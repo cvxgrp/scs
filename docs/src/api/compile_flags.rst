@@ -56,6 +56,14 @@ in :code:`include/glbopts.h`.
      - GPU indirect solver only: store the transpose of :code:`A` in GPU memory, which uses more GPU memory and makes the products with :code:`A` faster. The Python build has it as the option :code:`gpu_atrans`, off by default there
      - True/False
      - 1
+   * - :code:`CUDSS_MIN_PRODUCT_NNZ`
+     - cuDSS solver only: from this many nonzeros in the stored triangle of :math:`K` the multiplies by :math:`K` of the :ref:`refinement <refinement>` run on the GPU, below it on the CPU with SCS's products; 0 runs them on the GPU at every size. Empty uses the default in :code:`include/glbopts.h`
+     - :math:`\mathbf{N}`
+     - 60000
+   * - :code:`MKL_NO_OWN_PRODUCTS`
+     - MKL Pardiso solver only: the multiplies by :math:`K` of the :ref:`refinement <refinement>` are SCS's products at every size instead of MKL's sparse BLAS. Slower (1.45 instead of 1.32 times a plain iteration while the correction form is on); for tests of that path
+     - True/False
+     - 0
    * - :code:`VERBOSITY`
      - Verbosity level (for debugging)
      - :math:`\mathbf{N}`
@@ -158,11 +166,13 @@ options, with the same default: :code:`DLONG`, :code:`SFLOAT`,
 
 :code:`CTRLC` is always enabled in a CMake build. :code:`NO_TIMER`,
 :code:`NO_VALIDATE`, :code:`VERBOSITY`, :code:`NOBLASSUFFIX`,
-:code:`BLASSUFFIX`, :code:`MATLAB_MEX_FILE`, :code:`PYTHON` and :code:`USING_R`
-are not CMake options, and CMake ignores them with a warning if they are passed
-as one (:code:`-DNO_TIMER=ON`, say). They can be passed to the compiler
-directly, e.g., :code:`cmake -DCMAKE_C_FLAGS="-DNO_TIMER=1" ..` (for R the
-macro is :code:`R_LANG`, so :code:`-DCMAKE_C_FLAGS="-DR_LANG"`).
+:code:`BLASSUFFIX`, :code:`MATLAB_MEX_FILE`, :code:`PYTHON`, :code:`USING_R`,
+:code:`CUDSS_MIN_PRODUCT_NNZ` and :code:`MKL_NO_OWN_PRODUCTS` are not CMake
+options, and CMake ignores them with a warning if they are passed as one
+(:code:`-DNO_TIMER=ON`, say). They can be passed to the compiler directly,
+e.g., :code:`cmake -DCMAKE_C_FLAGS="-DNO_TIMER=1" ..`, which reaches the
+libraries and the tests alike (for R the macro is :code:`R_LANG`, so
+:code:`-DCMAKE_C_FLAGS="-DR_LANG"`).
 
 CMake finds the BLAS and LAPACK libraries itself. To choose a particular
 library set CMake's `BLA_VENDOR

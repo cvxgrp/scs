@@ -126,6 +126,20 @@ GPU_TRANSPOSE_MAT = 1
 ifneq ($(GPU_TRANSPOSE_MAT), 0)
 CUSTOM_FLAGS += -DGPU_TRANSPOSE_MAT=$(GPU_TRANSPOSE_MAT) # transpose A mat in GPU memory
 endif
+# cuDSS: the multiplies by K of the refinement run on the GPU from this many
+# nonzeros in K (empty: the default in include/glbopts.h; 0: at every size).
+# Empty here so that only the command line sets it, and tested for being
+# empty, not 0, so that CUDSS_MIN_PRODUCT_NNZ=0 reaches the compilers.
+CUDSS_MIN_PRODUCT_NNZ =
+ifneq ($(CUDSS_MIN_PRODUCT_NNZ),)
+CUSTOM_FLAGS += -DCUDSS_MIN_PRODUCT_NNZ=$(CUDSS_MIN_PRODUCT_NNZ)
+endif
+# MKL Pardiso: SCS's products for the refinement at every size instead of
+# MKL's sparse BLAS (slower; for tests of that path)
+MKL_NO_OWN_PRODUCTS = 0
+ifneq ($(MKL_NO_OWN_PRODUCTS), 0)
+CUSTOM_FLAGS += -DMKL_NO_OWN_PRODUCTS=$(MKL_NO_OWN_PRODUCTS)
+endif
 NO_TIMER = 0
 ifneq ($(NO_TIMER), 0)
 CUSTOM_FLAGS += -DNO_TIMER=$(NO_TIMER) # no timing, times reported as nan

@@ -7,7 +7,7 @@
 #include <string.h>
 
 /*
- * Refinement of each iteration's solve (solve_direct and refine_iter in
+ * Refinement of each iteration's solve (solve_direct and solve_indirect in
  * src/scs.c; "Accuracy of each iteration's solve" in glbopts.h), on an LP
  * with a second-order cone built like the MATLAB interface's mixed-cone test,
  * at a larger size: A dense, 130 x 100, entries uniform in [-1, 1];
@@ -38,8 +38,9 @@
  * iterations) and the same objectives to 1e-6.
  *
  * "refined" below counts the refinement steps (indirect solvers) plus the
- * iterations solved in correction form (direct solvers); a build has only
- * one of the two.
+ * iterations solved with refinement on (direct solvers: with the previous
+ * solution as the warm start, so in correction form unless the linear
+ * solver fell back to a plain solve); a build has only one of the two.
  */
 
 /* the instance (seeds 10 and 43 also pass in double precision; in single
@@ -108,8 +109,8 @@ static void solve_refine_data(ScsData *d, ScsCone *k) {
 
 /* solves the instance at eps (eps <= 0: the default tolerances), logging to
  * csv unless it is SCS_NULL; returns the status, SCS's info, and the residual
- * checks and refined solves made (refinement steps plus iterations solved in
- * correction form) */
+ * checks and refined solves made (refinement steps plus iterations solved
+ * with refinement on) */
 static scs_int solve_refine_solve(scs_float eps, const char *csv,
                                   ScsInfo *info, scs_int *checks,
                                   scs_int *steps) {
@@ -134,7 +135,7 @@ static scs_int solve_refine_solve(scs_float eps, const char *csv,
   if (w) {
     status = scs_solve(w, sol, info, 0);
     *checks = w->refine_checks;
-    *steps = w->refine_steps + w->refine_corrections;
+    *steps = w->refine_steps + w->refine_on_iters;
     scs_finish(w);
   }
   SCS(free_data)(d);
@@ -195,11 +196,14 @@ static const char *test_solve_refine_idle(void) {
  * correction form instead of 25, in 175 iterations either way; with the rule
  * before the correction form it also changed the iterations, 200 instead of
  * 225). Only that count is compared exactly: from 101 initial scales within
- * 50 ulps of the default it is 25 in every run, with and without FMA
- * contraction, while the iterations (175 or 200) and the residual checks (7
- * or 8) move with the last bits, and with USE_LAPACK every vector operation
- * goes through BLAS, where MKL's BLAS can round differently when the logged
- * solve's arrays are aligned differently in memory (it did in CI). The
+ * 50 ulps of the default, logging changed it in none of the runs (25 in
+ * every run with clang and LAPACK on Apple silicon; 50 or 75 with GCC and
+ * USE_LAPACK=0 on ARM, with and without FMA contraction; plain fallbacks
+ * while refinement is on included), while the iterations (175 or 200 with
+ * clang) and the residual checks (7 or 8) move with the last bits, and with
+ * USE_LAPACK every vector operation goes through BLAS, where MKL's BLAS can
+ * round differently when the logged solve's arrays are aligned differently
+ * in memory (it did in CI). The
  * objectives are compared to 1e-6 for the same reason. In single precision
  * the count is not robust either (the rule before the correction form gave
  * 26 refinement steps from 100 of 101 scales and 1 from the other), so the
@@ -250,19 +254,20 @@ static const char *test_solve_refine_csv(void) {
  * of its iterations in correction form; MKL Pardiso and cuDSS as well). In
  * single precision it runs at the default tolerances.
  *
- * Each direct solver solves it as set up and, if the linear solver computes
- * the refinement's products, again with SCS computing them itself
- * (refine_hook = 0). Every run must be solved with a solution whose relative
- * primal and dual residuals and gap, recomputed from the data, are at most
- * 1e-5 (1e-2 in single precision): a correction-form bug gives a wrong
- * answer of order one or no convergence. Only QDLDL, which SCS bundles, is
- * also required to have solved iterations in correction form: whether a
- * third-party solver (dense LAPACK, Accelerate, MKL Pardiso, cuDSS) turns
- * refinement on depends on the accuracy of its solves, which can change
- * with its version, and on iteration counts that change chaotically with
- * rounding; for them the count is printed. The objectives of the two runs
- * are only printed: the products round differently, and how a run continues
- * from there is not reproducible.
+ * Each direct solver solves it once, with the multiplies by K the linear
+ * solver uses at this size (its own for MKL Pardiso, SCS's for the others,
+ * cuDSS included below CUDSS_MIN_PRODUCT_NNZ; the CI job that builds cuDSS
+ * with that threshold at 0 runs it with cuDSS's GPU products). The run must
+ * be solved with a solution whose relative primal and dual residuals and
+ * gap, recomputed from the data, are at most 1e-5 (1e-2 in single
+ * precision): a correction-form bug gives a wrong answer of order one or no
+ * convergence. Only QDLDL, which SCS bundles, is also required to have
+ * solved iterations in correction form: whether a third-party solver (dense
+ * LAPACK, Accelerate, MKL Pardiso, cuDSS) turns refinement on depends on the
+ * accuracy of its solves, which can change with its version, and on
+ * iteration counts that change chaotically with rounding; for them the count
+ * is printed. (test_refine_perturbed makes every solver that measures with
+ * SCS's products refine, whatever its accuracy.)
  * The indirect solvers skip it: their rule is separate, and without
  * deflation the GPU conjugate gradient solver needs minutes on this
  * ill-conditioned instance at 1e-9.
@@ -331,11 +336,9 @@ static scs_float solve_refine_kkt_error(const ScsData *d,
   return MAX(ep, MAX(ed, eg));
 }
 
-/* solves the instance, with SCS's own products if own_products; returns the
- * status, the iterations solved in correction form and the solution's error
- * (solve_refine_kkt_error) */
-static scs_int solve_refine_dep_solve(scs_int own_products, ScsInfo *info,
-                                      scs_int *corrections, scs_int *hook,
+/* solves the instance; returns the status, the iterations solved with
+ * refinement on and the solution's error (solve_refine_kkt_error) */
+static scs_int solve_refine_dep_solve(ScsInfo *info, scs_int *corrections,
                                       scs_float *err) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
@@ -344,7 +347,7 @@ static scs_int solve_refine_dep_solve(scs_int own_products, ScsInfo *info,
   ScsWork *w;
   scs_int status = SCS_FAILED;
   memset(info, 0, sizeof(ScsInfo));
-  *corrections = *hook = -1;
+  *corrections = -1;
   *err = -1.;
   solve_refine_dep_data(d, k);
   scs_set_default_settings(stgs);
@@ -356,12 +359,8 @@ static scs_int solve_refine_dep_solve(scs_int own_products, ScsInfo *info,
   stgs->verbose = 0;
   w = scs_init(d, k, stgs);
   if (w) {
-    if (own_products) {
-      w->refine_hook = 0;
-    }
-    *hook = w->refine_hook;
     status = scs_solve(w, sol, info, 0);
-    *corrections = w->refine_corrections;
+    *corrections = w->refine_on_iters;
     scs_finish(w);
     *err = solve_refine_kkt_error(d, sol);
   }
@@ -373,7 +372,7 @@ static scs_int solve_refine_dep_solve(scs_int own_products, ScsInfo *info,
 }
 
 static const char *test_solve_refine_correction(void) {
-  scs_int status, corrections, hook, own, must_refine;
+  scs_int status, corrections, must_refine;
   scs_float err;
   ScsInfo info;
   if (strstr(scs_get_lin_sys_method(), "indirect")) {
@@ -381,22 +380,17 @@ static const char *test_solve_refine_correction(void) {
   }
   /* only the bundled QDLDL must refine, see above */
   must_refine = strstr(scs_get_lin_sys_method(), "qdldl") != SCS_NULL;
-  for (own = 0, hook = 1; own <= 1 && hook; ++own) {
-    status = solve_refine_dep_solve(own, &info, &corrections, &hook, &err);
-    scs_printf("test_solve_refine_correction: %s, products by %s, status "
-               "%li, %li iterations, %li in correction form, pobj %.10e, "
-               "error %.2e\n",
-               scs_get_lin_sys_method(), hook ? "the linear solver" : "SCS",
-               (long)status, (long)info.iter, (long)corrections, info.pobj,
-               (double)err);
-    mu_assert("test_solve_refine_correction: not solved",
-              status == SCS_SOLVED);
-    mu_assert("test_solve_refine_correction: wrong solution",
-              err >= 0 && err <= SOLVE_REFINE_SOL_TOL);
-    if (must_refine) {
-      mu_assert("test_solve_refine_correction: refinement did not turn on",
-                corrections > 0);
-    }
+  status = solve_refine_dep_solve(&info, &corrections, &err);
+  scs_printf("test_solve_refine_correction: %s, status %li, %li iterations, "
+             "%li with refinement on, pobj %.10e, error %.2e\n",
+             scs_get_lin_sys_method(), (long)status, (long)info.iter,
+             (long)corrections, info.pobj, (double)err);
+  mu_assert("test_solve_refine_correction: not solved", status == SCS_SOLVED);
+  mu_assert("test_solve_refine_correction: wrong solution",
+            err >= 0 && err <= SOLVE_REFINE_SOL_TOL);
+  if (must_refine) {
+    mu_assert("test_solve_refine_correction: refinement did not turn on",
+              corrections > 0);
   }
   return SCS_NULL;
 }

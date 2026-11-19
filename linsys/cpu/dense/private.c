@@ -114,6 +114,9 @@ static void form_gram(ScsLinSysWork *p, const scs_float *diag_r) {
   }
 }
 
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
+
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                      const scs_float *diag_r) {
   blas_int info, bn;
@@ -155,6 +158,11 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
+  if (SCS(lin_sys_shared_init)(&p->sh, A, P, diag_r, 0, plain_solve,
+                               SCS_NULL, SCS_NULL) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
   return p;
 }
 
@@ -165,8 +173,8 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
  *
  * Input b = [rx; ry], solution stored in b = [x; y].
  */
-scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
-                          scs_float tol) {
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
   blas_int bn = (blas_int)p->n;
   blas_int bm = (blas_int)p->m;
   blas_int one = 1;
@@ -219,6 +227,14 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
   return 0;
 }
 
+/* the warm start, refinement and residual around plain_solve, see linsys.h */
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res) {
+  return SCS(lin_sys_shared_solve)(&p->sh, p, b, s, tol, max_refine_steps,
+                                   res);
+}
+
 /* Update diagonal R entries: re-form Gram matrix and re-factorize */
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
   blas_int info, bn;
@@ -245,28 +261,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
     scs_free(p->tmp_m);
     scs_free(p->S);
     scs_free(p->diag_p);
+    SCS(lin_sys_shared_free)(&p->sh);
     scs_free(p);
   }
-}
-
-/* Products with this solver's own copy of K for SCS's per-iteration
- * refinement (optional, see linsys.h): not provided, so SCS computes them
- * from the problem data. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
-                               const scs_float *x) {
-  (void)w;
-  (void)b;
-  (void)x;
-  return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
-}
-
-void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {
-  (void)w;
-  (void)x;
-}
-
-scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) {
-  (void)w;
-  (void)x;
-  return -1;
 }

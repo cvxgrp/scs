@@ -337,18 +337,31 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * mixed one inexact solve into every REFINE_CHECK_INTERVAL accurate ones and
  * took up to 31 times the iterations (QFORPLAN at 1e-6 with Accelerate);
  * what slows SCS down is switching between inexact and accurate solves, not
- * the inexact solves themselves. A linear solver can compute the multiplies
- * by K with its own copy of K (scs_lin_sys_residual in linsys.h; cuDSS keeps
- * the vectors on the GPU), else SCS uses the problem data.
+ * the inexact solves themselves. SCS keeps the previous iteration's solution
+ * (refine_prev) while refinement is on and passes it as the warm start of
+ * scs_solve_lin_sys (linsys.h), which makes the correction form, its
+ * fallback and their multiplies by K; SCS decides only when, by the rules
+ * here. A linear solver can compute the multiplies with its own copy of K
+ * (MKL Pardiso; cuDSS from CUDSS_MIN_PRODUCT_NNZ, where the residual stays
+ * on the GPU and the warm start is copied there), else they are SCS's
+ * products with the problem data (linsys/scs_matrix.c).
  *
  * Indirect solvers (conjugate gradients, CPU and GPU). CG already solves to a
  * tolerance tied to SCS's residuals, and its error is set by that tolerance,
  * not by the size of the right-hand side, so the correction form would not
  * make it more accurate. While on, each iteration's solve is followed by one
- * refinement step: SCS solves K d = rhs - K u (cold, to CG_BEST_TOL) and adds
- * d to u. That costs one more multiply and one more CG solve per iteration;
- * CG fires only when a CG solve misses its tolerance (it stops early or, in
- * single precision, the residual it tracks drifts from the true one).
+ * refinement step: SCS computes r = rhs - K u with its own products and adds
+ * to u a cold CG solve of K d = r, to CG_BEST_TOL. That costs one more
+ * multiply and one more CG solve per iteration. The step must solve for the
+ * residual computed in the full space: a second CG solve of rhs
+ * warm-started from u, the same in exact arithmetic, works on CG's reduced
+ * residual and recomputes y from x, so it cannot remove the rounding the
+ * full residual measures (in single precision, from the same u, it lowered
+ * the residual by 10% or more in 38% of 455,177 steps, against 96% for this
+ * step, and of 25 random SOCPs at 1e-5 it solved 16 instead of 25, in 12
+ * times the time). CG fires only when a CG solve misses its tolerance (it
+ * stops early or, in single precision, the residual it tracks drifts from
+ * the true one).
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
@@ -462,6 +475,53 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #define REFINE_TOL_FLOOR (1e-5)
 #else
 #define REFINE_TOL_FLOOR (1e-12)
+#endif
+
+/* CUDSS_MIN_PRODUCT_NNZ: the smallest K (nonzeros of the stored triangle,
+ * diagonal included) for which the cuDSS solver computes the refinement's
+ * multiplies by K on the GPU, with its own copy of K; below it they are SCS's
+ * products on the CPU, from the problem data (linsys/scs_matrix.c), as for the
+ * solvers without products of their own. It is here rather than in the cuDSS
+ * solver so that the tests see the same value (they check which K a residual is
+ * measured with). Set it with make CUDSS_MIN_PRODUCT_NNZ=... (scs.mk passes it
+ * to the C and CUDA compilers alike), or with CMake
+ * -DCMAKE_C_FLAGS=-DCUDSS_MIN_PRODUCT_NNZ=...; 0 computes them on the GPU at
+ * every size (a CI job does, so that path is tested). A GPU product costs about
+ * 0.04 ms whatever the size (the copy of b, kernel launches, the amax and its
+ * scalar copy), SCS's own about 1 to 1.5 ns per nonzero. Measured per product
+ * on an NVIDIA GB10 (Grace CPU, unified memory, 33 problems): the GPU was 1.3
+ * to 50 times slower up to 4.2e4 nonzeros (0.04 against 0.0008 ms at 1.2e3) and
+ * faster from 9.0e4 on (0.64 to 0.87 times up to 1.2e5, 0.12 to 0.37 times from
+ * 3.7e5; BOYD1, 9.3e5: 0.18 against 1.27 ms). In the solves, on random LPs and
+ * SOCPs with 1.3e4 nonzeros at 1e-9, an iteration with the correction form on
+ * cost 1.6 times a plain one with the GPU products against 1.1 with SCS's
+ * (measured while the warm start stayed on the GPU; it is now copied there from
+ * the host, which on 10 larger problems added 2 to 9% of a plain solve to such
+ * an iteration). A discrete GPU, where copies cross PCIe, likely moves the
+ * break-even point up; not measured. Deterministic: the choice depends on the
+ * problem's size only. At or above it the products are part of the solver: if
+ * they cannot be set up (GPU memory for the second copy of K, a cuBLAS or
+ * cuSPARSE error, K too large for the index type), scs_init_lin_sys_work fails
+ * with a message, rather than leaving the products to SCS. Setup cost (NVIDIA
+ * GB10, random K): 3, 35 and 340 ms at 1e5, 1e6 and 8e6 nonzeros, 5 to 13% of
+ * cuDSS's analysis and factorization; of that cusparseCreate and cublasCreate
+ * took 0.4 to 0.8 ms. */
+#ifndef CUDSS_MIN_PRODUCT_NNZ
+#define CUDSS_MIN_PRODUCT_NNZ (60000)
+#endif
+
+/* MKL_NO_OWN_PRODUCTS: 1 makes the MKL Pardiso solver compute the
+ * refinement's multiplies by K with SCS's products (linsys/scs_matrix.c) at
+ * every size instead of MKL's sparse BLAS, so that this path, otherwise taken
+ * only for a K beyond MKL's 32-bit sparse integers, stays tested (a CI job
+ * builds with it). It is slower: an iteration with the correction form on
+ * costs 1.45 instead of 1.32 times a plain one (33 LPs and QPs at 1e-9, 4
+ * threads, AMD Zen 3). 0, the default, uses MKL's. It is here so that the
+ * tests see the same value. Set it with make MKL_NO_OWN_PRODUCTS=1 or CMake
+ * -DCMAKE_C_FLAGS=-DMKL_NO_OWN_PRODUCTS=1; it is on only for a value above 0,
+ * as NO_PRINTING and the other switches tested with #if. */
+#ifndef MKL_NO_OWN_PRODUCTS
+#define MKL_NO_OWN_PRODUCTS (0)
 #endif
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */

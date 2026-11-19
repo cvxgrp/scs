@@ -7,19 +7,30 @@ extern "C" {
 
 #include "glbopts.h"
 
-/* This is the API that any new linear system solver must implement */
+/* This is the API that any new linear system solver must implement. See
+ * "Implementing a new linear solver" in the documentation: the solvers in
+ * linsys/ implement scs_solve_lin_sys as one call to a shared routine
+ * (SCS(lin_sys_shared_solve), linsys/scs_matrix.h) around their plain solve,
+ * and a new solver can do the same. */
 
 /* Struct containing linear system workspace. Implemented by linear solver. */
 /* This typedef is in scs.h */
 /* typedef struct SCS_LIN_SYS_WORK ScsLinSysWork; */
 
 /**
- * Initialize `ScsLinSysWork` structure and perform any necessary preprocessing.
+ * Initialize `ScsLinSysWork` structure and perform any necessary preprocessing
+ * (for instance factorize K, see `scs_solve_lin_sys`).
+ *
+ * The solver may keep the three pointers and read the arrays in any later
+ * call: they stay valid, and A and P unchanged, until
+ * `scs_free_lin_sys_work`, and SCS writes every new R into this same
+ * `diag_r` array before it calls `scs_update_lin_sys_diag_r`.
  *
  *  @param  A          `A` data matrix, `m x n`.
- *  @param  P          `P` data matrix, `n x n`.
+ *  @param  P          `P` data matrix, `n x n`, upper triangle, or `SCS_NULL`.
  *  @param  diag_r     `R > 0` diagonal entries of length `m + n`.
- *  @return            Linear system solver workspace.
+ *  @return            Linear system solver workspace, or `SCS_NULL` on
+ *                     failure (with a message saying why).
  *
  */
 ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
@@ -33,124 +44,99 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 void scs_free_lin_sys_work(ScsLinSysWork *w);
 
 /**
- * Solves the linear system as required by SCS at each iteration:
+ * Solves the linear system as required by SCS:
  * \f[
- *    \begin{bmatrix}
+ *    K x = b, \qquad
+ *    K = \begin{bmatrix}
  *    (R_x + P) & A^\top \\
  *     A   &  -R_y \\
- *    \end{bmatrix} x = b
+ *    \end{bmatrix}
  *  \f]
  *
- *  for `x`, where `diag(R_x, R_y) = R`. Overwrites `b` with result.
+ *  for `x`, where `diag(R_x, R_y) = R` is the one given to the last
+ *  `scs_update_lin_sys_diag_r` (or to `scs_init_lin_sys_work`), and
+ *  overwrites `b` with `x`. With `max_refine_steps` 0 and `res` `SCS_NULL`
+ *  this is the solve of SCS 3.3 for a CG solver (conjugate gradients from
+ *  `s` to `tol`), and for a direct solver given no `s` (a plain solve).
+ *
+ *  Direct solvers (a factorization: QDLDL, dense, Apple Accelerate, MKL
+ *  Pardiso, cuDSS):
+ *  1. Warm start. Given `s`, the solver computes \f$r = b - K s\f$ and, if
+ *     \f$\|r\|_\infty < \|b\|_\infty\f$, returns the correction form
+ *     \f$x = s + K^{-1} r\f$, whose error is about that of a plain solve
+ *     times \f$\|r\|_\infty / \|b\|_\infty\f$, for one multiply by K more.
+ *     Otherwise (s is no better a guess than zero, for instance after R
+ *     changed) it solves plainly, \f$x = K^{-1} b\f$.
+ *  2. Refinement, if `max_refine_steps` > 0: while
+ *     \f$\|b - K x\|_\infty\f$ > `tol` and fewer than `max_refine_steps`
+ *     steps were taken, the candidate \f$c = x + K^{-1}(b - K x)\f$
+ *     replaces x if its residual is strictly smaller; if not, x stays and
+ *     refinement stops. It also stops after a kept step that did not at
+ *     least halve the residual. Each step costs a solve and a multiply by K,
+ *     the first one a multiply more (the residual of x).
+ *
+ *  CG solvers (conjugate gradients on the reduced system, CPU and GPU):
+ *  1. CG from `s` (its first n entries; y is computed from x), or from
+ *     zero, until the residual CG tracks is below `tol`.
+ *  2. Refinement, if `max_refine_steps` > 0: as for the direct solvers, with
+ *     \f$K^{-1}(b - K x)\f$ a CG solve from zero to `tol`. The residual is
+ *     computed in the full space with the multiplies below: the one CG
+ *     tracks, on the reduced system, can drift from it (in single precision
+ *     or from a warm start far from x) and has a higher rounding floor, and
+ *     y is computed from x, so restarting CG on b from x would remove only
+ *     part of either. Each step costs CG iterations and a multiply by K.
+ *
+ *  The multiplies by K (warm start, refinement, `res`) use the solver's own
+ *  copy of K where it has one, by a rule fixed when `scs_init_lin_sys_work`
+ *  returns and stated in the solver's documentation (MKL Pardiso; cuDSS from
+ *  `CUDSS_MIN_PRODUCT_NNZ` nonzeros), else SCS's products with the A, P and
+ *  diag_r given to `scs_init_lin_sys_work`. Every decision compares
+ *  residuals, never timings: a call is deterministic whenever the solver's
+ *  plain solve and products are.
  *
  *  @param  w    Linear system private workspace.
- *  @param  b    Right hand side, contains solution at the end.
- *  @param  s    Contains warm-start (may be NULL).
- *  @param  tol  Tolerance required for the system solve.
- *  @return status != 0 indicates failure.
+ *  @param  b    Right-hand side, n + m entries; overwritten with the
+ *               solution.
+ *  @param  s    Warm start, a guess of the solution (n + m entries; CG reads
+ *               the first n), or `SCS_NULL`. Not changed; must not alias `b`.
+ *  @param  tol  The accuracy asked for, as \f$\|b - K x\|_\infty\f$. CG
+ *               solvers stop at it (smaller is more accurate and costs more
+ *               CG iterations), and their refinement steps solve to it; they
+ *               need `tol` > 0. SCS's CG solvers return x = 0 for a b with
+ *               \f$\|b\|_\infty \le 10^{-12}\f$, and the CPU one makes no
+ *               CG iteration from a residual below 1e-12, so a smaller `tol`
+ *               is not reached. Direct solvers refine toward it, and ignore
+ *               it when `max_refine_steps` is 0. Below the rounding level of
+ *               the residual (about machine epsilon times
+ *               \f$\|b\|_\infty + \|K\|_\infty \|x\|_\infty\f$) a step only
+ *               measures rounding, and the halving test stops it.
+ *  @param  max_refine_steps  At most this many refinement steps; 0 for none.
+ *  @param  res  If not `SCS_NULL`, set to \f$\|b - K x\|_\infty\f$ for the
+ *               returned x and the given b, with the multiplies above.
+ *               Cost: a copy of b and a multiply by K, unless refinement
+ *               computed it. Asking for it never changes x. A NaN entry of
+ *               the residual may be missed by the max (as by SCS's
+ *               `norm_inf`), so a finite `*res` does not show that x is
+ *               finite.
+ *  @return 0 on success; nonzero if a solve or a multiply failed (b and
+ *          `*res` are then unspecified).
  *
  */
 scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
-                          scs_float tol);
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res);
 /**
  *  Update the linsys workspace when `R` is changed. For example, a
  *  direct method for solving the linear system might need to update the
- *  factorization of the matrix.
+ *  factorization of the matrix. SCS passes the `diag_r` array given to
+ *  `scs_init_lin_sys_work`, with the new R written into it.
  *
  *  @param  w             Linear system private workspace.
  *  @param  new_diag_r    Updated `diag_r`, diagonal entries of R.
+ *  @return status != 0 indicates failure.
  *
  */
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *w, const scs_float *new_diag_r);
-
-/*
- * Optional: products with the linear solver's own copy of the matrix.
- *
- * Direct solvers refine each iteration's solve in correction form while the
- * solve's error limits SCS (see "Accuracy of each iteration's solve" in
- * glbopts.h): from the previous iteration's solution x0 they solve
- * K d = b - K x0 and take x = x0 + d, where
- * \f$K = \begin{bmatrix} R_x + P & A^\top \\ A & -R_y \end{bmatrix}\f$
- * with the current `diag_r`. That costs one multiply by K per iteration, and
- * SCS checks the residual b - K x of a solve every 25 iterations. By default
- * SCS computes these products itself, from the problem data. A solver that
- * holds K anyway can compute them with its own copy instead, for instance
- * with a threaded or GPU sparse matrix-vector product, by implementing the
- * three functions below. SCS makes every decision (when to check, when to
- * use the correction form, the thresholds); the solver only computes. All
- * vectors are host vectors of length n + m.
- *
- * Contract:
- *  - Whether a workspace provides the products is fixed when
- *    `scs_init_lin_sys_work` returns, by a rule stated up front (for instance
- *    the size of K), never by whether a resource happened to be available.
- *    A workspace that does not provide them returns
- *    `SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED` from every `scs_lin_sys_residual`
- *    call and does nothing in the other two functions.
- *  - A workspace that should provide them but cannot set them up (out of
- *    memory, a library error, K too large for the product's index type) makes
- *    `scs_init_lin_sys_work` fail, with a message saying why; it does not
- *    fall back to "not provided".
- *  - Any error in a product returns `SCS_LIN_SYS_PRODUCTS_FAILED`.
- *  - SCS calls `scs_lin_sys_residual` once at setup, right after
- *    `scs_init_lin_sys_work`, with zero vectors: "not provided" makes SCS
- *    compute every product itself, a failure (any negative value other than
- *    "not provided") makes SCS's setup fail, and a norm (>= 0) means the
- *    solver provides them. During a solve every negative return is a failure
- *    of the linear solver, and the solve stops.
- */
-
-/** Returned by `scs_lin_sys_residual`: this workspace does not compute the
- * products, SCS computes them itself. */
-#define SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED (-1.)
-/** Returned by `scs_lin_sys_residual`: the product failed. */
-#define SCS_LIN_SYS_PRODUCTS_FAILED (-2.)
-
-/**
- * Computes \f$r = b - K x\f$ with the solver's own copy of K (as updated by
- * the last `scs_update_lin_sys_diag_r`) and returns \f$\|r\|_\infty\f$. The
- * solver keeps r for a following `scs_lin_sys_correct`. If `x` is `SCS_NULL`,
- * x is the vector stored by the last `scs_lin_sys_keep`. It must not change
- * the solver's copy of the solution of its latest solve (see
- * `scs_lin_sys_keep`).
- *
- *  @param  w    Linear system private workspace.
- *  @param  b    Right-hand side.
- *  @param  x    Point at which the residual is evaluated, or `SCS_NULL`.
- *  @return      \f$\|b - K x\|_\infty\f$,
- *               `SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED` or
- *               `SCS_LIN_SYS_PRODUCTS_FAILED` (see the contract above).
- */
-scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
-                               const scs_float *x);
-
-/**
- * Stores `x` as the guess x0 of the next correction-form solve. `x` is always
- * the solution returned by the latest `scs_solve_lin_sys` or
- * `scs_lin_sys_correct` call, unchanged, so a solver that keeps that solution
- * on its side (a GPU solver) may store its own copy and not read `x`.
- * Between that solve and this call SCS may call `scs_lin_sys_residual` (with
- * that solution or another vector as `x`, or with `SCS_NULL`), but no other
- * solve: the residual must therefore leave the solver's copy of the solution
- * as it is. Called only if the solver provides the products.
- *
- *  @param  w    Linear system private workspace.
- *  @param  x    The solution of the latest solve.
- */
-void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x);
-
-/**
- * Solves in correction form: \f$x = x_0 + K^{-1} r\f$, where r is the
- * residual of the latest `scs_lin_sys_residual` call, which SCS always makes
- * with `x` equal to `SCS_NULL` (so \f$r = b - K x_0\f$) right before. The
- * result counts as the latest solve for `scs_lin_sys_keep`. Called only if
- * the solver provides the products.
- *
- *  @param  w    Linear system private workspace.
- *  @param  x    Output, the solution.
- *  @return      status != 0 indicates failure.
- */
-scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x);
 
 /**
  * Name of the linear solver.

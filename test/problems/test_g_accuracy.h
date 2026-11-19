@@ -61,7 +61,7 @@ static scs_float g_accuracy_unrefined(ScsWork *w) {
   for (i = 0; i < m; ++i) {
     g0[n + i] = -w->d->b[i];
   }
-  scs_solve_lin_sys(w->p, g0, SCS_NULL, CG_BEST_TOL);
+  scs_solve_lin_sys(w->p, g0, SCS_NULL, CG_BEST_TOL, 0, SCS_NULL);
   res = g_accuracy_rel_res(w, g0);
   scs_free(g0);
   return res;

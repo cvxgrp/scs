@@ -73,7 +73,16 @@ This is not the per-row refinement of the scaling :math:`R` (see
 :ref:`per_row_refinement`), which changes :math:`R` itself, nor the refinement
 of the small least-squares solve inside :ref:`acceleration`, nor the
 refinement cuDSS does inside its own solves in single precision (see
-:ref:`cudss_solver`).
+:ref:`cudss_solver`), nor the two refinement steps MKL Pardiso takes inside a
+solve when its factorization had to perturb a pivot (``iparm[7] = 0`` with
+``iparm[9] = 13``, see :ref:`mkl`).
+
+SCS's linear solve takes a warm start, a tolerance and a number of refinement
+steps (see :ref:`new_linear_solver`). With the direct solvers, the
+per-iteration refinement passes the previous iteration's solution as the warm
+start and decides when; with the indirect solvers, and for the solve for
+:math:`(c, -b)`, SCS refines with plain solves and its own products (see
+below).
 
 .. _g_refinement:
 
@@ -141,8 +150,9 @@ one multiply by :math:`K` every 25 iterations.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
-following iteration solves in *correction form*: from the previous
-iteration's solution :math:`u_0` it solves :math:`K d = z^k - K u_0` and takes
+following iteration solves in *correction form*: SCS keeps the previous
+iteration's solution :math:`u_0` and passes it to the linear solve as its
+warm start, which solves :math:`K d = z^k - K u_0` and takes
 :math:`u = u_0 + d`. The error of a solve with a factorization is about
 proportional to the size of the right-hand side it is given. The iterates
 move little from one iteration to the next, so :math:`z^k - K u_0` is
@@ -184,11 +194,18 @@ already solves to a tolerance tied to SCS's residuals, and its error is set by
 that tolerance rather than by the size of the right-hand side, so the
 correction form would not make it more accurate. When a check finds the
 residual above *tol*, that iteration's solve and each following one is
-followed by one refinement step (one more conjugate gradient solve, for the
-residual). While this is on, every iteration is a check (one multiply by
-:math:`K`, of the solve before its refinement step), and it turns off at the
-first that finds the residual at most :math:`0.1\,` *tol*. This fires only
-when a conjugate gradient solve misses its tolerance.
+followed by one refinement step: one more conjugate gradient solve, from
+zero and to the solvers' best accuracy, for the residual SCS computed, added
+to the solution. While this is on, every iteration is a check (one multiply
+by :math:`K`, of the solve before its refinement step), and it turns off at
+the first that finds the residual at most :math:`0.1\,` *tol*. This fires
+only when a conjugate gradient solve misses its tolerance. The step solves
+for the residual of the whole system: a second solve of the same right-hand
+side started from the first one's solution, the same in exact arithmetic,
+works with the residual of the smaller system conjugate gradients solves,
+which cannot see all of the rounding error: in single precision it solved
+16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12 times the
+time.
 
 **What to expect** (direct solvers):
 
@@ -223,19 +240,53 @@ when a conjugate gradient solve misses its tolerance.
   threshold to turn it off is near or below what a single-precision solve can
   reach.
 
-**Who computes the multiplies.** By default SCS computes the multiplies by
-:math:`K` itself, from the problem data, on one thread. A linear solver can
-compute them with its own copy of :math:`K` instead (see
-:ref:`new_linear_solver`): MKL Pardiso uses MKL's threaded sparse matrix-vector
-product, and cuDSS computes them on the GPU, where the vectors stay. The
-decisions above are the same either way; only the cost of the multiply and its
-rounding change.
+**Who computes the multiplies.** With the direct solvers the multiplies by
+:math:`K` are made inside the linear solve (:code:`scs_solve_lin_sys`, see
+:ref:`new_linear_solver`); SCS keeps each iteration's solution and passes it
+to the next solve as its warm start. With the indirect solvers SCS computes
+the residual itself, with its own products, since the refinement step solves
+for that vector. Per iteration SCS asks for:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Iteration
+     - Solves
+     - Multiplies by :math:`K`
+   * - Off, not a check
+     - one plain solve
+     - none
+   * - Off, a check (every 25)
+     - one plain solve, with its residual
+     - 1
+   * - On, not a check
+     - one solve warm-started from the previous solution (correction form)
+     - 1
+   * - On, a check
+     - the warm-started solve with its residual, and a plain solve with its
+       residual
+     - 3
+   * - CG, a check or refinement on
+     - CG, and SCS's residual of it; while on, a second CG solve, of that
+       residual, from zero
+     - 1
+
+By default the multiplies are SCS's own products with the problem data (the
+multiply by :math:`A^\top` runs on OpenMP's threads when SCS is built with
+OpenMP, and stays deterministic: each entry is summed by one thread in a fixed
+order). MKL Pardiso computes them with MKL's threaded sparse matrix-vector
+product instead, and cuDSS from 60,000 nonzeros in :math:`K` computes them on
+the GPU, where the residual stays (the warm start is copied to the GPU). The
+decisions above are the same either way; only the cost of the multiply and
+its rounding change.
 
 What the solver's own multiplies buy is a cheaper iteration while the
 correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
 :math:`10^{-8}` (NVIDIA GB10), such an iteration cost 1.19 times a plain one
 with the multiplies on the GPU, against 1.48 with SCS's on the CPU (on BOYD1
-1.61 ms against 2.63, a plain iteration taking 1.33). With MKL Pardiso on 33
+1.61 ms against 2.63, a plain iteration taking 1.33; measured while the warm
+start stayed on the GPU, see :ref:`cudss_solver` for the cost of copying
+it). With MKL Pardiso on 33
 LPs and QPs at :math:`10^{-9}` (4 threads, AMD Zen 3) it cost 1.32 times a plain
 one against 1.45. Whole solves changed by a few percent at most, within the
 run-to-run variation of the iteration counts, because the correction form is
@@ -338,9 +389,13 @@ setup time that has not been measured: MKL analyses :math:`K`
 whether or not the correction form ever turns on, since the check every 25
 iterations uses the product too. In a build with ``DLONG`` but 32-bit MKL
 integers, a :math:`K` too large for those integers (more than :math:`2^{31}`
-stored nonzeros) gets SCS's own products instead, as before this change;
-``BLAS64=1`` (Meson's ``use_blas64``) provides MKL's at any size. If they
-cannot be set up otherwise (out of memory), setup fails with a message.
+stored nonzeros) gets SCS's own products instead; ``BLAS64=1`` (Meson's
+``use_blas64``) provides MKL's at any size. If they cannot be set up
+otherwise (out of memory), setup fails with a message. Built with
+``make mkl MKL_NO_OWN_PRODUCTS=1`` (see :ref:`compile_flags`), MKL Pardiso
+uses SCS's products at every size; that is slower (1.45 instead of 1.32
+times a plain iteration while the correction form is on), and the CI uses it
+so that this path stays tested.
 
 .. _apple_accelerate:
 
@@ -497,12 +552,14 @@ solve, which about doubles the cost of a solve, because without it one problem
 in the test suite does not converge.
 
 **Multiplies for the refinement.** When :math:`K` has at least 60,000 nonzeros
-(``CUDSS_MIN_PRODUCT_NNZ`` in ``linsys/cudss/direct/private.c``), the cuDSS
+(``CUDSS_MIN_PRODUCT_NNZ`` in ``include/glbopts.h``; set it with
+``make cudss CUDSS_MIN_PRODUCT_NNZ=...``, see :ref:`compile_flags`), the cuDSS
 solver computes the multiplies by :math:`K` of the per-iteration refinement
 (see :ref:`refinement`) on the GPU: one cuSPARSE sparse matrix-vector product
-and one cuBLAS reduction, with the guess and the residual kept on the GPU, so
-an iteration in correction form copies no more vectors between the host and
-the GPU than a plain solve. cuSPARSE has no symmetric product, so :math:`K`
+and one cuBLAS reduction. The residual stays on the GPU; the warm start, the
+previous solution that SCS keeps on the host, is copied to the GPU once per
+iteration with the correction form on, one vector of :math:`n + m` numbers
+more than a plain solve copies. cuSPARSE has no symmetric product, so :math:`K`
 is stored a second time with both triangles, about twice the nonzeros of the
 copy cuDSS factorizes. A call costs about 0.04 ms whatever the size, so smaller
 systems use SCS's product on the CPU, which was faster there. On an NVIDIA
@@ -511,6 +568,12 @@ GB10, per multiply, the GPU took 0.12 to 0.37 times the CPU's time above
 In the solves, on 10 large LPs, QPs and SOCPs at :math:`10^{-8}`, an
 iteration with the correction form on cost 1.19 times a plain one, against
 1.48 with the multiplies on the CPU, and the time per iteration fell by 4%.
+That was measured with the warm start kept on the GPU. Copying it from the
+host, as now, added 0.02 to 0.12 ms to such a solve on the same problems (2
+to 9% of a plain solve): an estimated 0.14% of their total solve time, and at
+most 3.3% on one (UBH1, with the correction form on for 64% of its
+iterations). On a discrete GPU, where the copy crosses PCIe, it has not been
+measured.
 Setting them up (building :math:`K` with both triangles, copying it to the
 GPU, creating the cuSPARSE and cuBLAS handles) is done at setup whether or not
 the correction form ever turns on, since the check every 25 iterations uses
@@ -548,72 +611,141 @@ residual and the gap (the gap of the GPU indirect solver by a factor of 13).
 Implementing a new linear solver
 --------------------------------
 
-In order to implement you own linear system solver, you need to implement the
-struct :code:`ScsLinSysWork` that contains the workspace your solver requires,
-and implement the functions in :code:`include/linsys.h` as detailed below.
-See :code:`linsys` directory for examples.
+A linear solver implements the struct :code:`ScsLinSysWork`, which holds its
+workspace, and the five functions in :code:`include/linsys.h` (documented
+below); the :code:`linsys` directory has seven worked examples. Four are
+simple: set up (for instance factorize :math:`K`), update for a new
+:math:`R`, free, and name. The fifth, :code:`scs_solve_lin_sys`, solves
+:math:`K x = b` and also takes a warm start, a tolerance and a number of
+refinement steps, and reports the residual :math:`\|b - K x\|_\infty`:
+SCS's :ref:`iterative_refinement` runs through it. The solvers in
+:code:`linsys` write only their plain solve and get the rest from a shared
+routine (:code:`linsys/scs_matrix.h`). A new solver built with SCS's sources
+does the same in five steps:
 
-**Products with the matrix (optional).** The per-iteration refinement of the
-direct solvers (see :ref:`refinement`) multiplies by the matrix :math:`K`:
-every 25 iterations to check a solve, and once per iteration while the
-correction form is on. By default SCS computes these products itself, from the
-problem data, on one thread. A solver that holds :math:`K` anyway can compute
-them faster with its own copy, by implementing three functions:
+1. :code:`#include "scs_matrix.h"` and put a :code:`ScsLinSysShared sh;`
+   member in your :code:`ScsLinSysWork`.
 
-- :code:`scs_lin_sys_residual(w, b, x)` computes :math:`r = b - K x` with the
-  solver's current :math:`K` (including the latest :math:`R` from
-  :code:`scs_update_lin_sys_diag_r`), keeps :math:`r`, and returns
-  :math:`\|r\|_\infty`. If :code:`x` is :code:`SCS_NULL`, :math:`x` is the
-  vector stored by the last :code:`scs_lin_sys_keep`.
-- :code:`scs_lin_sys_keep(w, x)` stores :math:`x` as the guess :math:`x_0`.
-  SCS calls it with the solution of the latest solve (a
-  :code:`scs_solve_lin_sys` or :code:`scs_lin_sys_correct` call), unchanged,
-  so a GPU solver can copy the solution it still has on the device and not
-  read :code:`x` at all. Between that solve and this call SCS may call
-  :code:`scs_lin_sys_residual` (when it turns the correction form on, it
-  checks the solve with :code:`scs_lin_sys_residual(w, b, x)` first), but no
-  other solve, so the residual must not overwrite the solver's copy of the
-  solution.
-- :code:`scs_lin_sys_correct(w, x)` returns :math:`x = x_0 + K^{-1} r` for the
-  :math:`r` of the latest :code:`scs_lin_sys_residual(w, b, SCS_NULL)`.
+2. Write your plain solve, which overwrites :code:`b` with :math:`K^{-1} b`
+   and returns 0 (nonzero on failure). A direct solver ignores :code:`s` and
+   :code:`tol`; an iterative one starts from :code:`s` (its first :math:`n`
+   entries; from zero when it is :code:`SCS_NULL`) and stops at
+   :code:`tol`::
 
-Every solver must define the three functions so that it links (an
-out-of-tree solver written for an earlier SCS needs the three stubs below).
-The contract:
+       static scs_int plain_solve(ScsLinSysWork *w, scs_float *b,
+                                  const scs_float *s, scs_float tol);
 
-- :code:`scs_lin_sys_residual` returns :math:`\|r\|_\infty \ge 0`,
-  :code:`SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED` if the workspace does not compute
-  the products, or :code:`SCS_LIN_SYS_PRODUCTS_FAILED` on an error.
-- Whether a workspace provides the products is fixed when
-  :code:`scs_init_lin_sys_work` returns, by a rule stated up front (cuDSS: the
-  number of nonzeros of :math:`K`; MKL Pardiso: always, except a :math:`K` too
-  large for 32-bit MKL integers in a ``DLONG`` build without ``BLAS64``), never
-  by whether memory or a library happened to be available. A solver that should provide
-  them but cannot set them up makes :code:`scs_init_lin_sys_work` fail with a
-  message saying why, rather than returning "not provided".
-- SCS calls :code:`scs_lin_sys_residual` once at setup, with zero vectors:
-  "not provided" makes SCS compute every product itself (and never call the
-  other two functions); a failure makes SCS's setup fail; a norm means the
-  solver provides them. During a solve any negative return is a failure of
-  the linear solver.
+3. At the end of :code:`scs_init_lin_sys_work`, after your own setup::
 
-A solver without the products defines::
+       if (SCS(lin_sys_shared_init)(&w->sh, A, P, diag_r, 0, plain_solve,
+                                    SCS_NULL, SCS_NULL) != 0) {
+         scs_free_lin_sys_work(w);
+         return SCS_NULL;
+       }
 
-    scs_float scs_lin_sys_residual(ScsLinSysWork *w, const scs_float *b,
-                                   const scs_float *x) {
-      return SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED;
-    }
-    void scs_lin_sys_keep(ScsLinSysWork *w, const scs_float *x) {}
-    scs_int scs_lin_sys_correct(ScsLinSysWork *w, scs_float *x) { return -1; }
+   with 1 in place of the first 0 for an iterative solver such as conjugate
+   gradients (its warm start is then the solver's starting point, and each
+   refinement step a solve from zero of the residual, computed in the full
+   space; see :code:`linsys.h`). This allocates three vectors of
+   :math:`n + m` numbers and keeps the three pointers: SCS keeps :code:`A`,
+   :code:`P` and :code:`diag_r` alive until :code:`scs_free_lin_sys_work`,
+   leaves :code:`A` and :code:`P` unchanged and writes each new :math:`R`
+   into the same :code:`diag_r`, and the residuals are computed from them.
 
-SCS makes every decision (when to check, the thresholds, when to use the
-guess); the solver only computes, so the refinement behaves the same with
-every solver, up to the rounding of the product.
-:code:`test_lin_sys_products` in the test suite checks a solver's products
-against SCS's own. The MKL Pardiso solver (:code:`linsys/mkl/direct/private.c`,
-with MKL's sparse BLAS) and the cuDSS solver
-(:code:`linsys/cudss/direct/private.c`, on the GPU with cuSPARSE and cuBLAS)
-are examples; the other solvers return "not provided".
+4. Implement :code:`scs_solve_lin_sys` as one call::
+
+       scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b,
+                                 const scs_float *s, scs_float tol,
+                                 scs_int max_refine_steps, scs_float *res) {
+         return SCS(lin_sys_shared_solve)(&w->sh, w, b, s, tol,
+                                          max_refine_steps, res);
+       }
+
+5. Call :code:`SCS(lin_sys_shared_free)(&w->sh)` in
+   :code:`scs_free_lin_sys_work` (it is safe on a zeroed :code:`sh`).
+
+With that, SCS's refinement behaves with your solver as with the bundled
+ones: the warm start (the correction form and its comparison with zero, or
+the starting point of an iterative solver), the refinement steps, and the
+residuals are the shared routine's, with SCS's own
+multiplies by :math:`K` from the problem data. Only your plain solve's
+accuracy and cost differ. :code:`linsys/scs_matrix.h` is not installed with
+SCS's headers, so this is for solvers compiled with SCS's sources, as every
+solver outside this repository we know of is.
+
+**Your own multiplies (optional).** A solver that holds :math:`K` anyway can
+compute the multiplies with its own copy instead, for instance with a
+threaded sparse matrix-vector product, by passing a residual function in
+place of the first :code:`SCS_NULL` in step 3::
+
+    static scs_int my_residual(ScsLinSysWork *w, const scs_float *b,
+                               const scs_float *x, scs_float *r,
+                               scs_float *nr, scs_float *nb);
+
+It computes :math:`r = b - K x` with your :math:`K` (as of the last update of
+:math:`R`) into :code:`r`, :math:`\|r\|_\infty` in :code:`*nr` and
+:math:`\|b\|_\infty` in :code:`*nb` (unless :code:`nb` is
+:code:`SCS_NULL`), and returns 0 (nonzero on failure, which fails the solve
+with a message asking to open an issue). MKL Pardiso does this with MKL's
+sparse BLAS (:code:`prod_residual` in :code:`linsys/mkl/direct/private.c`). A
+solver whose vectors live elsewhere can also pass a correct function in place
+of the second :code:`SCS_NULL`::
+
+    static scs_int my_correct(ScsLinSysWork *w, const scs_float *x,
+                              const scs_float *r, scs_float *out);
+
+It sets :code:`out` to :math:`x + K^{-1} r`, where :code:`r` is that of the
+residual call the shared routine always makes just before and :code:`x` has
+the values of that call's :code:`x`. So the residual function may keep
+:math:`r` where the solver keeps its vectors, and need not write the
+:code:`r` it is given; if it keeps :math:`x` too, it keeps a copy, not the
+pointer: :code:`x` may then be another vector with the same values, and
+:code:`out` the very vector the residual call was given as :code:`x`. cuDSS does
+this on the GPU (:code:`dev_residual` and :code:`dev_correct` in
+:code:`linsys/cudss/direct/private.c`), so that the residual never leaves
+the device. Decide whether to use your own multiplies once, in
+:code:`scs_init_lin_sys_work`, by a rule you state up front (MKL: always,
+except a :math:`K` too large for 32-bit MKL integers in a ``DLONG`` build
+without ``BLAS64``; cuDSS: from :code:`CUDSS_MIN_PRODUCT_NNZ` nonzeros),
+never by whether memory or a library happened to be available: if they
+should be used but cannot be set up, make :code:`scs_init_lin_sys_work` fail
+with a message saying why.
+
+**Without the shared routine.** A solver may implement
+:code:`scs_solve_lin_sys` entirely itself, but then it must honour the whole
+of :code:`linsys.h`. :code:`res` must be the true residual of the returned
+:math:`x`, because SCS turns its refinement on and off by comparing it with
+its own residuals. A direct solver given :code:`s` must return the
+correction form from it, and solve plainly when :math:`\|b - K s\|_\infty
+\ge \|b\|_\infty`. With :code:`max_refine_steps` above 0 it must take at most
+that many steps :math:`x + K^{-1}(b - K x)` (a CG solver too, with the
+residual computed in the full space and solved from zero), keep a step only
+if it lowers the residual, and stop after one that does not halve it. A
+direct solver that ignores :code:`s` still gives correct answers, but SCS's
+refinement then cannot make its solves more accurate, which on badly scaled
+problems can keep SCS from reaching tight tolerances.
+
+**Tests.** :code:`test_lin_sys_solve` in the test suite checks the contract
+against residuals it computes itself: warm starts near and far from the
+solution (the correction form and its fallback), refinement and its limits
+(steps kept only when better, the halving stop, :code:`max_refine_steps`),
+and the residual with the :math:`K` of the solver's rule,
+before and after an update of :math:`R`. :code:`test_refine_perturbed` makes
+the solver factorize a different :math:`R` from the one SCS measures with, so
+that SCS's refinement fires (and, with a mismatch too large to contract, its
+safeguard); a solver that measures with its own :math:`K` follows the update,
+sees no mismatch, and is skipped there with a message (MKL Pardiso, unless
+built with ``MKL_NO_OWN_PRODUCTS``; cuDSS from :code:`CUDSS_MIN_PRODUCT_NNZ`
+nonzeros).
+
+**From SCS 3.3.** The solve was :code:`scs_solve_lin_sys(w, b, s, tol)`.
+:code:`max_refine_steps` and :code:`res` are new, so a solver written for 3.3
+no longer compiles. Rename its solve :code:`plain_solve` (it keeps its 3.3
+meaning) and follow the steps above; the solver then behaves as the bundled
+solvers do. A solver written against the unreleased development versions
+after 3.3, which had :code:`scs_lin_sys_residual`, :code:`scs_lin_sys_keep` and
+:code:`scs_lin_sys_correct`, deletes them; its own multiplies, if it has
+them, become a residual function as above.
 
 .. doxygentypedef:: ScsLinSysWork
 

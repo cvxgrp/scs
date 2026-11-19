@@ -192,16 +192,19 @@ jobs:
       - name: Run the cuDSS tests on the simulated GPU
         run: vgpu run out/run_tests_cudss
       # The suite's problems are below CUDSS_MIN_PRODUCT_NNZ (60,000 nonzeros
-      # in K), so above only test_lin_sys_products uses the GPU products of
-      # the per-iteration refinement. Rebuilt with the threshold at 0, every
-      # solve computes them on the GPU (cuSPARSE and cuBLAS), so turning the
-      # correction form on and the checks while it is on run through them.
+      # in K, include/glbopts.h), so above only the large case of
+      # test_lin_sys_solve multiplies on the GPU. Rebuilt with the threshold
+      # at 0, every solve runs the shared routine of scs_solve_lin_sys with
+      # the GPU ops (cuSPARSE and cuBLAS), so turning the correction form on
+      # and the checks while it is on run through them. The make variable
+      # reaches the library and the tests alike (scs.mk), which apply the
+      # same rule (test_refine_perturbed then skips cuDSS).
       - name: Make cudss target with the refinement's products on the GPU
         run: |
           export CUDSS_PATH=/usr/lib/cudss
           make clean
           make cudss DLONG=${{ matrix.long }} CUDA_PATH=/usr/local/cuda-13.0 \
-            CUDSS_FLAGS="-I$CUDSS_PATH/include -I/usr/local/cuda-13.0/include -DCUDSS_MIN_PRODUCT_NNZ=0"
+            CUDSS_MIN_PRODUCT_NNZ=0
       - name: Run the cuDSS tests on the simulated GPU, products on the GPU
         run: vgpu run out/run_tests_cudss
 

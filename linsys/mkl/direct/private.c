@@ -1,4 +1,5 @@
 #include "private.h"
+#include "linalg.h"
 #include <string.h>
 
 #define PARDISO_SYMBOLIC (11)
@@ -152,6 +153,11 @@ static scs_int prod_setup(ScsLinSysWork *p);
 static scs_int prod_make_handle(ScsLinSysWork *p);
 static void prod_free_handle(ScsLinSysWork *p);
 static void prod_free(ScsLinSysWork *p);
+static scs_int prod_residual(ScsLinSysWork *p, const scs_float *b,
+                             const scs_float *x, scs_float *r, scs_float *nr,
+                             scs_float *nb);
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol);
 
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-mkl-pardiso";
@@ -165,6 +171,7 @@ void scs_free_lin_sys_work(ScsLinSysWork *p) {
      * what was actually initialized. The sparse BLAS handle of the
      * products refers to the KKT arrays, so it goes first. */
     prod_free(p);
+    SCS(lin_sys_shared_free)(&p->sh);
     if (p->kkt) {
       /* release on the handle's own thread count, like every other call */
       p->phase = PARDISO_CLEANUP;
@@ -313,10 +320,11 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
-  /* the refinement's products with K in MKL's sparse BLAS, except for a K too
-   * large for MKL's 32-bit sparse integers (prod_setup's size rule, then SCS
-   * computes them): if they cannot be set up, setup fails (prod_setup says
-   * why) rather than leaving them to SCS */
+  /* the multiplies by K in MKL's sparse BLAS, except for a K too large for
+   * MKL's 32-bit sparse integers (prod_setup's size rule) and in a build
+   * with MKL_NO_OWN_PRODUCTS (glbopts.h), where they are SCS's products: if
+   * they cannot be set up, setup fails (prod_setup says why) rather than
+   * leaving them to SCS. */
   if (prod_setup(p) != 0) {
     scs_printf("MKL Pardiso: the refinement's products with K could not be "
                "set up\n");
@@ -324,13 +332,21 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
   p->prod_ok = !p->prod_none;
+  if (SCS(lin_sys_shared_init)(&p->sh, A, P, diag_r, 0, plain_solve,
+                               p->prod_ok ? prod_residual : SCS_NULL,
+                               SCS_NULL) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
+  }
 
   return p;
 }
 
-/* Returns solution to linear system Ax = b with solution stored in b */
-scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
-                          scs_float tol) {
+/* The plain solve: K x = b with solution stored in b (s and tol unused) */
+static scs_int plain_solve(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                           scs_float tol) {
+  (void)s;
+  (void)tol;
   /* Back substitution and iterative refinement */
   p->phase = PARDISO_SOLVE;
   pardiso_call(p, PARDISO_SOLVE, p->kkt->x, b);
@@ -338,6 +354,15 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *ws,
     scs_printf("Error during linear system solution: %d", (int)p->error);
   }
   return p->error;
+}
+
+/* the warm start, refinement and residual around plain_solve, see linsys.h;
+ * the multiplies by K are prod_residual's (or SCS's under prod_none) */
+scs_int scs_solve_lin_sys(ScsLinSysWork *p, scs_float *b, const scs_float *s,
+                          scs_float tol, scs_int max_refine_steps,
+                          scs_float *res) {
+  return SCS(lin_sys_shared_solve)(&p->sh, p, b, s, tol, max_refine_steps,
+                                   res);
 }
 
 /* Update factorization when R changes */
@@ -376,11 +401,13 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
 }
 
 /* ------------------------------------------------------------------------
- * Products with K for SCS's per-iteration refinement (optional, linsys.h),
- * in MKL's inspector-executor sparse BLAS: K is the upper triangle Pardiso
- * gets (kkt, CSR), passed as a symmetric matrix, analysed once by
- * mkl_sparse_optimize, and r = b - K x is one mkl_sparse_?_mv. The guess x0
- * and r are host vectors of this workspace.
+ * The multiplies by K of scs_solve_lin_sys (the warm start's residual, the
+ * refinement, the residual SCS asks for at its checks), in MKL's
+ * inspector-executor sparse BLAS: K is the upper triangle Pardiso gets (kkt,
+ * CSR), passed as a symmetric matrix, analysed once by mkl_sparse_optimize,
+ * and r = b - K x is one mkl_sparse_?_mv (prod_residual, the residual op of
+ * the shared routine in linsys/scs_matrix.c, on that routine's host
+ * vectors).
  *
  * Threads. The product runs on MKL's threads, except for a small system,
  * where Pardiso runs on one thread (one_thread, see PARDISO_MIN_THREADED_NNZ
@@ -408,10 +435,9 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
  * is 64-bit with BLAS64 (ILP64, as for Pardiso) and in MATLAB, else 32-bit;
  * when that differs from scs_int (DLONG without BLAS64) the indices are
  * copied once; a K too large for 32-bit indices gets SCS's own products
- * (not provided, by size), while a BLAS64=1 build provides them at any
- * size. scs_mkl_int has the width of scs_blas.h's blas_int, which is defined
- * only with USE_LAPACK; an MKL build need not use LAPACK, so it is defined
- * here.
+ * (by size), while a BLAS64=1 build has MKL's at any size. scs_mkl_int has
+ * the width of scs_blas.h's blas_int, which is defined only with
+ * USE_LAPACK; an MKL build need not use LAPACK, so it is defined here.
  * ---------------------------------------------------------------------- */
 #if defined(MATLAB_MEX_FILE)
 #include <stddef.h>
@@ -516,31 +542,24 @@ static void prod_free(ScsLinSysWork *p) {
   prod_free_handle(p);
   scs_free(p->prod_ind);
   scs_free(p->prod_ptr);
-  scs_free(p->prod_r);
-  scs_free(p->prod_x0);
   p->prod_ind = p->prod_ptr = SCS_NULL;
-  p->prod_r = p->prod_x0 = SCS_NULL;
 }
 
 static scs_int prod_setup(ScsLinSysWork *p) {
+#if MKL_NO_OWN_PRODUCTS > 0
+  /* SCS's products at every size (see MKL_NO_OWN_PRODUCTS in glbopts.h) */
+  p->prod_none = 1;
+  return 0;
+#else
   scs_int k, nm = p->n_plus_m, nnz = p->kkt->p[nm];
-  p->prod_r = (scs_float *)scs_calloc(nm, sizeof(scs_float));
-  p->prod_x0 = (scs_float *)scs_calloc(nm, sizeof(scs_float));
-  if (!p->prod_r || !p->prod_x0) {
-    scs_printf("MKL sparse BLAS: out of memory\n");
-    return -1;
-  }
   if (sizeof(scs_mkl_int) != sizeof(scs_int)) {
     scs_mkl_int *ptr, *ind;
     if ((scs_int)(scs_mkl_int)nnz != nnz || (scs_int)(scs_mkl_int)nm != nm) {
       /* A size rule, fixed by the problem data: K does not fit MKL's 32-bit
        * sparse BLAS integers (DLONG without BLAS64), while Pardiso, with
-       * 64-bit indices, still solves it. So this workspace does not provide
-       * the products and SCS computes them, as on master, instead of failing
-       * setup. A BLAS64 (ILP64) build provides them at any size. */
-      scs_free(p->prod_r);
-      scs_free(p->prod_x0);
-      p->prod_r = p->prod_x0 = SCS_NULL;
+       * 64-bit indices, still solves it. So the multiplies are SCS's
+       * products, instead of setup failing. A BLAS64 (ILP64) build has
+       * MKL's at any size. */
       p->prod_none = 1;
       return 0;
     }
@@ -565,54 +584,33 @@ static scs_int prod_setup(ScsLinSysWork *p) {
     return -1;
   }
   return 0;
+#endif
 }
 
-/* r = b - K x (x = x0 when x is SCS_NULL), r kept in prod_r. Returns
- * ||r||_inf or SCS_LIN_SYS_PRODUCTS_FAILED. */
-scs_float scs_lin_sys_residual(ScsLinSysWork *p, const scs_float *b,
-                               const scs_float *x) {
+/* The residual op of the shared routine (ScsLinSysResidual, scs_matrix.h):
+ * r = b - K x with MKL's product, *nr = ||r||_inf and *nb = ||b||_inf
+ * (unless nb is SCS_NULL) */
+static scs_int prod_residual(ScsLinSysWork *p, const scs_float *b,
+                             const scs_float *x, scs_float *r, scs_float *nr,
+                             scs_float *nb) {
   scs_int i, nm = p->n_plus_m;
   scs_float res = 0.;
   int prev, st;
-  if (!p->prod_ok) {
-    /* the size rule in prod_setup; otherwise never (setup fails without
-     * them) */
-    return p->prod_none ? SCS_LIN_SYS_PRODUCTS_NOT_PROVIDED
-                        : SCS_LIN_SYS_PRODUCTS_FAILED;
+  if (nb) {
+    *nb = SCS(norm_inf)(b, nm);
   }
-  memcpy(p->prod_r, b, nm * sizeof(scs_float));
+  memcpy(r, b, nm * sizeof(scs_float));
   prev = prod_threads_begin(p);
   st = SCS_MKL_SPARSE_MV(SCS_MKL_SPARSE_OPERATION_NON_TRANSPOSE, -1.,
-                         (scs_mkl_sparse_t)p->prod_k, prod_descr(),
-                         x ? x : p->prod_x0, 1., p->prod_r);
+                         (scs_mkl_sparse_t)p->prod_k, prod_descr(), x, 1., r);
   prod_threads_end(p, prev);
   if (st != SCS_MKL_SPARSE_STATUS_SUCCESS) {
-    return SCS_LIN_SYS_PRODUCTS_FAILED;
-  }
-  for (i = 0; i < nm; ++i) {
-    res = MAX(res, ABS(p->prod_r[i]));
-  }
-  return res;
-}
-
-void scs_lin_sys_keep(ScsLinSysWork *p, const scs_float *x) {
-  if (p->prod_ok) {
-    memcpy(p->prod_x0, x, p->n_plus_m * sizeof(scs_float));
-  }
-}
-
-/* x = x0 + K^{-1} r */
-scs_int scs_lin_sys_correct(ScsLinSysWork *p, scs_float *x) {
-  scs_int i, status;
-  if (!p->prod_ok) {
+    scs_printf("MKL sparse BLAS: the product with K failed: %d\n", st);
     return -1;
   }
-  memcpy(x, p->prod_r, p->n_plus_m * sizeof(scs_float));
-  status = scs_solve_lin_sys(p, x, SCS_NULL, -1.);
-  if (status == 0) {
-    for (i = 0; i < p->n_plus_m; ++i) {
-      x[i] += p->prod_x0[i];
-    }
+  for (i = 0; i < nm; ++i) {
+    res = MAX(res, ABS(r[i]));
   }
-  return status;
+  *nr = res;
+  return 0;
 }
