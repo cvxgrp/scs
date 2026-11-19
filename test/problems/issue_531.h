@@ -14,11 +14,15 @@
  * matrix_frac(x, P) s.t. x == 5, P == eye(11)): close to a*I + b*11' with
  * a < 0, so ten of its eigenvalues agree to the last few bits, which is the
  * case MRRR struggles with. The exact bits matter (a clean a*I + b*11' does
- * not trigger it), so they are stored as hex floats. The projection now
- * falls back to syev when syevr does not converge.
+ * not trigger it), so they are stored as hex floats. #532 made the
+ * projection fall back to syev when syevr did not converge.
  *
- * Other LAPACKs (OpenBLAS, netlib) converge here, so on those the tests only
- * check the result; they exercise the fallback where dsyevr fails.
+ * The projection now uses syevd, which converges on this block with
+ * Accelerate and OpenBLAS (checked on macOS 26; OpenBLAS and netlib LAPACK
+ * converged with syevr too). So these tests check the result only, and do
+ * not reach the fallback. The builds with the test-only flag
+ * SCS_FORCE_PSD_FALLBACK (cones.c), which send every block through the
+ * fallback, cover it.
  */
 
 /* svec of the block, every eigenvalue is negative (about -0.1776 and

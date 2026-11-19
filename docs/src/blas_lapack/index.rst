@@ -219,18 +219,29 @@ threads it runs on, matter.
 
 What it costs and gains
 ~~~~~~~~~~~~~~~~~~~~~~~
-SCS 3.3 and earlier used the MRRR routine :code:`syevr` (:code:`heevr`).
+Earlier versions of SCS used the MRRR routine :code:`syevr` (:code:`heevr`).
 Compared with it, :code:`syevd`:
 
-* **is faster**: on the SDPLIB problems the projection took 31% to 51% less
-  time per iteration (geometric mean over the problems), and an iteration 28%
-  to 47% less, with OpenBLAS, NVPL, MKL and Accelerate. It gains most on
-  blocks with exactly repeated eigenvalues, which :code:`syevr` is slow on:
-  2.7 to 2.9 times faster on ``thetaG11``. With the BLAS on 1 or 4 threads
-  (on the fast cores of the chip described below), and with Accelerate and
-  MKL, no SDPLIB problem was more than 2% slower. On one of that chip's slow
-  cores the gain was smaller (about 20% on 10 problems), and ``qap8`` took 11
-  to 16% longer.
+* **is faster on real blocks**: on the SDPLIB problems (all real) the
+  projection took 31% to 51% less time per iteration (geometric mean over the
+  problems), and an iteration 28% to 47% less, with OpenBLAS and NVPL (on the
+  chip described below) and with Accelerate (on an Apple M4). With MKL (on an
+  AMD Zen 3, 14 of the problems) the projection took 29% to 38% less. It
+  gains most on blocks with exactly repeated eigenvalues, which
+  :code:`syevr` is slow on: 2.7 to 2.9 times faster on ``thetaG11``. With the
+  BLAS on 1 or 4 threads (on the fast cores of that chip) no problem took more
+  than 2.3% longer (``qap8`` with NVPL; with OpenBLAS on one thread this holds
+  for full solves, while a run of ``qpG11`` stopped after 75 iterations took
+  19% longer), with Accelerate none more than 1.8% (82 problems), and with MKL
+  none took longer. On one of that chip's slow cores the gain was smaller
+  (about 20% on 10 problems), and ``qap8`` took 11 to 16% longer (two checks of
+  three runs, on a loaded machine).
+* **can be slower on complex blocks**. SDPLIB has none, and complex blocks
+  were timed only one at a time, on an Apple M4 with the BLAS on one thread.
+  :code:`heevd` was faster than :code:`heevr` on small blocks and on blocks
+  with exactly repeated eigenvalues, but on blocks without, of size 100 to
+  400, it took 6% to 28% longer with OpenBLAS, and 10% to 85% longer with
+  Accelerate (sizes 100 to 800).
 * **needs more memory**: a work array of about :math:`2n^2` numbers for a
   block of size :math:`n`, which also holds the rebuilt block, where
   :code:`syevr` needed a separate :math:`n \times n` array for the
@@ -244,9 +255,9 @@ Compared with it, :code:`syevd`:
   :math:`9 \times 10^{-15}`, on blocks with repeated eigenvalues.
 * **starts the threads of a multithreaded BLAS at smaller blocks**. On a
   20-core chip with 10 fast and 10 slow cores, with the BLAS on all 20, the
-  problems whose largest block had :math:`n = 45` to 130 took up to twice as
-  long in the projection as with :code:`syevr` (``control7`` with NVPL,
-  ``qap7`` 1.6 times with OpenBLAS), and OpenBLAS kept all 20 cores busy
+  problems whose largest block had :math:`n = 45` to 130 took up to 2.1 times
+  as long in the projection as with :code:`syevr` (``control7`` with NVPL,
+  ``qap7`` 1.6 times with OpenBLAS), and OpenBLAS kept 15 to 20 cores busy
   where :code:`syevr` used 1.4 to 12 of them. Blocks this small were faster
   still with the BLAS on one thread, with either routine.
 
@@ -255,11 +266,14 @@ Problems with small blocks
 If the PSD blocks of your problem are smaller than a few hundred, the threads
 of the BLAS gain little inside one block and can cost a lot, more so on a
 machine with many cores or with fast and slow cores. Try the BLAS on one
-thread, e.g. :code:`OPENBLAS_NUM_THREADS=1`, :code:`MKL_NUM_THREADS=1`, or
-:code:`OMP_NUM_THREADS=1` for a BLAS built with OpenMP, and compare the time
-of a solve. With several blocks, the
-:ref:`parallel projection <blas_lapack_openmp>` uses the cores across the
-blocks instead.
+thread, e.g. :code:`OPENBLAS_NUM_THREADS=1` or :code:`MKL_NUM_THREADS=1`, and
+compare the time of a solve. For a BLAS built with OpenMP the variable is
+:code:`OMP_NUM_THREADS=1`, which in a build with the parallel projection
+turns that off as well, since SCS takes its thread count from the same
+variable. With several blocks, a build with the
+:ref:`parallel projection <blas_lapack_openmp>` (the build option
+:code:`USE_PARALLEL_PSD`, off by default) uses the cores across the blocks
+instead, with the BLAS on one thread inside each block.
 
 If LAPACK does not converge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -281,7 +295,9 @@ integers, the usual case, the :math:`1 + 6n + 2n^2` entries that
 :code:`syevd` needs fit up to :math:`n = 32766`. For a larger block, the setup
 fails with a message saying so. Use a BLAS and LAPACK with 64-bit integers
 (the :ref:`compiler flag <compile_flags>` :code:`BLAS64`) for blocks that
-large.
+large, and for blocks larger than :math:`n = 46340` SCS's own 64-bit
+integers as well (the compiler flag :code:`DLONG`): SCS indexes the entries
+of a block with numbers up to :math:`n^2`, which then do not fit in 32 bits.
 
 
 .. _blas_lapack_openmp:
@@ -401,7 +417,8 @@ Whether the BLAS stays on one thread depends on where it gets its threads from:
    * - Accelerate (macOS)
      - Keeps a pool of threads of its own, which stays almost idle
      - Nothing. At its default settings the parallel projection was 2.3 to 3.3
-       times faster than the serial one on 4 threads
+       times faster than the serial one on 4 threads (measured before SCS moved
+       to :code:`syevd`)
 
 Putting a BLAS on one thread with an environment variable holds for the whole
 process: that BLAS then runs on one thread wherever else it is used, in SCS
@@ -436,6 +453,14 @@ a projection of less than about 13 microseconds (32 on macOS) stays on one
 thread, one of 50 microseconds gets about 6 threads (4 on macOS), and one of a
 millisecond gets up to about 30 (20 on macOS). A solve uses fewer threads if
 the OpenMP thread count has been lowered since the setup.
+
+SCS estimates the time of each block from its size, with a formula fitted to
+measurements made before it moved to :code:`syevd`, and so did the rules
+below. :code:`syevd` projects small real blocks faster than the formula says:
+blocks of size 3 to 12 in a third to three quarters of the estimated time (on
+an Apple M4, with Accelerate and with OpenBLAS). A problem with many such
+blocks can then get more threads than is fastest. If that matters, compare
+the time of a solve with a lower :code:`OMP_NUM_THREADS`.
 
 Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when
@@ -508,11 +533,12 @@ at least 50), and a thread holds one during a BLAS call: with more threads than
 buffers, OpenBLAS 0.3.18 and later print a warning and allocate more, and
 earlier versions fail. The OpenMP thread count bounds the number of threads.
 
-A parallel projection takes more memory: each thread after the first has its
-own eigendecomposition workspace, sized for the blocks that thread projects.
-The extra memory is therefore at most the PSD workspace of the serial
-projection times the number of threads less one, and less when only a few
-threads get the largest blocks. That workspace is about :math:`3n^2` floats
+A parallel projection takes more memory: each thread has its own
+eigendecomposition workspace, sized for the blocks that thread projects, and
+none is larger than the workspace of the serial projection. The extra memory
+is therefore at most the PSD workspace of the serial projection times the
+number of threads less one, and less when only a few threads get the largest
+blocks. That workspace is about :math:`3n^2` floats
 for the largest real block of size :math:`n` and :math:`6n^2` for the largest
 complex block (see :ref:`above <blas_lapack_psd>`).
 

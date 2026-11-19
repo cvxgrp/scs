@@ -143,9 +143,9 @@ static scs_int psd_par_proj(ScsConeWork *c, const scs_float *v, scs_float *out,
  * sizes) and 4 complex ones: the workspaces are sized per thread, and if the
  * LAPACK calls were passed the lengths of their thread's work arrays instead
  * of the sizes of their own block, the large blocks would round differently,
- * and this mix shows it. The largest block holds less than half of the work, so the parallel
- * path is used. Other cones before and after the PSD blocks check the
- * offsets. */
+ * and this mix shows it. The largest block holds less than half of the
+ * work, so the parallel path is used. Other cones before and after the PSD
+ * blocks check the offsets. */
 static scs_int psd_par_s[] = {1,  2,  3, 5,  8, 13, 21, 1, 2,  3,  48, 5, 8, 13,
                               21, 1,  2, 3,  5, 8,  64, 21, 1, 2,  3,  5, 8, 13,
                               21, 1, 40, 3,  5, 8,  13, 36, 1, 2,  3,  5};
