@@ -417,17 +417,26 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * (one more CG solve per REFINE_CHECK_INTERVAL iterations while on). Before
  * 3.4.0 every iteration while on was a check, with SCS's own residual, and
  * was followed by a cold CG solve of r to CG_BEST_TOL whether or not the
- * solve had missed. Against that rule (CPU CG, KKT-verified): in single
- * precision at 1e-6, on 100 random SOCPs from two initial scales on two
- * machines (clang on Apple silicon, GCC on ARM), 3 problems were lost and 6
- * gained (outcomes there flip both ways with rounding), at 0.97 to 1.04
- * times the time in shifted geometric mean (0.49 to 0.95 of the total); at
- * 1e-5 (125 SOCPs) every run was solved by both, at 0.83 to 1.00 times the
- * time. In double precision CG refinement did not fire on 500 random SOCPs
- * at 1e-9 nor on badly scaled QPs and LPs at 1e-4, so nothing changed
- * there. A step must solve for the residual in the full space: CG
- * restarted on rhs from u, the same in exact arithmetic, works on CG's
- * reduced residual and recomputes y from x, so it cannot remove the
+ * solve had missed. Deciding only at checks costs this: once on, refinement
+ * stays on for at least REFINE_CHECK_INTERVAL iterations, where the old
+ * rule's episodes often lasted one. Against the old rule (KKT-verified at
+ * 10 times eps; CPU CG with clang on Apple silicon and GCC on ARM, GPU CG on
+ * a GB10; random SOCPs at 1e-9 and, in single precision, 1e-6, the Netlib and
+ * SDPLIB certificate problems, badly scaled QPs and LPs at 1e-4; from one
+ * start, and from 8 more for every problem that moved): no double-precision
+ * run was lost or gained, at 0.996 to 1.002 times the time in shifted
+ * geometric mean; in single precision 6 of 678 CPU runs were lost and 9
+ * gained (outcomes there flip both ways with rounding; averaged over the
+ * starts, within one problem), at 1.04 and 1.08 times the time from one
+ * start (1.01 and 0.97 averaged over the starts of the problems that moved),
+ * and with GPU CG 1.44 (1.07 averaged; 4 of 20 SOCPs stuck on refinement
+ * from that start, none from the others). In double precision CG refinement
+ * fires mostly on certificates and on problems that stall; there it was on
+ * for 2 to 5 times as many iterations, and one LP run for a fixed 2,000
+ * iterations (QSCFXM2) took 2.5 times the time. A step must solve for the
+ * residual in the full space: CG restarted on rhs from u, the same in exact
+ * arithmetic, works on CG's reduced residual and recomputes y from x, so it
+ * cannot remove the
  * rounding the full residual measures (in single precision, from the same
  * u, it lowered the residual by 10% or more in 38% of 455,177 steps, against
  * 96% for the cold step, and of 25 random SOCPs at 1e-5 it solved 16
@@ -518,7 +527,9 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * the residuals fell to the error of the refined solves, refinement turned
  * off, and until the next check the unrefined solves undid the progress.
  * The price is that refinement stays on longer once it fires: with CG it
- * refined about twice as many solves. The off threshold is at least
+ * refined about twice as many solves (this paragraph was measured with the
+ * rule before 3.4.0, a CG solve every iteration while on). The off
+ * threshold is at least
  * CG_BEST_TOL, the smallest tolerance CG is given (refine_next_on in
  * src/scs.c: tol is at least CG_BEST_TOL / REFINE_INDIRECT_OFF_FACTOR, 1e-5
  * in single precision, 1e-11 in double), which in single precision is near
@@ -536,8 +547,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * tol above (refine_next_on in src/scs.c). That size is, row by row, the sum
  * of the magnitudes of the terms the residual is computed from, so the
  * rounding of the computed residual is a few epsilons of it whatever the
- * scaling of K, rhs and u (the error bound of a sum of products): a residual
- * below it cannot be lowered by refinement, nor shown to be lower. It
+ * scaling of K, rhs and u (the error bound of a sum of products): below it
+ * refinement can lower ||r||_inf by at most a small factor (to about one
+ * epsilon of that size, the rounding of the row with the largest terms),
+ * and the computed residual cannot show even that. It
  * replaces an absolute floor on tol of 1e-12, which was below rounding level
  * where those terms are large: where tol goes to zero (one of SCS's
  * residuals on a certificate) refinement turned on and stayed on to the end,
@@ -550,9 +563,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * refinement could make it; 2 left refinement on, or switching, for up to
  * 300 of 500 iterations on certificates; a larger value turns off refinement
  * that still lowers the residual severalfold. On 500 random SOCPs at 1e-4,
- * 1e-6 and 1e-9 (QDLDL, dense, Accelerate) and on badly scaled QPs and LPs
- * at 1e-4 and 1e-6 (regress340, QDLDL) every run took the same iterations as
- * with the absolute floor. The size is row by row: ||rhs|| alone misses the
+ * 1e-6 and 1e-9 (QDLDL, dense, Accelerate), on the Netlib and SDPLIB
+ * certificate problems at 1e-4 and 1e-6 and on badly scaled QPs and LPs at
+ * 1e-4 and 1e-6 (regress340; QDLDL, KKT-verified at 10 times eps) every run
+ * was solved as with the absolute floor, and every run took the same
+ * iterations but two (and two stopped by a time limit in both): LASER at
+ * 1e-4, where tol fell below 1e-14 while the plain residual, 1e-10 of its
+ * terms, was far above their rounding, so refinement now turned on (for 11%
+ * of the iterations; 0.7% fewer iterations), and klein1 (an infeasible LP)
+ * at 1e-6, where the plain residual was 1.7 epsilons of its terms and
+ * refinement stayed off where the floor let it on (2,100 iterations instead
+ * of 1,150; from 8 more starts, equal from 6 and more from 2). The suite's
+ * certificate problems mostly find their certificate before tol reaches
+ * rounding level, so this rule matters where SCS keeps iterating on one.
+ * The size is row by row: ||rhs|| alone misses the
  * cancellation in K u (the row-by-row size was up to 150 times it), and the
  * normwise ||rhs|| + ||K|| ||u|| was up to 1e3 times the row-by-row size on
  * the random problems and a median 1e5 (up to 2.5e6) on regress340, where it
@@ -596,7 +620,11 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * steps per call, and 81% of the steps were kept. One step solved 97 of the
  * 100 where two solved 100 (the rule before 3.4.0: 98), at 0.94 times the
  * time of two (clang on Apple silicon); more steps add CG solves that the
- * halving stop mostly ends. */
+ * halving stop mostly ends. In double precision, where CG refinement fires
+ * on certificates and on problems that stall, calls took about 1.5 steps
+ * and 39 to 45% of the steps were rejected (no lower residual), each
+ * costing a CG solve; one step would save the second solves, but solved
+ * fewer in single precision (above). */
 #define REFINE_CG_MAX_STEPS (2)
 
 /* CUDSS_MIN_PRODUCT_NNZ: the smallest K (nonzeros of the stored triangle,

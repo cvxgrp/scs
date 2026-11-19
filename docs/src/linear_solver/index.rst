@@ -188,19 +188,21 @@ costs one multiply by :math:`K` every 25 iterations.
 residual is at rounding level: at most four machine epsilons times
 :math:`\|\,|z^k| + |K|\,|u|\,\|_\infty`, the size of the terms the residual
 is computed from, row by row. A residual that small is mostly the rounding of
-its own computation, and refinement cannot lower it. This matters where *tol*
-goes to zero, on an infeasibility or unboundedness certificate: before 3.4.0
-the floor was absolute (*tol* at least :math:`10^{-12}`), below rounding
-level wherever those terms are large, so there refinement turned on and
-stayed on to the end. The size is computed only at a check where it can
-change the outcome (one pass over :math:`A` and :math:`P`, the cost of a
-multiply). Single precision has no such test: there refinement also lowers an
-error of the solution that the residual does not show (with conjugate
-gradients and the dense solver, which solve a smaller system), and turning
-it off at rounding level lost problems at :math:`10^{-6}`. With conjugate
-gradients refinement turns off, in both precisions, once the error is at
-most the solvers' best accuracy (:math:`10^{-12}`, :math:`10^{-6}` in single
-precision), below which they are never asked to go.
+its own computation, and refinement cannot lower it by more than a small
+factor. This matters where *tol* goes to zero, on an infeasibility or
+unboundedness certificate that SCS keeps iterating on: before 3.4.0 the floor
+was absolute (*tol* at least :math:`10^{-12}`), below rounding level wherever
+those terms are large, so there refinement turned on and stayed on to the
+end. The size is computed only at a check where it can change the outcome
+(one pass over :math:`A` and :math:`P`, the cost of a multiply). Single
+precision has no such test: there refinement also lowers an error of the
+solution that the residual does not show (with conjugate gradients and the
+dense solver, which solve a smaller system), and turning it off at rounding
+level lost problems at :math:`10^{-6}`. With conjugate gradients, in both
+precisions, the thresholds do not go below the solvers' best accuracy
+(:math:`10^{-12}`, :math:`10^{-6}` in single precision), below which they are
+never asked to go: refinement does not turn on while the error is at most
+ten times that, and turns off at the latest once the error is at most that.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
@@ -265,15 +267,27 @@ restarting conjugate gradients on the same right-hand side from the
 solution, the same in exact arithmetic, works with the residual of the
 smaller system and cannot see all of the rounding error: in single precision
 it solved 16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12
-times the time. Before 3.4.0, while refinement was on, every iteration was a
-check, and each was followed by a conjugate gradient solve, to the solvers'
-best accuracy, for the residual SCS computed, whether or not the solve had
-missed its tolerance. Against that rule, in single precision at
-:math:`10^{-6}` (100 random SOCPs, two starting points, two machines) 3
-problems were lost and 6 gained, at about the same time (0.97 to 1.04 times
-in shifted geometric mean); at :math:`10^{-5}` nothing changed but the time
-(0.83 to 1.00 times). In double precision this refinement did not fire on the
-problems measured.
+times the time.
+
+Before 3.4.0, while refinement was on, every iteration was a check, and each
+was followed by a conjugate gradient solve, to the solvers' best accuracy, for
+the residual SCS computed, whether or not the solve had missed its tolerance.
+Deciding only every 25 iterations means that once refinement turns on it
+stays on for at least 25 iterations. Against that rule (solutions checked
+independently; random SOCPs, the Netlib and SDPLIB infeasible problems and
+badly scaled LPs and QPs, about 1,800 runs on the CPU and the GPU):
+
+- In double precision the same problems were solved, in about the same time
+  (0.996 to 1.002 times in shifted geometric mean). Refinement fires mostly
+  on infeasibility certificates and on problems that stall; there it was on
+  for 2 to 5 times as many iterations, and one LP run for a fixed 2,000
+  iterations took 2.5 times as long.
+- In single precision outcomes flip both ways with rounding: 6 runs lost and
+  9 gained of 678 on the CPU, within one problem when averaged over nine
+  starting points. From one starting point the time was 1.04 to 1.08 times
+  (0.97 to 1.01 averaged over the starting points of the problems that
+  changed), and 1.44 times with the GPU solver (1.07 averaged), where a few
+  runs stayed on refinement for most of the solve.
 
 **What to expect** (direct solvers):
 
@@ -320,21 +334,18 @@ refinement steps. Per iteration SCS asks for:
      - Solves
      - Multiplies by :math:`K`
    * - Off, not a check
-     - one plain solve
+     - one plain solve (CG: from the warm start)
      - none
    * - Off, a check (every 25)
      - one plain solve, with its residual
      - 1
-   * - On, not a check
+   * - Direct, on, not a check
      - one solve warm-started from the previous solution (correction form)
      - 1
-   * - On, a check
+   * - Direct, on, a check
      - the warm-started solve with its residual, and a plain solve with its
        residual
      - 3
-   * - CG, off, a check
-     - CG, with its residual
-     - 1
    * - CG, on, not a check
      - CG with refinement steps: its residual and, where the solve missed its
        tolerance, up to two CG solves from zero for the residual
@@ -342,6 +353,10 @@ refinement steps. Per iteration SCS asks for:
    * - CG, on, a check
      - the same, and a plain CG solve with its residual
      - 2, and 1 per step
+
+In double precision a check whose residual is above the threshold also makes
+one pass over :math:`A` and :math:`P`, about the cost of a multiply, for the
+rounding level (see "Rounding level" above).
 
 By default the multiplies are SCS's own products with the problem data (the
 multiply by :math:`A^\top` runs on OpenMP's threads when SCS is built with

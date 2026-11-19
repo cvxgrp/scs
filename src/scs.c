@@ -1344,7 +1344,10 @@ static scs_int solve_indirect(ScsWork *w, scs_int iter,
   if (was_on) {
     /* the plain solve that decides, in kkt_corr: the CG solve the call above
      * started with (same right-hand side, start and tol, no steps), with its
-     * res. One more CG solve per REFINE_CHECK_INTERVAL iterations while on. */
+     * res. (With eigCG deflation it is that solve exactly unless a step of
+     * the call, a cold solve, harvested the first deflation vectors since R
+     * last changed; the decision is still a function of the iterates.) One
+     * more CG solve per REFINE_CHECK_INTERVAL iterations while on. */
     iter_rhs(w, w->kkt_corr);
     status = scs_solve_lin_sys(w->p, w->kkt_corr, warm_start, tol, 0, &res);
     if (status != 0) {
