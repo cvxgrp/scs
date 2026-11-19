@@ -65,7 +65,10 @@ When to set one thread
 ~~~~~~~~~~~~~~~~~~~~~~
 Put the BLAS on one thread for an SDP whose PSD blocks are all of size 200 or
 less, in particular when several solves run at the same time, since each would
-start threads for every core.
+start threads for every core. How much this saves depends on the library and
+on how many threads it had: on blocks of size 37 to 200 OpenBLAS on 4 threads
+was within 5% of one thread, while NVPL on 4 threads, and both libraries at
+their default, were slower (see :ref:`blas_lapack_threads_measured`).
 
 Use a few threads instead when
 
@@ -125,20 +128,23 @@ In a build of SCS with OpenMP (:code:`USE_OPENMP`; the pre-built Python wheels
 are built without it), :code:`OMP_NUM_THREADS` is also SCS's own thread count,
 and setting it to 1 stops SCS's own threads too, the :ref:`parallel PSD
 projection <blas_lapack_openmp>` included. With OpenBLAS's own thread pool or
-with MKL, set the library's variable instead. A BLAS built with OpenMP has no
-variable of its own, so :code:`OMP_NUM_THREADS` is one budget for SCS and the
-BLAS. Inside a parallel PSD projection the BLAS runs on one thread by itself,
-but where SCS projects the blocks one after another (a build without
+with MKL, set the library's variable instead. An OpenMP build of OpenBLAS, or
+NVPL, has no variable of its own, so :code:`OMP_NUM_THREADS` is one budget for
+SCS and the BLAS. Inside a parallel PSD projection the BLAS runs on one thread
+by itself, but where SCS projects the blocks one after another (a build without
 :code:`USE_PARALLEL_PSD`, or one block that holds most of the work) the BLAS
-runs on all the threads. Projected one block after the other, control7
-(blocks of size 70 and 35) took 1.93 times as long with NVPL and
-:code:`OMP_NUM_THREADS=4` as with 1. For such a problem compare
-:code:`OMP_NUM_THREADS=1` with your thread count.
+runs on all the threads. We measured that case in a build of SCS without
+OpenMP, which projects the blocks one after another: on control7 (blocks of
+size 70 and 35), NVPL with :code:`OMP_NUM_THREADS=4` made the projection take
+1.93 times as long as with 1, and a whole iteration 1.42 times. For such a
+problem compare :code:`OMP_NUM_THREADS=1` with your thread count.
 
 To check, watch the CPU use of the process during a solve (``top``). With the
 BLAS on one thread and SCS built without OpenMP it stays near 100%; several
 hundred percent on a problem with small PSD blocks means that the BLAS threads
 are running.
+
+.. _blas_lapack_threads_measured:
 
 What we measured
 ~~~~~~~~~~~~~~~~
