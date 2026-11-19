@@ -64,10 +64,11 @@ SCS is very slow
   direct solver that can be significantly faster than the default QDLDL
   for large problems. See :ref:`mkl`.
 * **SDPs with small PSD blocks**: with some BLAS libraries, threads make the
-  projection of PSD blocks of size up to a few hundred slower than one
-  thread does (up to 2 times on 4 threads in our measurements). See
+  projection of PSD blocks of size up to about 200 slower than one thread
+  does (up to 1.9 times on 4 threads in our measurements). See
   :ref:`blas_lapack_threads` for when to put the BLAS on one thread and which
-  variable to set.
+  variable to set. The x86-64 Linux Python wheels, with their default linear
+  solver, already project on one thread (sequential MKL).
 * **Check problem scaling**: if the data has entries that vary by many orders
   of magnitude, SCS will struggle. Try to rescale your problem so that the
   entries of :math:`A`, :math:`b`, and :math:`c` are roughly of order 1.

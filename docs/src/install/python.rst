@@ -251,7 +251,8 @@ To compile SCS with OpenMP, install with:
 SCS then uses several threads for its matrix-vector products and for the
 projection onto exponential cones. The number of threads is the OpenMP thread
 count: set the environment variable :code:`OMP_NUM_THREADS` before starting
-Python.
+Python. The same variable can also set the threads of the BLAS, see
+:ref:`blas_lapack_threads`.
 
 To also project the positive semidefinite (PSD) blocks of a problem in
 parallel, add the option :code:`use_parallel_psd`:
