@@ -63,11 +63,11 @@ SCS is very slow
 * **Try MKL Pardiso** if you have Intel MKL installed. It offers a parallel
   direct solver that can be significantly faster than the default QDLDL
   for large problems. See :ref:`mkl`.
-* **SDPs with small PSD blocks**: with some BLAS libraries, threads make the
-  projection of PSD blocks of size up to about 200 slower than one thread
-  does (up to 1.9 times on 4 threads in our measurements). See
-  :ref:`blas_lapack_threads` for when to put the BLAS on one thread and which
-  variable to set. The x86-64 Linux Python wheels, with their default linear
+* **SDPs with small PSD blocks**: a multithreaded BLAS at its default, one
+  thread per core, can make the projection of PSD blocks of size up to about
+  300 slower than one thread does (1.5 to 2.5 times on average on a 20-core
+  machine in our measurements). See :ref:`blas_lapack_threads` for when to
+  put the BLAS on one thread, or on a few, and which variable to set. The x86-64 Linux Python wheels, with their default linear
   solver, already project on one thread (sequential MKL).
 * **Check problem scaling**: if the data has entries that vary by many orders
   of magnitude, SCS will struggle. Try to rescale your problem so that the
