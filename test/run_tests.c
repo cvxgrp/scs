@@ -51,7 +51,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 95
+#define MU_TOTAL_TESTS 96
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -84,6 +84,7 @@ _SKIP(test_psd_repeated_eigs)
 _SKIP(test_complex_psd_repeated_eigs)
 _SKIP(test_complex_psd_multiplet_solve)
 _SKIP(test_psd_lapack_int_overflow)
+_SKIP(test_psd_spectral_shared_work)
 #endif
 
 /* solve SDPs from data files, requires blas / lapack */
@@ -178,6 +179,7 @@ static void all_tests(void) {
   mu_run_test(test_complex_psd_repeated_eigs);
   mu_run_test(test_complex_psd_multiplet_solve);
   mu_run_test(test_psd_lapack_int_overflow);
+  mu_run_test(test_psd_spectral_shared_work);
   mu_run_test(hs21_tiny_qp);
   mu_run_test(hs21_tiny_qp_rw);
   mu_run_test(test_rw_settings);
@@ -255,6 +257,15 @@ int main(void) {
   all_tests();
   scs_printf("Tests run: %d, skipped: %d, total: %d\n", tests_run, tests_skipped,
              MU_TOTAL_TESTS);
+#if defined(SCS_FORCE_PSD_FALLBACK) && defined(USE_LAPACK)
+  /* The CI jobs built with this test-only flag check for this line, with a
+   * count above 0: it is missing if the flag did not reach the tests, and the
+   * tests do not link if it reached them but not the library (cones.c
+   * defines the counter) */
+  scs_printf("SCS_FORCE_PSD_FALLBACK: %ld PSD blocks projected through syev / "
+             "heev\n",
+             (long)SCS(psd_fallbacks));
+#endif
   if (tests_skipped > 0) {
     scs_printf("Skipped (compiled out by build flags):");
     for (i = 0; i < tests_skipped && i < MU_MAX_FAILED_TESTS; ++i) {

@@ -15,16 +15,24 @@
  * a*I + b*v*v' with |v_i| = 1: n - 1 exactly repeated eigenvalues, the case
  * where syevr was slow and where Accelerate's dsyevr did not converge (#531).
  * The projection is known in closed form. Blocks of different sizes share
- * one cone, so each LAPACK call gets its own block's work-array sizes. The
+ * one cone, so the work arrays are longer than the smaller blocks need. The
  * check is relative to the largest entry of the input: a wrong eigenvector,
  * a stale buffer or a fallback that does not restore the block is off by
  * about that much, while the projection is accurate to about 1e-14 of it.
+ * (These tests cannot tell whether each LAPACK call passes its own block's
+ * work-array sizes: any size from LAPACK's minimum up gives a right result.
+ * The bit-for-bit comparison of test_psd_parallel, with OpenBLAS on one
+ * thread in CI, is what catches that.)
  *
  * test_complex_psd_multiplet_solve solves max t s.t. M - t*I is PSD, with M
  * complex and its smallest eigenvalue repeated, so heevd runs in a solve.
  *
+ * test_psd_spectral_shared_work projects PSD blocks together with logdet and
+ * sum-of-largest-eigenvalues cones, which share a workspace with them.
+ *
  * A build with the test-only flag SCS_FORCE_PSD_FALLBACK sends every block
- * through the fallback; the projection tests then also check that it ran.
+ * through the fallback; the projection tests then also check that it ran,
+ * and run_tests prints how many blocks went through it, which CI checks.
  *
  * test_psd_lapack_int_overflow checks that a block too large for 32-bit
  * LAPACK integers fails at setup instead of overflowing inside LAPACK.
@@ -108,8 +116,9 @@ static const char *psd_syevd_check(ScsCone *k, scs_float *x,
 
 static const char *test_psd_repeated_eigs(void) {
   /* sizes above and below LAPACK's crossovers (25 for divide and conquer,
-   * 32 for blocked tridiagonal reduction); in the second block the repeated
-   * eigenvalue is positive, in the others it is negative */
+   * 32 for blocked tridiagonal reduction); the repeated eigenvalue a is
+   * positive in the first two blocks and negative in the third, and the
+   * other one, a + n*b, has the opposite sign */
   scs_int s[] = {100, 7, 100};
   scs_float a[] = {3., 1., -3.}, b[] = {-0.25, -0.5, 0.25};
   scs_int i, m = 0, off = 0;
@@ -134,6 +143,7 @@ static const char *test_psd_repeated_eigs(void) {
 }
 
 static const char *test_complex_psd_repeated_eigs(void) {
+  /* the signs of the eigenvalues as in test_psd_repeated_eigs */
   scs_int cs[] = {40, 6, 40};
   scs_float a[] = {2., 1., -2.}, b[] = {-0.25, -0.5, 0.25};
   scs_int i, m = 0, off = 0;
@@ -219,6 +229,90 @@ static const char *test_complex_psd_multiplet_solve(void) {
   scs_free(Ax);
   scs_free(Ai);
   return fail;
+}
+
+/* The PSD blocks of PSD list 0 and the logdet and sum-of-largest-eigenvalues
+ * cones share workspace 0 (cones.c, set_up_psd_work): its Xs, e and work
+ * arrays serve both, Z the spectral cones alone. One cone of PSD blocks
+ * larger and smaller than the spectral cones (real and complex), a logdet
+ * cone larger than every PSD block and a sum-of-largest cone in between is
+ * projected at once, and compared with the PSD blocks and the spectral cones
+ * each projected in a cone of their own. A buffer sized for the wrong cones
+ * shows as an error of the order of the data, or as an out-of-bounds access
+ * in the sanitizer jobs. Not in single precision, where the spectral cones
+ * are not tested (run_tests.c). */
+static const char *test_psd_spectral_shared_work(void) {
+#if !defined(USE_SPECTRAL_CONES) || defined(SFLOAT)
+  return mu_skipped;
+#else
+  scs_int s[] = {24, 3, 20, 20, 16, 16}, cs[] = {10}, d[] = {30};
+  scs_int sl_n[] = {12}, sl_k[] = {3};
+  scs_int i, m_psd = 0, m_spec, m, ret;
+  unsigned long r = 12345;
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsCone *kp = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsCone *ks = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsConeWork *cw;
+  scs_float *x, *y, err, scale;
+  for (i = 0; i < 6; ++i)
+    m_psd += s[i] * (s[i] + 1) / 2;
+  m_psd += cs[0] * cs[0];
+  m_spec = 2 + d[0] * (d[0] + 1) / 2 + 1 + sl_n[0] * (sl_n[0] + 1) / 2;
+  m = m_psd + m_spec;
+  x = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  y = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  for (i = 0; i < m; ++i) { /* deterministic, in [-1, 1) */
+    r = (r * 1103515245UL + 12345UL) & 0x7fffffffUL;
+    x[i] = y[i] = 2. * (scs_float)r / 2147483648. - 1.;
+  }
+  scale = SCS(norm_inf)(x, m);
+  kp->ssize = 6;
+  kp->s = s;
+  kp->cssize = 1;
+  kp->cs = cs;
+  ks->dsize = 1;
+  ks->d = d;
+  ks->sl_size = 1;
+  ks->sl_n = sl_n;
+  ks->sl_k = sl_k;
+  *k = *kp;
+  k->dsize = ks->dsize;
+  k->d = ks->d;
+  k->sl_size = ks->sl_size;
+  k->sl_n = ks->sl_n;
+  k->sl_k = ks->sl_k;
+
+  /* all at once in x, each kind on its own in y */
+  cw = SCS(init_cone)(k, m);
+  mu_assert("test_psd_spectral_shared_work: cone init failed", cw);
+  ret = SCS(proj_dual_cone)(x, cw, SCS_NULL, SCS_NULL);
+  SCS(finish_cone)(cw);
+  mu_assert("test_psd_spectral_shared_work: projection failed", ret == 0);
+  cw = SCS(init_cone)(kp, m_psd);
+  mu_assert("test_psd_spectral_shared_work: PSD cone init failed", cw);
+  ret = SCS(proj_dual_cone)(y, cw, SCS_NULL, SCS_NULL);
+  SCS(finish_cone)(cw);
+  mu_assert("test_psd_spectral_shared_work: PSD projection failed", ret == 0);
+  cw = SCS(init_cone)(ks, m_spec);
+  mu_assert("test_psd_spectral_shared_work: spectral cone init failed", cw);
+  ret = SCS(proj_dual_cone)(&(y[m_psd]), cw, SCS_NULL, SCS_NULL);
+  SCS(finish_cone)(cw);
+  mu_assert("test_psd_spectral_shared_work: spectral projection failed",
+            ret == 0);
+
+  err = SCS(norm_inf_diff)(x, y, m);
+  scs_printf("test_psd_spectral_shared_work: largest difference %.2e, %.2e "
+             "relative to the input\n",
+             err, err / scale);
+  scs_free(x);
+  scs_free(y);
+  scs_free(k);
+  scs_free(kp);
+  scs_free(ks);
+  mu_assert_less("test_psd_spectral_shared_work: projections differ", err,
+                 PSD_EIG_TOL * scale);
+  return 0;
+#endif
 }
 
 /* A block of size n needs LAPACK work arrays of 1 + 6n + 2n^2 entries (real)
