@@ -6,8 +6,9 @@ BLAS and LAPACK are dense numerical linear algebra packages. SCS uses these
 libraries in the following places:
 
 * To compute the eigen-decomposition for the semidefinite :ref:`cone <cones>`
-  projection, and the eigen-decompositions and singular value decompositions
-  for the :ref:`spectral cones <spectral_cones>`
+  projection (see :ref:`below <blas_lapack_psd>`), and the
+  eigen-decompositions and singular value decompositions for the
+  :ref:`spectral cones <spectral_cones>`
 * To solve the linear system in :ref:`Anderson acceleration <acceleration>`
 * To form and factorize the matrix in the :ref:`dense direct <dense>` linear
   solver
@@ -203,6 +204,84 @@ pinned to fast cores; 20 threads is the default of both libraries there.
 * We did not measure x86 (MKL, or OpenBLAS on x86) or a machine with only one
   kind of core, where the sizes at which threads start to pay may differ.
   There, compare the time of a solve on one and on a few threads.
+
+
+.. _blas_lapack_psd:
+
+Projection onto the PSD cone
+----------------------------
+SCS projects each positive semidefinite (PSD) block onto the cone with an
+eigendecomposition by LAPACK's divide-and-conquer routine :code:`syevd`
+(:code:`heevd` for a complex block), and rebuilds the block from the
+eigenvectors of its positive eigenvalues. On most SDPs this is where most of
+the time of an iteration goes, so the LAPACK library, and the number of
+threads it runs on, matter.
+
+What it costs and gains
+~~~~~~~~~~~~~~~~~~~~~~~
+SCS 3.3 and earlier used the MRRR routine :code:`syevr` (:code:`heevr`).
+Compared with it, :code:`syevd`:
+
+* **is faster**: on the SDPLIB problems the projection took 31% to 51% less
+  time per iteration (geometric mean over the problems), and an iteration 28%
+  to 47% less, with OpenBLAS, NVPL, MKL and Accelerate. It gains most on
+  blocks with exactly repeated eigenvalues, which :code:`syevr` is slow on:
+  2.7 to 2.9 times faster on ``thetaG11``. With the BLAS on 1 or 4 threads
+  (on the fast cores of the chip described below), and with Accelerate and
+  MKL, no SDPLIB problem was more than 2% slower. On one of that chip's slow
+  cores the gain was smaller (about 20% on 10 problems), and ``qap8`` took 11
+  to 16% longer.
+* **needs more memory**: a work array of about :math:`2n^2` numbers for a
+  block of size :math:`n`, which also holds the rebuilt block, where
+  :code:`syevr` needed a separate :math:`n \times n` array for the
+  eigenvectors. The projection of a real block takes about :math:`3n^2`
+  floating-point numbers instead of :math:`2n^2`: in double precision 24 MB at
+  :math:`n = 1000`, 600 MB at :math:`n = 5000` and 1.2 GB at :math:`n = 7000`
+  (a solve with one block of size 5000 peaked at 873 MB instead of 608 MB). A
+  complex block takes about :math:`6n^2` instead of :math:`4n^2`.
+* **is as accurate or more**: errors of :math:`2` to :math:`4 \times 10^{-15}`
+  relative to the largest entry of the projection, against :math:`3` to
+  :math:`9 \times 10^{-15}`, on blocks with repeated eigenvalues.
+* **starts the threads of a multithreaded BLAS at smaller blocks**. On a
+  20-core chip with 10 fast and 10 slow cores, with the BLAS on all 20, the
+  problems whose largest block had :math:`n = 45` to 130 took up to twice as
+  long in the projection as with :code:`syevr` (``control7`` with NVPL,
+  ``qap7`` 1.6 times with OpenBLAS), and OpenBLAS kept all 20 cores busy
+  where :code:`syevr` used 1.4 to 12 of them. Blocks this small were faster
+  still with the BLAS on one thread, with either routine.
+
+Problems with small blocks
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+If the PSD blocks of your problem are smaller than a few hundred, the threads
+of the BLAS gain little inside one block and can cost a lot, more so on a
+machine with many cores or with fast and slow cores. Try the BLAS on one
+thread, e.g. :code:`OPENBLAS_NUM_THREADS=1`, :code:`MKL_NUM_THREADS=1`, or
+:code:`OMP_NUM_THREADS=1` for a BLAS built with OpenMP, and compare the time
+of a solve. With several blocks, the
+:ref:`parallel projection <blas_lapack_openmp>` uses the cores across the
+blocks instead.
+
+If LAPACK does not converge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When :code:`syevd` (:code:`heevd`) reports that it did not converge, SCS
+decomposes the block again with the QR-based :code:`syev` (:code:`heev`).
+That is slower: forced on 11 SDPLIB problems, the projection took 1.4 to 3.6
+times as long, and the problems were solved as with :code:`syevd`. It has
+happened with Apple Accelerate, whose :code:`dsyevd` did not converge on one
+iterate of ``thetaG11`` (a block of size 801), and whose :code:`dsyevr` did
+not converge on the block of
+`issue #531 <https://github.com/cvxgrp/scs/issues/531>`_. If :code:`syev`
+fails as well, the solve stops with status ``failure`` and the message
+``error in project_cones``.
+
+Very large blocks
+~~~~~~~~~~~~~~~~~
+LAPACK counts the entries of its work arrays in its own integers. With 32-bit
+integers, the usual case, the :math:`1 + 6n + 2n^2` entries that
+:code:`syevd` needs fit up to :math:`n = 32766`. For a larger block, the setup
+fails with a message saying so. Use a BLAS and LAPACK with 64-bit integers
+(the :ref:`compiler flag <compile_flags>` :code:`BLAS64`) for blocks that
+large.
 
 
 .. _blas_lapack_openmp:
@@ -430,14 +509,14 @@ buffers, OpenBLAS 0.3.18 and later print a warning and allocate more, and
 earlier versions fail. The OpenMP thread count bounds the number of threads.
 
 A parallel projection takes more memory: each thread after the first has its
-own eigendecomposition workspace, with matrix buffers for the largest block
-that thread projects and LAPACK work arrays of the serial sizes. The extra
-memory is therefore at most the PSD workspace of the serial projection times
-the number of threads less one. That workspace is about :math:`2n^2` floats for
-the largest real block of size :math:`n` and :math:`2n^2` complex numbers for
-the largest complex block, plus LAPACK work arrays linear in :math:`n`.
+own eigendecomposition workspace, sized for the blocks that thread projects.
+The extra memory is therefore at most the PSD workspace of the serial
+projection times the number of threads less one, and less when only a few
+threads get the largest blocks. That workspace is about :math:`3n^2` floats
+for the largest real block of size :math:`n` and :math:`6n^2` for the largest
+complex block (see :ref:`above <blas_lapack_psd>`).
 
-Each block goes through the same LAPACK calls as in the serial projection, so
-with single-threaded BLAS the result is the same bit for bit, whatever the
-number of threads (unless the rounding of the BLAS depends on the memory
-alignment of its arguments, as it can with MKL).
+Each block goes through the same LAPACK calls, with the same work-array sizes,
+as in the serial projection, so with single-threaded BLAS the result is the
+same bit for bit, whatever the number of threads (unless the rounding of the
+BLAS depends on the memory alignment of its arguments, as it can with MKL).
