@@ -47,6 +47,163 @@ libraries like `MKL <https://software.intel.com/content/www/us/en/develop/tools/
 or `ATLAS <http://math-atlas.sourceforge.net/>`_.
 
 
+.. _blas_lapack_threads:
+
+Number of BLAS threads
+----------------------
+SCS projects each PSD block with a LAPACK eigendecomposition (:code:`syevr`,
+or :code:`heevr` for a complex block) and a BLAS product (:code:`syrk` or
+:code:`herk`). A multithreaded BLAS can split these calls, and SCS's other
+BLAS calls (see the list above), over its own threads, by default about one
+per core. Waking and synchronizing the threads has a fixed cost. In our
+measurements blocks of size up to about 200 gained nothing from threads and
+with some libraries were slower, blocks of size 500 and more gained from a few
+threads, and in between it depended on the library. The number of threads is
+set by an environment variable of the BLAS, so you can choose.
+
+When to set one thread
+~~~~~~~~~~~~~~~~~~~~~~
+Put the BLAS on one thread for an SDP whose PSD blocks are all of size 200 or
+less, in particular when several solves run at the same time, since each would
+start threads for every core. How much this saves depends on the library and
+on how many threads it had: on blocks of size 37 to 200 OpenBLAS on 4 threads
+was within 5% of one thread, while NVPL on 4 threads, and both libraries at
+their default, were slower (see :ref:`blas_lapack_threads_measured`).
+
+Use a few threads instead when
+
+* the problem has PSD blocks of size 500 or more. On 4 fast cores the
+  projection took 0.90 (NVPL) and 0.76 (OpenBLAS) of its time on one thread at
+  size 500, and 0.68 and 0.61 at sizes 800 to 2000. The default, all 20 cores
+  of that machine, was slower than one thread at size 500 (1.32 with NVPL,
+  1.05 with OpenBLAS), so compare a few thread counts, and on a machine with
+  fast and slow cores count only the fast ones;
+* the linear system is large and solved with MKL Pardiso, which runs on MKL's
+  threads (see the threads paragraph of :ref:`MKL Pardiso <mkl>`), or with the
+  :ref:`dense direct <dense>` solver, which forms and factorizes its matrix
+  with BLAS and LAPACK (not measured).
+
+A problem with several PSD blocks can instead use threads across the blocks,
+with the BLAS on one thread inside each: see :ref:`blas_lapack_openmp`.
+
+Which variable to set
+~~~~~~~~~~~~~~~~~~~~~
+Set it to 1, or to the number of threads to use.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 22 44
+
+   * - Your BLAS
+     - Set
+     - Notes
+   * - OpenBLAS with a thread pool of its own: built with pthreads, its
+       default (the default :code:`libopenblas-dev` of Debian and Ubuntu is
+       one), or on Windows with Windows threads
+     - :code:`OPENBLAS_NUM_THREADS=1`
+     - When that is unset it reads :code:`OMP_NUM_THREADS`, so
+       :code:`OMP_NUM_THREADS=1` works too
+   * - A BLAS built with OpenMP: an OpenMP build of OpenBLAS, NVPL's OpenMP
+       (:code:`_gomp`) libraries
+     - :code:`OMP_NUM_THREADS=1`
+     - An OpenMP build of OpenBLAS ignores :code:`OPENBLAS_NUM_THREADS`
+   * - MKL
+     - :code:`MKL_NUM_THREADS=1`
+     - Takes precedence over :code:`OMP_NUM_THREADS`. It also puts MKL Pardiso
+       on one thread. A sequential MKL, such as the MKL backend of the x86-64
+       Linux Python wheels (their default linear solver), always runs on one
+       thread. Not measured in the projection
+   * - Accelerate (macOS)
+     - Nothing
+     - :code:`VECLIB_MAXIMUM_THREADS=1` did not change the time of the
+       projection on an Apple M4 (82 SDPLIB problems: time at the default over
+       time with the variable 0.89 to 1.11, geometric mean 1.01)
+
+Set the variable before the program starts (in Python, at the latest before
+importing NumPy or SCS): the libraries read it when they start. It holds for
+every call to that library in the process, including SCS's dense direct
+linear solver and your own code.
+
+In a build of SCS with OpenMP (:code:`USE_OPENMP`; the pre-built Python wheels
+are built without it), :code:`OMP_NUM_THREADS` is also SCS's own thread count,
+and setting it to 1 stops SCS's own threads too, the :ref:`parallel PSD
+projection <blas_lapack_openmp>` included. With OpenBLAS's own thread pool or
+with MKL, set the library's variable instead. An OpenMP build of OpenBLAS, or
+NVPL, has no variable of its own, so :code:`OMP_NUM_THREADS` is one budget for
+SCS and the BLAS. Inside a parallel PSD projection the BLAS runs on one thread
+by itself, but where SCS projects the blocks one after another (a build without
+:code:`USE_PARALLEL_PSD`, or one block that holds most of the work) the BLAS
+runs on all the threads. We measured that case in a build of SCS without
+OpenMP, which projects the blocks one after another: on control7 (blocks of
+size 70 and 35), NVPL with :code:`OMP_NUM_THREADS=4` made the projection take
+1.93 times as long as with 1, and a whole iteration 1.42 times. For such a
+problem compare :code:`OMP_NUM_THREADS=1` with your thread count.
+
+To check, watch the CPU use of the process during a solve (``top``). With the
+BLAS on one thread and SCS built without OpenMP it stays near 100%; several
+hundred percent on a problem with small PSD blocks means that the BLAS threads
+are running.
+
+.. _blas_lapack_threads_measured:
+
+What we measured
+~~~~~~~~~~~~~~~~
+Time of the PSD projection per iteration on the 58 SDPLIB problems whose
+largest PSD block is of size 37 or more, relative to the BLAS on one thread
+(geometric mean, range in brackets; below 1 is faster). The machine is an
+NVIDIA GB10 with 10 fast and 10 slow ARM cores, the libraries NVPL and a
+pthreads build of OpenBLAS 0.3.31. The runs on one and on 4 threads were
+pinned to fast cores; 20 threads is the default of both libraries there.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 19 19 19 19
+
+   * - Size of the largest PSD block
+     - NVPL, 4 threads
+     - NVPL, 20 threads
+     - OpenBLAS, 4 threads
+     - OpenBLAS, 20 threads
+   * - 37 to 124 (25 problems)
+     - 1.34 [1.03, 1.93]
+     - 2.27 [1.20, 3.83]
+     - 1.02 [0.99, 1.05]
+     - 1.18 [1.01, 1.90]
+   * - 150 to 300 (17)
+     - 1.07 [1.01, 1.15]
+     - 2.45 [1.75, 6.34]
+     - 0.94 [0.85, 1.01]
+     - 1.55 [1.02, 2.10]
+   * - 500 (8)
+     - 0.90 [0.89, 0.93]
+     - 1.32 [1.28, 1.37]
+     - 0.76 [0.74, 0.79]
+     - 1.05 [0.84, 1.23]
+   * - 800 to 2000 (8)
+     - 0.68 [0.50, 0.88]
+     - 0.82 [0.49, 1.10]
+     - 0.61 [0.45, 0.88]
+     - 0.59 [0.33, 0.89]
+
+* control7 (blocks of size 70 and 35) took 0.51 ms per projection with NVPL
+  on one thread, 0.98 ms on 4 and 1.74 ms on 20, and a whole iteration
+  1.29 ms, 1.84 ms and 2.63 ms.
+* On 4 threads the pthreads OpenBLAS lost little time on blocks of size up to
+  200. At its default it was slower (1.18 times at sizes 37 to 124, 1.55 at
+  150 to 300) and kept cores busy for nothing: 9 problems with blocks of size
+  37 to 124 used 3 to 12 cores (310% to 1168% CPU) where one thread was 1% to
+  34% faster, and truss8, whose blocks are of size 19 at most, used 329%.
+  Those cores are taken from anything else on the machine, such as other
+  solves.
+* The 20-thread columns include the slow cores and depend on where the system
+  placed the threads: the 27 problems whose blocks are all smaller than 37
+  were up to 2.2 times slower there, though 4 threads changed their time by
+  at most 11%. So they show what the default can cost on such a machine, not
+  the cost of the threads alone.
+* We did not measure x86 (MKL, or OpenBLAS on x86) or a machine with only one
+  kind of core, where the sizes at which threads start to pay may differ.
+  There, compare the time of a solve on one and on a few threads.
+
 
 .. _blas_lapack_openmp:
 
