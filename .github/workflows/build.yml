@@ -56,6 +56,14 @@ jobs:
           out/run_tests_direct
           out/run_tests_indirect
           if [ "${{ matrix.lapack }}" = 1 ]; then out/run_tests_dense; fi
+      - name: Indirect tests with eigCG deflation off (DEFLATE_VECTORS=0)
+        # DEFLATE_VECTORS is a compile-time setting (include/glbopts.h); the
+        # tests above run the indirect solver with deflation on, its default.
+        if: matrix.lapack == 1 && matrix.long == 0
+        run: |
+          make purge
+          make test CFLAGS="-DDEFLATE_VECTORS=0"
+          out/run_tests_indirect
       - name: Tests through the syev / heev fallback of the PSD projection
         # The test-only flag SCS_FORCE_PSD_FALLBACK sends every PSD block
         # through the fallback that runs when syevd / heevd do not converge,

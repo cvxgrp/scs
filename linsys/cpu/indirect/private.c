@@ -129,7 +129,7 @@ static void apply_pre_conditioner(scs_float *z, scs_float *r, scs_int n,
 
 /* ======================== eigCG deflation ======================== */
 
-#define EIGCG_WINDOW (60)
+/* DEFLATE_VECTORS and EIGCG_WINDOW are compile-time settings in glbopts.h */
 
 #ifdef USE_LAPACK
 #include "scs_blas.h"
@@ -705,10 +705,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
 
   p->tot_cg_its = 0;
   {
-    const char *dm = getenv("SCS_DEFLATE");
-    char *wm = getenv("SCS_EIGCG_WIN");
-    p->dfl_max = dm ? (scs_int)atoi(dm) : DEFLATE_VECTORS;
-    p->dfl_max = MIN(p->dfl_max, p->n);
+    p->dfl_max = MIN(DEFLATE_VECTORS, p->n);
     p->dfl_count = 0;
     p->dfl_harvest = 0;
 #ifndef USE_LAPACK
@@ -720,7 +717,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     p->dfl_max = 0;
 #endif
     if (p->dfl_max > 0) {
-      scs_int win = wm ? (scs_int)atoi(wm) : EIGCG_WINDOW;
+      scs_int win = EIGCG_WINDOW;
       win = MAX(win, 3 * p->dfl_max); /* >= nev free slots per cycle */
       win = MAX(win, 2 * p->dfl_max + 2);
       p->eig_win = win;
