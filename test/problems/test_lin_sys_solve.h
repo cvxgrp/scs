@@ -41,7 +41,9 @@
  *      correction form from it would be about 1e6 times worse);
  *  (d) CG solvers, from a warm start so far (LSS_CG_FAR) that the rounding
  *      of b - K s leaves CG's tracked residual far below the true one (the
- *      premise, res > 100 tol, is asserted): two refinement steps bring res
+ *      premise, res > 100 tol: res was 1e3 to 1e4 times that bar in double
+ *      precision and 6 to 29 times in single, on the CPU and the GPU; if it
+ *      fails, (d) is skipped with a message): two refinement steps bring res
  *      to at most 10 tol, and below the unrefined res;
  *  (e) refinement (max_refine_steps 3; tol 0 for direct solvers, CG's tol
  *      for CG): never worse than the plain solve (2 res for run-to-run
@@ -305,15 +307,21 @@ static const char *lss_phase1(LssCase *c) {
     LSS_CALL(lss_solve(c, c->x, c->s, LSS_CG_TOL, 0, &res0),
              "CG from a very far warm start");
     LSS_CHECK(lss_check(c, "(d) CG from a very far warm start", c->x, res0, 0));
-    mu_assert("test_lin_sys_solve: premise: CG's tracked residual from the "
-              "very far warm start did not drift from the true one",
-              res0 > 100. * LSS_CG_TOL);
-    LSS_CALL(lss_solve(c, c->x, c->s, LSS_CG_TOL, 2, &res),
-             "CG with refinement from a very far warm start");
-    LSS_CHECK(lss_check(c, "(d) the same, with 2 steps", c->x, res, 0));
-    mu_assert("test_lin_sys_solve: CG's refinement did not reach the "
-              "tolerance",
-              res <= 10. * LSS_CG_TOL && res < res0);
+    if (res0 <= 100. * LSS_CG_TOL) {
+      /* the premise rests on rounding (that of b - K s, and on the GPU a
+       * product that is not reproducible run to run), not on the code
+       * under test, so a run where it fails checks nothing here: (h) and
+       * phase 3 still check CG's refinement steps */
+      scs_printf("test_lin_sys_solve: (d) premise not met (the residual CG "
+                 "tracks did not drift from the true one): skipped\n");
+    } else {
+      LSS_CALL(lss_solve(c, c->x, c->s, LSS_CG_TOL, 2, &res),
+               "CG with refinement from a very far warm start");
+      LSS_CHECK(lss_check(c, "(d) the same, with 2 steps", c->x, res, 0));
+      mu_assert("test_lin_sys_solve: CG's refinement did not reach the "
+                "tolerance",
+                res <= 10. * LSS_CG_TOL && res < res0);
+    }
   }
   /* (e) refinement: never worse */
   LSS_CALL(lss_solve(c, c->x, SCS_NULL, c->cg ? LSS_CG_TOL : 0., 3, &res),

@@ -624,11 +624,11 @@ does the same in five steps:
    with 1 in place of the first 0 for an iterative solver such as conjugate
    gradients (its warm start is then the solver's starting point, and each
    refinement step a solve from zero of the residual, computed in the full
-   space; see :code:`linsys.h`). This allocates three vectors of :math:`n + m` numbers
-   and keeps the three pointers: SCS keeps :code:`A`, :code:`P` and
-   :code:`diag_r` alive until :code:`scs_free_lin_sys_work`, leaves
-   :code:`A` and :code:`P` unchanged and writes each new :math:`R` into the
-   same :code:`diag_r`, and the residuals are computed from them.
+   space; see :code:`linsys.h`). This allocates three vectors of
+   :math:`n + m` numbers and keeps the three pointers: SCS keeps :code:`A`,
+   :code:`P` and :code:`diag_r` alive until :code:`scs_free_lin_sys_work`,
+   leaves :code:`A` and :code:`P` unchanged and writes each new :math:`R`
+   into the same :code:`diag_r`, and the residuals are computed from them.
 
 4. Implement :code:`scs_solve_lin_sys` as one call::
 
@@ -698,10 +698,10 @@ correction form from it, and solve plainly when :math:`\|b - K s\|_\infty
 \ge \|b\|_\infty`. With :code:`max_refine_steps` above 0 it must take at most
 that many steps :math:`x + K^{-1}(b - K x)` (a CG solver too, with the
 residual computed in the full space and solved from zero), keep a step only
-if it lowers the residual, and stop after one that does not halve it. A direct solver that
-ignores :code:`s` still gives correct answers, but SCS's refinement then
-cannot make its solves more accurate, which on badly scaled problems can keep
-SCS from reaching tight tolerances.
+if it lowers the residual, and stop after one that does not halve it. A
+direct solver that ignores :code:`s` still gives correct answers, but SCS's
+refinement then cannot make its solves more accurate, which on badly scaled
+problems can keep SCS from reaching tight tolerances.
 
 **Tests.** :code:`test_lin_sys_solve` in the test suite checks the contract
 against residuals it computes itself: warm starts near and far from the
