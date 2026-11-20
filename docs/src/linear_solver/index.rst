@@ -318,13 +318,13 @@ times the time.
   Deciding at every iteration was measured too: it cost 2% to 5% more time
   overall in single precision, where refinement is on most of the time.
 - In single precision at tight tolerances (:math:`10^{-6}`) it is on for
-  about 60% of the iterations of random SOCPs, and it is what lets many of
+  60% to 86% of the iterations of random SOCPs, and it is what lets many of
   those solves converge. There the outcome of a run can flip with rounding
   from one starting point to the next.
 - While it is on, an iteration costs one more multiply by :math:`K`, and
   conjugate gradient solves only where its plain solve missed the tolerance
-  (in single precision almost always: 1.5 steps per iteration on average),
-  plus one more plain solve at each check.
+  (in single precision almost always: 1.5 to 1.8 steps per iteration on
+  average), plus one more plain solve at each check.
 
 **Who computes the multiplies.** The multiplies by :math:`K` are made inside
 the linear solve (:code:`scs_solve_lin_sys`, see :ref:`new_linear_solver`).
