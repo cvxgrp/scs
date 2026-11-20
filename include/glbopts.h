@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include "scs.h"
+#include <float.h>
 #include <math.h>
 
 #ifndef SCS
@@ -273,32 +274,81 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * improves on no floor, 1e-3 is the best on solve count. */
 #define DEN_FLOOR_FRAC (1e-3)
 
+/* SCS_MACH_EPS: the machine epsilon of scs_float (DBL_EPSILON, or FLT_EPSILON
+ * with SFLOAT), the unit of the tolerance of the solve for g below. */
+#ifdef SFLOAT
+#define SCS_MACH_EPS (FLT_EPSILON)
+#else
+#define SCS_MACH_EPS (DBL_EPSILON)
+#endif
+
 /* --- Accuracy of the solve for g = K^{-1} [c; -b] ---
  * SCS solves for g at the start of every solve and after every scale update
  * (once per factorization of K) and uses it in every iteration until the
- * next one, so an
- * error in g is repeated in every iteration instead of being averaged out,
- * and it can limit the accuracy SCS reaches. After that solve SCS computes
- * the residual [c; -b] - K g from the problem data, whatever the linear
- * solver, and while the residual is larger than G_SOLVE_TOL times the largest
- * term of the product (and of [c; -b]) it refines g: it solves K d = residual
- * and adds d to g. It stops after G_REFINE_MAX_STEPS steps, or when a step
- * does not at least halve the residual, and discards a step that makes it
- * larger. Tradeoff: one multiply by K per solve for g, plus one solve and one
- * multiply per refinement step. For the direct solvers that is small next to
- * the factorization; when the solve is already that accurate only the
- * multiply is paid. CG stops on an absolute residual of its reduced system
- * (CG_BEST_TOL), which on badly scaled data can leave a much larger relative
- * residual here, so CG's g is checked and refined too, and for CG a
- * refinement step is another cold CG solve, which can cost up to about as
- * many iterations as the solve for g itself. Single precision cannot reach
- * 1e-12, so it uses 1e-5. */
-#ifdef SFLOAT
-#define G_SOLVE_TOL (1e-5)
-#else
-#define G_SOLVE_TOL (1e-12)
-#endif
-#define G_REFINE_MAX_STEPS (3)
+ * next one, so an error in g is repeated in every iteration instead of being
+ * averaged out, and it can limit the accuracy SCS reaches. g is therefore
+ * solved to about machine precision, with the linear solve's own warm start
+ * and refinement (scs_solve_lin_sys, linsys.h; update_work_cache in
+ * src/scs.c). A plain solve (CG: from zero to CG_BEST_TOL) gives g0 and its
+ * residual; if that is above
+ *   tol_g = G_TOL_EPS * SCS_MACH_EPS * || |[c; -b]| + |K| |g0| ||
+ * (absolute values entry by entry: each row's sum of the absolute values of
+ * the terms that row of the residual is computed from, and the largest of
+ * these over the rows), the solve is repeated from g0 to tol_g, with at
+ * most G_REFINE_MAX_STEPS steps in all: for a direct solver
+ * the correction form from g0 is the first, for CG a CG solve from g0 to
+ * tol_g; each further step solves for the residual, computed with K, and
+ * adds the correction (CG: by CG from zero to tol_g). A step is kept only if
+ * it lowers the residual, the steps stop after one that does not halve it
+ * (LIN_SYS_REFINE_CONTRACTION), and g0 is kept unless the result is better.
+ * Cost: one multiply by K per solve for g (the residual of g0) and a pass
+ * over A and P for the size of the terms; when g0 misses tol_g, a solve and
+ * a multiply per step, and for a direct solver one multiply more (the
+ * correction form computes the residual of g0 again). For CG a step costs
+ * the CG iterations that reach tol_g: in all, up to about a third of the first
+ * solve's on random SOCPs in double precision (two thirds in single), but
+ * where CG cannot reach tol_g each step runs to CG's iteration limit (up to
+ * five times the first solve, on badly scaled QPs).
+ *
+ * G_TOL_EPS: the rounding of the computed residual itself is a few machine
+ * epsilons of the size of its terms, so G_TOL_EPS of them is machine
+ * precision with room for that rounding. Lower asks for steps that only
+ * measure rounding (the halving stop then ends them, after one solve and one
+ * multiply each); higher leaves an error in g that SCS repeats in every
+ * iteration. The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
+ * (the normwise backward error, which pairs K's largest row with g0's
+ * largest entry even where they do not meet): on badly scaled data that was
+ * up to 1e9 times larger (regress340, QDLDL), and let most solves for g stop
+ * with residuals up to 1e5 machine epsilons of their terms. It is one
+ * number, the largest row's, because the solve's tol bounds the largest
+ * entry of the residual: a row whose terms are much smaller than the
+ * largest row's is held to the largest row's rounding, not to its own.
+ *
+ * G_REFINE_MAX_STEPS: LAPACK's ITMAX (xGERFS); the halving stop usually ends
+ * the steps sooner. More can only help while each step still halves the
+ * residual, at a solve and a multiply each. */
+#define G_TOL_EPS (4.)
+#define G_REFINE_MAX_STEPS (5)
+/* G_FAIL_REL_RES: SCS stops with SCS_FAILED, and a message asking for a bug
+ * report, when the solve for g returns an error, g is not finite (or the
+ * size of its terms overflows), or the residual of the refined g is above
+ * this fraction of the size of its terms (as for tol_g): not even its
+ * leading digit is right. The fraction is at
+ * most 1 for every g (g = 0 has 1); a solver solving with an R 1e12 times
+ * too large gives 1.00 (test_g_accuracy). The refined g of working solvers
+ * is far below it, at about tol_g (1e-15 in double precision, 5e-7 in
+ * single) except where the solver itself cannot do better: at most 5e-3
+ * with CG at its iteration limit (QSCFXM1, double precision), 2e-3 with
+ * QDLDL in single precision (neos-4413714-turia), and 1.5e-2 with
+ * test_refine_perturbed's solver on R (1 - 0.55); first solves, before
+ * refinement, reached 0.17 (single-precision CG, neos-3656078-kumeu) and
+ * were refined to 5e-7 (measured with QDLDL and CG in both precisions on
+ * the test suite, 250 random SOCPs and 17 badly scaled LPs and QPs, 14 of
+ * them with CG in double precision; dense and Accelerate on the test
+ * suite). Lower would also stop solvers that are inaccurate rather than
+ * broken, which SCS's iterations cope with; higher would let through a g
+ * with no correct digit. */
+#define G_FAIL_REL_RES (0.5)
 
 /* --- Accuracy of each iteration's solve ---
  * Every iteration solves K u = [R_x v_x; -R_y v_y] (K as above), and SCS's
@@ -525,8 +575,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 
 /* --- Conjugate gradient (CG) parameters, only used with indirect solver --- */
-/* Accuracy of the most accurate CG solves (the cold solve for g, and the floor
- * of the warm ones). Single precision cannot reach 1e-12: a CG asked for it
+/* Accuracy of the cold CG solve for g0 (see "Accuracy of the solve for g"
+ * above; its refinement then goes to about machine precision) and the floor
+ * of the per-iteration (warm) ones, set in src/scs.c.
+ * Single precision cannot reach 1e-12: a CG asked for it
  * runs to its iteration limit on every solve and its rounding errors then
  * reach the iterates (issue_499's infeasibility certificate stalled with
  * tau at rounding level). 1e-6 is about ten times float's machine epsilon;
@@ -536,6 +588,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #else
 #define CG_BEST_TOL (1e-12)
 #endif
+/* CG_ZERO_RHS_TOL: a CG solve returns x = 0 without iterating when
+ * ||b||_inf is at most MIN(tol, CG_ZERO_RHS_TOL); x = 0 then meets tol, its
+ * residual being ||b||. The per-iteration solves have tol >= CG_BEST_TOL, so
+ * for them this is the 1e-12 of SCS 3.3; the MIN honours a smaller tol (the
+ * solve for g and its refinement steps). Higher returns 0 for right-hand
+ * sides that a solve would still resolve; lower runs CG on right-hand sides
+ * at rounding level. */
+#define CG_ZERO_RHS_TOL (1e-12)
 /* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
  * values give more accurate CG solves at the cost of more CG iterations.
  * With deflation making inner accuracy cheap, 0.03 measured optimal on a
