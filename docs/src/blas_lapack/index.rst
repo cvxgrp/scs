@@ -466,13 +466,24 @@ thread, one of 50 microseconds gets about 6 threads (4 on macOS), and one of a
 millisecond gets up to about 30 (20 on macOS). A solve uses fewer threads if
 the OpenMP thread count has been lowered since the setup.
 
-SCS estimates the time of each block from its size, with a formula fitted to
-measurements made before it moved to :code:`syevd`, and so did the rules
-below. :code:`syevd` projects small real blocks faster than the formula says:
-blocks of size 3 to 12 in a third to three quarters of the estimated time (on
-an Apple M4, with Accelerate and with OpenBLAS). A problem with many such
-blocks can then get more threads than is fastest. If that matters, compare
-the time of a solve with a lower :code:`OMP_NUM_THREADS`.
+SCS estimates the time of each block from its size, with a formula
+(:code:`psd_block_cost` in :code:`src/cones.c`) fitted to the time
+:code:`syevd` takes for a real block with NVPL on one core of an Arm
+Cortex-X925. The estimate decides how the blocks are shared out and, with
+the time per thread, how many threads are used. BLAS libraries differ most on
+small blocks: Accelerate on an Apple M4 and OpenBLAS take a quarter to two
+thirds of NVPL's time for blocks of size 3 to 10. SCS uses one formula for
+all of them. Following NVPL, the slowest, made the projection faster with NVPL
+and OpenBLAS and a little slower with Accelerate in our measurements (0.86,
+0.95 and 1.05 times the time with the previous formula, on the block
+structures whose split changed). The cost is on the faster libraries: a
+projection of 9 to 16 microseconds made of 8 to 16 blocks of size 3 to 6 can
+get threads where one thread is faster (up to 2.3 times on the M4). If that
+matters, compare the time of a solve with a lower :code:`OMP_NUM_THREADS`.
+Complex blocks keep the estimate fitted to :code:`heevr`, which is close to
+:code:`heevd`'s time with NVPL up to size 100 and up to 1.5 times too low for
+larger blocks: the estimate fitted to :code:`heevd` was slower in the same
+measurements.
 
 Even with the option, the blocks are projected one after another, and the BLAS
 is free to use its own threads, when
@@ -522,10 +533,11 @@ is the reason the option is left to whoever builds SCS and knows its BLAS.
   checks for it at setup and then projects the blocks one after another. With
   :code:`OPENBLAS_NUM_THREADS=1` the projection is parallel, but the BLAS calls
   of the threads still wait for one lock inside an OpenBLAS that was not built
-  with OpenMP. SCS counts that when it chooses the number of threads: small
-  blocks mostly stay serial, and blocks of :math:`10 \times 10` to
-  :math:`32 \times 32` get two to six threads. An OpenMP build of OpenBLAS
-  does not have this limit. Both checks need the functions
+  with OpenMP. SCS counts that when it chooses the number of threads: a few
+  small blocks stay serial, many blocks of :math:`3 \times 3` to
+  :math:`10 \times 10` get two to four threads, and blocks of
+  :math:`16 \times 16` to :math:`32 \times 32` four to six. An OpenMP build
+  of OpenBLAS does not have this limit. Both checks need the functions
   :code:`openblas_get_parallel` and :code:`openblas_get_num_threads` visible to
   SCS: they are off for a static :code:`libopenblas.a` (the weak references
   can stay unresolved), for an OpenBLAS with suffixed symbol names, and for

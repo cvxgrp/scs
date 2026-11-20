@@ -1091,7 +1091,9 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * size of the block, for n = 3 to 32: about 0.3, 0.5, 1.1, 1.7 and 4.8 us
  * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
  * that, because the smallest blocks lost more. An OpenMP build did not show
- * this (measured on macOS). */
+ * this (measured on macOS). These were measured with syevr and not again
+ * with syevd; the rule, with the estimate of psd_block_cost, was checked by
+ * that estimate's A/B (0.95x the time with this OpenBLAS). */
 #ifndef PSD_PAR_LOCK_COST
 #define PSD_PAR_LOCK_COST (300.)
 #endif
@@ -1159,31 +1161,57 @@ typedef struct {
   scs_int blk;
 } PsdBlockCost;
 
-/* Estimated time of the projection of block b, in nanoseconds: a cubic in n
- * fitted to the measured times of single blocks, with 4x the n^3 term for a
- * complex block. It is within 25% of them for n from 2 to 300 on an Apple
- * M4 with Accelerate and on a Cortex-X925 with OpenBLAS, and within 30% of
- * the times of n = 1000 to 2000 on x86-64 with OpenBLAS and with MKL (#505).
- * It is up to 1.5x too low at n = 1000 on the Cortex-X925, and up to 1.9x too
- * low below n = 10 with NVPL, which takes longer for small blocks. Only the
- * relative sizes and the order of magnitude matter. n^3 alone makes small
- * blocks far too cheap: a block of n = 10 takes 1/650 of the time of one of
- * n = 300, not 1/27000. LAPACK takes a short path for n = 2 (0.2 us, but
- * 1.5 us with NVPL), and a block of n = 1 is a clamp.
- * These times were measured with syevr / heevr, and the cubic has not been
- * fitted to syevd / heevd. On the M4 on one thread, with Accelerate and with
- * OpenBLAS 0.3.34, a real block now takes 0.33-0.75x of the estimate for
- * n = 3 to 12 and 0.82-1.04x for n = 16 to 64; with Accelerate 0.55-0.85x
- * for n = 100 to 500. A complex block takes 0.38-0.66x of it for n = 3 to 8
- * and, with Accelerate, 1.13-1.44x for n = 48 to 400. Too high an estimate
- * makes the threads look worth more next to PSD_PAR_THREAD_COST and
- * PSD_PAR_LOCK_COST than they are, mostly for many small real blocks, so
- * those may get more threads than is fastest. */
+/* Estimated time of the projection of block b, in nanoseconds. It decides
+ * the split: blocks go, largest estimate first, to the least loaded thread,
+ * and the estimates of all blocks, next to PSD_PAR_THREAD_COST and
+ * PSD_PAR_LOCK_COST, decide how many threads are used at all. So only the
+ * relative sizes and the order of magnitude matter. n^3 alone would make
+ * small blocks far too cheap: a block of n = 10 takes 1/600 to 1/900 of the
+ * time of one of n = 300 (the three libraries below), not 1/27000. A block
+ * of n = 2 takes LAPACK's short path, and a block of n = 1 is a clamp.
+ *
+ * Real blocks: a cubic fitted to the times of single blocks with syevd on
+ * one thread, as inside the threads of a parallel projection, with NVPL on
+ * a Cortex-X925 (DGX Spark, Linux): least squares in log(estimate / time)
+ * for n = 3 to 1000. NVPL's times are 0.91-1.17x the estimate, except
+ * n = 64 (1.5x). n = 2 is 200 ns, the time with Accelerate and OpenBLAS
+ * (NVPL: 1.4 us).
+ *
+ * The tradeoff. One formula serves every BLAS, and they differ most for
+ * small blocks: for n = 3 to 10, Accelerate (Apple M4) and OpenBLAS 0.3.31
+ * (pthreads build on one thread, Cortex-X925) take a quarter to two thirds
+ * of NVPL's time, and Accelerate grows more slowly for large blocks (55 ms
+ * at n = 1000, NVPL 116 ms). Too low an estimate keeps blocks serial that
+ * threads would project faster; too high gives threads to projections that
+ * are faster on one. Following NVPL, the highest times, was faster with two
+ * of the three libraries. On the block structures whose split changed
+ * (#507's 82 and the SDPs of SDPLIB and the benchmark suite with several
+ * blocks, 2 to 4 threads), the projection took, against the previous
+ * estimate (below), 0.86x the time with NVPL (4 blocks of n = 5 and 6 of
+ * n = 3 now take threads, 1.6-2.8x faster), 0.95x with OpenBLAS (lock
+ * counted, PSD_PAR_LOCK_COST) and 1.05x with Accelerate, where projections
+ * of 9 to 16 us made of 8 to 16 blocks of n = 3 to 6 now take threads and
+ * are up to 2.3x slower. A fit through NVPL and Accelerate together
+ * (0.5-0.8x this estimate for n = 3 to 10) took 1.10x with NVPL, 1.18x with
+ * OpenBLAS and 1.00x with Accelerate. NVPL's 1.4 us for n = 2 took 0.4-0.7x
+ * with NVPL on 16 to 64 such blocks, but up to 1.8x with the other two.
+ *
+ * Complex blocks: the estimate from before syevd (#543), fitted to heevr's
+ * times with Accelerate and OpenBLAS. heevd with NVPL takes 0.9-1.4x of it
+ * for n = 3 to 100 and 1.2-1.55x from n = 150 (Accelerate 1.2-1.3x,
+ * OpenBLAS up to 1.85x at n = 500). The cubic fitted to heevd with NVPL
+ * (1170 + 345 n + 60 n^2 + 0.45 n^3) was slower: 1.20x with NVPL, 1.09x with
+ * OpenBLAS and 1.08x with Accelerate on the complex structures whose split
+ * changed, mostly because one block of n = 300 with four of n = 100 then
+ * looked like a gain of 1.24x, below PSD_PAR_MIN_GAIN, and stayed serial
+ * (1.2-1.55x slower).
+ *
+ * Previous estimate, fitted to syevr: 600 + 250 n + 45 n^2 + 0.06 n^3. */
 static scs_float psd_block_cost(const ScsCone *k, scs_int b) {
   scs_float n = (scs_float)psd_block_n(k, b);
   if (b < k->ssize)
     return n < 3. ? (n < 2. ? 2. : 200.)
-                  : 600. + n * (250. + n * (45. + 0.06 * n));
+                  : 940. + n * (310. + n * (45. + 0.055 * n));
   return n < 3. ? (n < 2. ? 2. : 300.)
                 : 600. + n * (250. + n * (70. + 0.24 * n));
 }
