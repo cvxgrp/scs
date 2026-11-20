@@ -1284,7 +1284,12 @@ static void set_refine_tol(ScsWork *w) {
  * refinement stayed on to the end, chasing rounding, where refine_tol goes
  * to zero (a certificate). That size is computed only when it can change the
  * outcome: a pass over A and P, with rhs rebuilt in kkt_corr and kkt_res as
- * scratch. Depends only on the iterates (deterministic). */
+ * scratch. u_t is the iterate: at a check while refinement is on that is the
+ * refined (CG) or correction-form (direct) solution, not the plain solve
+ * whose res is tested, which was in kkt_corr and is overwritten here. The
+ * two differ by about the plain solve's error, far below the size of the
+ * terms, so the threshold barely moves. Depends only on the iterates
+ * (deterministic). */
 static scs_int refine_next_on(ScsWork *w, scs_float res, scs_float on_factor,
                               scs_float off_factor, scs_float min_reach) {
   scs_float tol = MAX(w->refine_tol, min_reach / off_factor);

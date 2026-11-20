@@ -190,11 +190,12 @@ residual is at rounding level: at most four machine epsilons times
 is computed from, row by row. A residual that small is mostly the rounding of
 its own computation, and refinement cannot lower it by more than a small
 factor. This matters where *tol* goes to zero, on an infeasibility or
-unboundedness certificate that SCS keeps iterating on: before 3.4.0 the floor
-was absolute (*tol* at least :math:`10^{-12}`), below rounding level wherever
-those terms are large, so there refinement turned on and stayed on to the
-end. The size is computed only at a check where it can change the outcome
-(one pass over :math:`A` and :math:`P`, the cost of a multiply). Single
+unboundedness certificate that SCS keeps iterating on: with an absolute floor
+instead (*tol* at least :math:`10^{-12}`, as in an earlier rule), which is
+below rounding level wherever those terms are large, refinement turned on
+there and stayed on to the end. The size is computed only at a check where
+it can change the outcome (one pass over :math:`A` and :math:`P`, the cost of
+a multiply). Single
 precision has no such test: there refinement also lowers an error of the
 solution that the residual does not show (with conjugate gradients and the
 dense solver, which solve a smaller system), and turning it off at rounding
@@ -269,26 +270,6 @@ smaller system and cannot see all of the rounding error: in single precision
 it solved 16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12
 times the time.
 
-Before 3.4.0, while refinement was on, every iteration was a check, and each
-was followed by a conjugate gradient solve, to the solvers' best accuracy, for
-the residual SCS computed, whether or not the solve had missed its tolerance.
-Deciding only every 25 iterations means that once refinement turns on it
-stays on for at least 25 iterations. Against that rule (solutions checked
-independently; random SOCPs, the Netlib and SDPLIB infeasible problems and
-badly scaled LPs and QPs, about 1,800 runs on the CPU and the GPU):
-
-- In double precision the same problems were solved, in about the same time
-  (0.996 to 1.002 times in shifted geometric mean). Refinement fires mostly
-  on infeasibility certificates and on problems that stall; there it was on
-  for 2 to 5 times as many iterations, and one LP run for a fixed 2,000
-  iterations took 2.5 times as long.
-- In single precision outcomes flip both ways with rounding: 6 runs lost and
-  9 gained of 678 on the CPU, within one problem when averaged over nine
-  starting points. From one starting point the time was 1.04 to 1.08 times
-  (0.97 to 1.01 averaged over the starting points of the problems that
-  changed), and 1.44 times with the GPU solver (1.07 averaged), where a few
-  runs stayed on refinement for most of the solve.
-
 **What to expect** (direct solvers):
 
 - At the default tolerances it rarely turns on: on 112 LPs, QPs and SDPs at
@@ -320,6 +301,30 @@ badly scaled LPs and QPs, about 1,800 runs on the CPU and the GPU):
   of the solve in 11 runs, which solved one run more and took 6% more time.
   In single precision it tends to stay on once it turns on (see "Rounding
   level" above).
+
+**What to expect** (indirect solvers):
+
+- Refinement is decided only at the checks, as for the direct solvers, so
+  once it turns on it stays on for at least 25 iterations, until a check
+  finds the plain solve within :math:`0.1\,` *tol*.
+- In double precision it rarely turns on: never on 500 random SOCPs at
+  :math:`10^{-9}`, for 2% of the iterations on badly scaled LPs and QPs at
+  :math:`10^{-4}`, and for 13% to 24% on the Netlib and SDPLIB infeasible
+  problems at :math:`10^{-4}` and :math:`10^{-6}`, mostly on certificates
+  that SCS keeps iterating on and on problems that stall. There each
+  iteration with a step costs conjugate gradient solves, and the 25-iteration
+  minimum adds up: an LP run for a fixed 2,000 iterations took 2.3 times as
+  long as with an earlier rule that decided at every iteration while on.
+  Deciding at every iteration was measured too: it cost 2% to 5% more time
+  overall in single precision, where refinement is on most of the time.
+- In single precision at tight tolerances (:math:`10^{-6}`) it is on for
+  about 60% of the iterations of random SOCPs, and it is what lets many of
+  those solves converge. There the outcome of a run can flip with rounding
+  from one starting point to the next.
+- While it is on, an iteration costs one more multiply by :math:`K`, and
+  conjugate gradient solves only where its plain solve missed the tolerance
+  (in single precision almost always: 1.5 steps per iteration on average),
+  plus one more plain solve at each check.
 
 **Who computes the multiplies.** The multiplies by :math:`K` are made inside
 the linear solve (:code:`scs_solve_lin_sys`, see :ref:`new_linear_solver`).

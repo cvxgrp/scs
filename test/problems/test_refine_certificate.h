@@ -18,9 +18,9 @@
  * the certificate (as test_inaccurate does), at a fixed scale
  * (adaptive_scale off, R_y = 1 / scale), and the test requires refinement
  * to be on for at most a tenth of the iterations. With the absolute floor
- * before 3.4.0 (tol at least 1e-12, whatever the size of the terms of the
- * residual) refinement turned on once the residual reached zero and stayed
- * on to the end, chasing rounding:
+ * of an earlier rule (tol at least 1e-12, whatever the size of the terms of
+ * the residual) refinement turned on once the residual reached zero and
+ * stayed on to the end, chasing rounding:
  *
  * - An unbounded LP (RC_N, RC_SEED, RC_SCALE; every linear solver): on for
  *   799 of the 1000 iterations with QDLDL (dense, Accelerate, cuDSS and CG
