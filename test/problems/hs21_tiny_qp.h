@@ -7,8 +7,7 @@
 #include "util.h"
 
 static const char *hs21_tiny_qp(void) {
-  scs_int cold_iter;
-  scs_float scale;
+  scs_float scale, ws_ratio;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -86,24 +85,40 @@ static const char *hs21_tiny_qp(void) {
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
-  cold_iter = info.iter;
 
   /* test warm-starting. scs() sets up a new workspace, which starts at
    * stgs->scale; pass the scale the cold solve ended at (info.scale, as
    * docs/src/api/info.rst says to for a new workspace), since with
    * adaptive_scale the cold solve may have updated it and a warm start in
-   * another metric is not the warm start this checks. A broken warm start
-   * (a cold restart at info.scale) still takes more than half the cold
-   * iterations here. */
+   * another metric is not the warm start this checks.
+   *
+   * The check is on the first iterate, not on the number of iterations the
+   * warm-started solve takes. SCS checks for convergence every 25 iterations
+   * (CONVERGED_INTERVAL), and on this problem the residuals swing by factors
+   * of 10 or more from one iteration to the next, so a solve stops at
+   * whichever check lands in a dip below the tolerance. A cold solve can stop
+   * there mid-swing, its residuals within the tolerance while the iterate is
+   * still moving; the warm-started solve then resumes the swing and stops at
+   * a later dip, after anything from 0 iterations to more than the cold
+   * solve took. Over 2,000 starting scales around the default it took more
+   * than half the cold solve's iterations on 12 to 14% of them in single
+   * precision with CG and 1.4% in double precision with CG (Mac clang, Spark
+   * gcc), and on a CI runner (gcc, single precision, CG); with direct solvers
+   * on none. The first iterate shows whether the warm start was used,
+   * wherever the solves stop: warm_start_first_iterate_ratio. */
   scale = stgs->scale;
   stgs->scale = info.scale;
+  ws_ratio = warm_start_first_iterate_ratio(d, k, stgs, sol);
+  scs_printf("hs21_tiny_qp: warm-start first iterate ratio %.2e "
+             "(limit %.2e)\n",
+             ws_ratio, WARM_START_FIRST_ITER_TOL);
+  mu_assert("hs21_tiny_qp: warm-start failure",
+            ws_ratio <= WARM_START_FIRST_ITER_TOL);
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
   stgs->scale = scale;
-  /* relative to the cold solve: an absolute cap encodes the iteration
-   * count of one particular metric and breaks whenever the scaling
-   * changes, even though the warm solve is correct */
-  mu_assert("hs21_tiny_qp: warm-start failure", info.iter <= cold_iter / 2);
+  perr = info.pobj - opt;
+  derr = info.dobj - opt;
   success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
             exitflag == SCS_SOLVED;
 
