@@ -112,26 +112,10 @@ static const char *hs21_tiny_qp_rw(void) {
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
 
-  /* test warm-starting. scs() sets up a new workspace, which starts at
-   * stgs->scale; pass the scale the cold solve ended at (info.scale, as
-   * docs/src/api/info.rst says to for a new workspace), since with
-   * adaptive_scale the cold solve may have updated it and a warm start in
-   * another metric is not the warm start this checks.
-   *
-   * The check is on the first iterate, not on the number of iterations the
-   * warm-started solve takes. SCS checks for convergence every 25 iterations
-   * (CONVERGED_INTERVAL), and on this problem the residuals swing by factors
-   * of 10 or more from one iteration to the next, so a solve stops at
-   * whichever check lands in a dip below the tolerance. A cold solve can stop
-   * there mid-swing, its residuals within the tolerance while the iterate is
-   * still moving; the warm-started solve then resumes the swing and stops at
-   * a later dip, after anything from 0 iterations to more than the cold
-   * solve took. Over 2,000 starting scales around the default it took more
-   * than half the cold solve's iterations on 12 to 14% of them in single
-   * precision with CG and 1.4% in double precision with CG (Mac clang, Spark
-   * gcc), and on a CI runner (gcc, single precision, CG); with direct solvers
-   * on none. The first iterate shows whether the warm start was used,
-   * wherever the solves stop: warm_start_first_iterate_ratio. */
+  /* test warm-starting as hs21_tiny_qp.h does, and for the reasons given
+   * there: start from the scale the cold solve ended at (info.scale), and
+   * check the first iterate, not the number of iterations the warm-started
+   * solve takes. */
   scale = stgs->scale;
   stgs->scale = info.scale;
   ws_ratio = warm_start_first_iterate_ratio(d, k, stgs, sol);
