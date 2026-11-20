@@ -378,6 +378,16 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
  * iterate is already at sol cannot tell the two apart; it fails the check
  * unless the warm start's is there too. */
 #define WARM_START_FIRST_ITER_TOL (5e-2)
+
+/* max(a, b), except that it is NaN if a or b is NaN, so once a running
+ * maximum has met a NaN it stays NaN whatever is compared after it */
+static scs_float warm_start_nan_max(scs_float a, scs_float b) {
+  if (isnan(a)) {
+    return a;
+  }
+  return (isnan(b) || b > a) ? b : a;
+}
+
 scs_float warm_start_first_iterate_ratio(const ScsData *d, const ScsCone *k,
                                          const ScsSettings *stgs,
                                          const ScsSolution *sol) {
@@ -406,21 +416,21 @@ scs_float warm_start_first_iterate_ratio(const ScsData *d, const ScsCone *k,
       memcpy(it[b], ref[b], len[b] * sizeof(scs_float));
     }
     scs(d, k, &st, &first, &info);
-    /* written so that a NaN carries through to the result */
+    /* a NaN anywhere in a block makes its distance NaN */
     for (b = 0; b < 3; ++b) {
       for (i = 0; i < len[b]; ++i) {
-        e = ABS(it[b][i] - ref[b][i]);
-        if (!(e <= dist[warm][b])) {
-          dist[warm][b] = e;
-        }
+        dist[warm][b] =
+            warm_start_nan_max(dist[warm][b], ABS(it[b][i] - ref[b][i]));
       }
     }
   }
+  /* a NaN distance in any block, warm or cold, makes the ratio NaN, which
+   * fails a ratio <= tolerance check */
   for (b = 0; b < 3; ++b) {
-    e = dist[1][b] == 0. ? 0. : dist[1][b] / dist[0][b];
-    if (!(e <= ratio)) {
-      ratio = e;
-    }
+    e = (dist[1][b] == 0. && !isnan(dist[0][b]))
+            ? 0.
+            : dist[1][b] / dist[0][b];
+    ratio = warm_start_nan_max(ratio, e);
   }
   scs_free(first.x);
   scs_free(first.y);
