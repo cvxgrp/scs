@@ -67,7 +67,7 @@
 
 /* The limit on g's measure, in both tests. SCS refines g until a step no
  * longer halves its residual, which ends at 0.3-0.4 machine epsilons of the
- * terms (median over random SOCPs; at most 1.6 in 26,000 solves) and at
+ * terms (median over random SOCPs; at most 1.7 in about 30,000 solves) and at
  * 0.06-0.97 in these tests (QDLDL, CG, the dense solver, Accelerate, MKL
  * Pardiso, GPU CG and cuDSS, in both precisions, on macOS, Linux and
  * Windows). A refinement that stops at a looser target is above 2: with
@@ -394,9 +394,16 @@ static const char *test_g_accuracy(void) {
  * single-precision builds of this suite raises every tolerance to at least
  * 1e-4 (problem_utils.h): at 1e-4 the floor is far below the tolerance */
 #define G_ITER_EPS (1e-6)
-/* about five times the most iterations it took at those starts: with the
- * floor above the tolerance, no number of iterations would do */
-#define G_ITER_MAX_ITERS (5000)
+/* Single precision at 1e-6 on this generator is path-chaotic even with g
+ * refined to the halving stop: over seeds 1-40, the most iterations were
+ * 6,050 with CG and 13,650 with QDLDL (one seed each above 5,000; seed 4
+ * took 400-900 with CG and 225-500 with QDLDL at 9 starts). 20,000, the
+ * single-precision cap of the A/B, leaves room for a runner whose rounding
+ * takes another path. The cap costs nothing while the test passes; with the
+ * floor above the tolerance no number of iterations would do (G_TOL_EPS 4,
+ * single-precision CG: still at max_iters after 20,000, g at 3.4 epsilons of
+ * its terms, about a minute on the Mac). */
+#define G_ITER_MAX_ITERS (20000)
 
 static const char *test_g_accuracy_iteration(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
@@ -421,11 +428,11 @@ static const char *test_g_accuracy_iteration(void) {
   scs_set_default_settings(stgs);
   stgs->verbose = 0;
   w = scs_init(d, k, stgs);
-  mu_assert("test_g_accuracy_iteration: scs_init returned NULL",
-            w != SCS_NULL);
   stgs->eps_abs = stgs->eps_rel = G_ITER_EPS;
   stgs->max_iters = G_ITER_MAX_ITERS;
-  if (scs_update_settings(w, stgs) != 0) {
+  if (w == SCS_NULL) {
+    fail = "test_g_accuracy_iteration: scs_init returned NULL";
+  } else if (scs_update_settings(w, stgs) != 0) {
     fail = "test_g_accuracy_iteration: scs_update_settings failed";
   } else {
     exitflag = scs_solve(w, sol, &info, 0);
