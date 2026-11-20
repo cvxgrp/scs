@@ -11,11 +11,12 @@
  * adaptive_diag_scale each row's entry is further divided by its own
  * multiplier.
  *
- * In the box cone's usual form, l <= a'x <= u written as (1, a'x) in
+ * In the box cone's usual form, l <= a'x <= u written as (1, b - A x) in
  * {(t, s) : t l <= s <= t u}, the row of A for t is zero and its entry of b
- * is 1, so the row says t = 1. Weighted like an inequality row, t could stop
- * off 1 by about SCS's primal tolerance, eps (1 + ||A x||), and every bound is
- * then met only up to |t - 1| times the bound.
+ * is 1 (and b - A x = a'x on the other rows), so the row says t = 1.
+ * Weighted like an inequality row, t could stop off 1 by about SCS's primal
+ * tolerance, eps (1 + ||A x||), and every bound is then met only up to
+ * |t - 1| times the bound.
  *
  * The problems are built from HS76 (Hock and Schittkowski, test problem 76),
  * a convex QP in 4 variables:
@@ -224,13 +225,15 @@ static const char *test_box_t_weight_no_box(void) {
 
 /* HS76 as a benchmark suite poses it, every row in a box cone, at the default
  * eps of 1e-4. Weighted like an inequality row, t stopped at 1 + 4.1e-4 here
- * (macOS, Accelerate and QDLDL, any starting scale near the default), close to
- * SCS's primal tolerance of about 1e-4 (1 + 5), and the first constraint was
- * violated by 2.2e-3; weighted like an equality row, t stops within 1e-9 of 1
- * and the violation is below 1e-6. The test asks for |t - 1| below 1e-5,
- * between the two by orders of magnitude, so it fails if t is weighted like an
- * inequality row again but not on the roundoff of another platform or of
- * single precision. */
+ * (macOS with Accelerate and QDLDL, any starting scale near the default, and
+ * Linux gcc with QDLDL and CG: 4.05e-4 to 4.06e-4), close to SCS's primal
+ * tolerance of about 1e-4 (1 + 5), and the first constraint was violated by
+ * 2.2e-3; weighted like an equality row, t stops within 2e-9 of 1 and the
+ * violation is below 3e-6 (3.6e-7 and 1.4e-4 in single precision). The test
+ * asks for |t - 1| below 1e-5, 40 times below the first and 28 times above
+ * the largest of the second, so it fails if t is weighted like an inequality
+ * row again but not on the roundoff of another platform or of single
+ * precision. */
 static const char *test_box_t_weight_stop(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
@@ -259,7 +262,8 @@ static const char *test_box_t_weight_stop(void) {
   for (j = 0; j < 7; ++j) {
     scs_float ax = a[j][0] * sol->x[0] + a[j][1] * sol->x[1] +
                    a[j][2] * sol->x[2] + a[j][3] * sol->x[3];
-    viol = MAX(viol, MAX(hs76_box_bl[j] - ax, 0.) + MAX(ax - hs76_box_bu[j], 0.));
+    viol = MAX(viol,
+               MAX(hs76_box_bl[j] - ax, 0.) + MAX(ax - hs76_box_bu[j], 0.));
   }
   scs_printf("test_box_t_weight_stop: %li iterations, |t - 1| = %.3e, largest "
              "bound violation %.3e, objective error %.3e\n",

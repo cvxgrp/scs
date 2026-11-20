@@ -254,10 +254,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * stopped with their bounds violated. Weighted like an equality row, t tracks
  * tau b_t about as tightly as an equality is held, and the box rows are
  * clipped to bounds at their stated scale. See SCS(set_r_y) for how the weight
- * acts. Tradeoff: any positive weight is a valid metric, so this changes the
- * path, never the solution; on most problems with a box cone the path gets
- * shorter, but a few take many more iterations (see
- * docs/src/algorithm/scale.rst). */
+ * acts. It needs the box projection to be exact (proj_box_cone): with the
+ * weight, a projection that stopped short of t* made ADMM cycle.
+ * Tradeoff: any positive weight is a valid metric, so this changes the path,
+ * never the solution. Over 30 benchmark problems with box cones (QDLDL,
+ * statuses independently verified) more runs meet the tolerance (397 of 432
+ * against 272) in less time, but some starting scales fall into a very slow
+ * regime: pilotnov at eps 1e-4 took 61,000 to 643,000 iterations on 4 of 8
+ * starts (about 2,000 on the others), and at eps 1e-6 perold reached the
+ * limits on all 16 starts and pilot took a median of 295,000 iterations
+ * (32,000 without the weight; 8 of 16 solved against 1). It also makes tau
+ * smaller at the solution, since the t entry of v is y_t + s_t / rho_y with
+ * s_t = tau b_t (hs21_tiny_qp: 0.019 against 0.34): harmless in double
+ * precision, but fixed absolute floors on the iterate, such as the CG floor
+ * in single precision, count for more (docs/src/algorithm/scale.rst). */
 #define BOX_T_RY_FACTOR (ZERO_CONE_RY_FACTOR)
 
 /* --- Anderson Acceleration (AA) parameters --- */

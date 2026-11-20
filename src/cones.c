@@ -407,17 +407,20 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
    *   (root_plus), as a zero-cone row with b != 0 does.
    * - The box projection, whose metric weighs t by rho_t = 1 / rho_y
    *   (proj_cone hands proj_box_cone the slice of r_y that starts at this
-   *   entry). Its input is t0 = 2 tau b_t - rho_y v_t, the value the linear
-   *   system hands it; the clipped rows pull t away from t0 by
+   *   entry). project_cones hands proj_dual_cone 2 y_t - v_t, which it
+   *   negates and multiplies by rho_y, so with y_t from the linear system as
+   *   above (tau its root_plus value) the t input is
+   *   t0 = -rho_y (2 y_t - v_t) = 2 tau b_t - rho_y v_t. At t* = K / H (see
+   *   proj_box_cone) the clipped rows pull t away from t0 by
    *   sum_j r_j b_j (x_j - t0 b_j) / H, with H = rho_t + S and
    *   S = sum_j r_j b_j^2 over them (b_j the bound row j is clipped to). A
    *   rho_t BOX_T_RY_FACTOR times larger shrinks that pull by
    *   (rho_t + S) / (BOX_T_RY_FACTOR rho_t + S), by up to BOX_T_RY_FACTOR when
    *   S does not dominate, so the box rows are clipped to a t nearer tau b_t.
-   * Everything else reads the entry from diag_r (the per-row multiplier of
-   * adaptive_diag_scale divides it as it does a zero-cone row's, since the box
-   * rows are scaled independently; the linear system, root_plus, the remap of
-   * v at a scale update and warm starts), so this is the one place it is set.
+   * Everything else reads the entry from diag_r: the linear system,
+   * root_plus, the remap of v at a scale update and warm starts. With
+   * adaptive_diag_scale the row's own multiplier divides it, as it divides a
+   * zero-cone row's. So this is the one place it is set.
    * A box cone of size 1 is t >= 0 alone, with no bounds for t to scale: a
    * nonnegative entry, which keeps 1 / scale. */
   if (c->k->bsize > 1) {
@@ -2087,9 +2090,10 @@ static void normalize_box_cone(ScsCone *k, scs_float *D, scs_int bsize) {
  * so that g is one line there. They return the root of that line: A1 as
  * K / H, with H and K summed from scratch in one pass over the rows, A2 as
  * t - g(t) / H from a point t on that line close enough to the root that H's
- * rounding does not matter. The sums that set the result are compensated (box_twosum), so the
- * result is t* up to the rounding of the products in the terms and of the
- * final division, a bound that does not grow with the number of rows:
+ * rounding does not matter. The sums that set the result are compensated
+ * (box_twosum), so the result is t* up to the rounding of the products in the
+ * terms and of the final division, a bound that does not grow with the number
+ * of rows:
  *   A1: |t - t*| <= ~3 eps (t* + (rho_t |t0| + sum |r_j x_j b_j|) / H),
  *   A2: |t - t*| <= ~3 eps (t* + sum |r_j (t b_j - x_j) b_j| / H),
  * the sums over the clipped rows (validated against an exact rational t*: at

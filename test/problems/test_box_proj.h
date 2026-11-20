@@ -72,7 +72,7 @@ static const char *test_box_proj_kink_trap(void) {
   /* t* = 0 for the first input, which leaves the warm start at 0 */
   scs_float p0[] = {-1., 0., 0.};
   /* t* = 0.5: rows 1 and 2 are free for t > 1e-12, so g(t) = t - 0.5 */
-  scs_float p1[] = {0.5, 1., 0.};
+  scs_float p1[] = {0.5, 1., 0.}, x1[] = {1., 0.};
   scs_float work[3], t_star = 0.5;
   const char *fail = SCS_NULL;
 
@@ -80,7 +80,10 @@ static const char *test_box_proj_kink_trap(void) {
   k->bl = bl;
   k->bu = bu;
   cw = SCS(init_cone)(k, 3);
-  mu_assert("test_box_proj_kink_trap: cone init failed", cw);
+  if (!cw) {
+    scs_free(k);
+    return "test_box_proj_kink_trap: cone init failed";
+  }
   box_proj_call(cw, p0, r_y, work, 2);
   if (ABS(p0[0]) > 1e-12) {
     fail = "test_box_proj_kink_trap: t of the first projection is not 0";
@@ -88,7 +91,7 @@ static const char *test_box_proj_kink_trap(void) {
   box_proj_call(cw, p1, r_y, work, 2);
   scs_printf("test_box_proj_kink_trap: t = %.6e (t* = %.1f), g(t) = %.3e\n",
              p1[0], t_star,
-             box_proj_g(p1[0], 0.5, &(p1[1]), bl, bu, 2, 1., rinv));
+             box_proj_g(p1[0], 0.5, x1, bl, bu, 2, 1., rinv));
   SCS(finish_cone)(cw);
   scs_free(k);
   if (fail) {
@@ -115,21 +118,20 @@ static scs_float box_proj_rand(unsigned long long *state) {
  * random weights and bounds: finite, infinite, zero width, and steep (bounds
  * of 1e6 to 1e14 with their kinks near 0, the 3.3 loop's trap; larger ones
  * would overflow u^2 in single precision), and inputs with kinks within a
- * few ulps of t*. The returned t is t* to within d
- * max(t, 1) if g changes sign across [t - d max(t, 1), t + d max(t, 1)]
- * (only g(t + d max(t, 1)) > 0 when that interval reaches below 0), and s
- * must be x clipped to [t' l, t' u] for a t' in that interval, to d max(|x|,
- * 1). d = 1e-7 (1e-3 in single precision) is far
- * above the rounding of these well-scaled instances and far below what a
- * projection stopped short of its root gives (the 3.3 loop: t off by up to
- * 100% of t* on the steep instances). */
+ * few ulps of t*. The returned t is t* to within h = d max(t, 1) if g
+ * changes sign across [t - h, t + h] (only g(t + h) > 0 when t - h < 0), and
+ * s must be x clipped to [t' l, t' u] for some t' within h of t, to
+ * d max(|x|, 1). d = 1e-7 (1e-3 in single precision) is far above the
+ * rounding of these well-scaled instances and far below what a projection
+ * stopped short of its root gives (the 3.3 loop: t off by up to 100% of t* on
+ * the steep instances). */
 static const char *test_box_proj_optimality(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   scs_float bl[BOX_PROJ_MAX_ROWS], bu[BOX_PROJ_MAX_ROWS];
   scs_float r_y[BOX_PROJ_MAX_ROWS + 1], rinv[BOX_PROJ_MAX_ROWS];
   scs_float p[BOX_PROJ_MAX_ROWS + 1], x[BOX_PROJ_MAX_ROWS];
   scs_float work[BOX_PROJ_MAX_ROWS + 1];
-  scs_float d = VERIFY_TOL(1e-7, 1e-3), t, t0, h, lo, hi, s, e;
+  scs_float d = VERIFY_TOL(1e-7, 1e-3), t, t0, h, lo, hi, s, e, bmax;
   scs_float worst = 0., one = 1.;
   unsigned long long state = 20261119ULL;
   scs_int i, j, call, nb, family, nbad = 0, ncalls = 0;
@@ -213,9 +215,9 @@ static const char *test_box_proj_optimality(void) {
          * which moves it by at most h |bound| */
         s = MIN(MAX(x[j], bl[j] > -INFINITY ? t * bl[j] : -INFINITY),
                 bu[j] < INFINITY ? t * bu[j] : INFINITY);
-        lo = MAX(bl[j] > -INFINITY ? ABS(bl[j]) : 0.,
-                 bu[j] < INFINITY ? ABS(bu[j]) : 0.);
-        e = MAX(e, (ABS(p[j + 1] - s) - h * lo) / MAX(ABS(x[j]), one));
+        bmax = MAX(bl[j] > -INFINITY ? ABS(bl[j]) : 0.,
+                   bu[j] < INFINITY ? ABS(bu[j]) : 0.);
+        e = MAX(e, (ABS(p[j + 1] - s) - h * bmax) / MAX(ABS(x[j]), one));
       }
       worst = MAX(worst, e);
       if (e > d) {
