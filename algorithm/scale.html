@@ -53,7 +53,10 @@
 <li class="toctree-l2"><a class="reference internal" href="equilibration.html">Data equilibration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Non-identity DR Scaling</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cone-projection">Cone projection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selecting-r">Selecting <span class="math notranslate nohighlight">\(R\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selecting-r">Selecting <span class="math notranslate nohighlight">\(R\)</span></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-box-cone-s-t-entry">The box cone’s <span class="math notranslate nohighlight">\(t\)</span> entry</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#root-plus-function">Root-plus function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#moreau-decomposition">Moreau decomposition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dual-vector">Dual vector</a></li>
@@ -144,6 +147,22 @@ computed exactly in the norm that <span class="math notranslate nohighlight">\(R
 decomposition below). The box cone projection solves a weighted problem in
 its scalar variable, and the PSD projection applies a diagonal congruence
 before and after the usual eigendecomposition.</p>
+<p>The box cone’s scalar problem is the minimization of a convex piecewise
+quadratic in <span class="math notranslate nohighlight">\(t\)</span>, whose derivative is piecewise linear, increasing, and
+changes slope at the breakpoints <span class="math notranslate nohighlight">\(t = x_j / u_j\)</span> and
+<span class="math notranslate nohighlight">\(t = x_j / l_j\)</span>. SCS solves it with Newton’s method from the previous
+iteration’s <span class="math notranslate nohighlight">\(t\)</span>, kept inside a bracket on the root, and falls back to
+sorting the breakpoints. It stops only when the derivative changes sign
+across an interval that contains no breakpoint, so the result is exact up to
+rounding: there is no tolerance that a short step can meet while the root is
+still far away (see <code class="code docutils literal notranslate"><span class="pre">proj_box_cone</span></code> in <code class="code docutils literal notranslate"><span class="pre">src/cones.c</span></code>). This
+matters because ADMM relies on the projection being exact. SCS 3.3’s version
+stopped on a step-size tolerance, and on a problem with bounds of
+<span class="math notranslate nohighlight">\(10^{20}\)</span> left finite (no normalization) it returned
+<span class="math notranslate nohighlight">\(t \approx 10^{-20}\)</span> where the answer was between 0.002 and 0.3. With
+the box cone’s <span class="math notranslate nohighlight">\(t\)</span> weighted as described in <a class="reference internal" href="#box-t-weight"><span class="std std-ref">The box cone’s t entry</span></a>, each
+such <span class="math notranslate nohighlight">\(t\)</span> was the starting point of the next projection and the solve ran
+to its iteration limit.</p>
 </section>
 <section id="selecting-r">
 <h2>Selecting <span class="math notranslate nohighlight">\(R\)</span><a class="headerlink" href="#selecting-r" title="Link to this heading"></a></h2>
@@ -160,17 +179,18 @@ term includes the effect of the parameter <code class="code docutils literal not
 heuristically to improve convergence. Basically</p>
 <div class="math notranslate nohighlight">
 \[\rho_y \approx (1/\mathrm{scale}) I\]</div>
-<p>with two differences. First, each cone can modify this relationship slightly
-(currently only the zero cone does, which sets
-<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>). Second, with
-<code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> each row <span class="math notranslate nohighlight">\(i\)</span> has its own multiplier
-<span class="math notranslate nohighlight">\(f_i\)</span>, which acts like a scale for that row alone:</p>
+<p>with two differences. First, an equality row gets a smaller entry,
+<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>: every row of the zero cone, and the
+first entry <span class="math notranslate nohighlight">\(t\)</span> of a box cone with bounds (see <a class="reference internal" href="#box-t-weight"><span class="std std-ref">The box cone’s t entry</span></a>).
+Second, with <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> each row <span class="math notranslate nohighlight">\(i\)</span> has its own
+multiplier <span class="math notranslate nohighlight">\(f_i\)</span>, which acts like a scale for that row alone:</p>
 <div class="math notranslate nohighlight">
 \[\rho_{y,i} = \frac{1}{\mathrm{scale}\ f_i}\]</div>
-<p>for a row outside the zero cone, and
-<span class="math notranslate nohighlight">\(\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)\)</span> for a row of the zero
-cone. The multipliers start at one, so at the start of a solve on a new
-workspace they change nothing, and they are kept in
+<p>for most rows, and <span class="math notranslate nohighlight">\(\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)\)</span> for a
+row of the zero cone and for the box cone’s <span class="math notranslate nohighlight">\(t\)</span> entry. The factor 1000 is
+<code class="code docutils literal notranslate"><span class="pre">ZERO_CONE_RY_FACTOR</span></code> (and <code class="code docutils literal notranslate"><span class="pre">BOX_T_RY_FACTOR</span></code>, equal to it) in
+<code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>. The multipliers start at one, so at the start of a
+solve on a new workspace they change nothing, and they are kept in
 <span class="math notranslate nohighlight">\([10^{-3}, 10^{3}]\)</span>. How they are updated is described in
 <a class="reference internal" href="#per-row-refinement"><span class="std std-ref">Per-row refinement</span></a>. So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</span> decreases
 and vice-versa.</p>
@@ -178,6 +198,59 @@ and vice-versa.</p>
 <code class="code docutils literal notranslate"><span class="pre">rho_x</span></code>. The quantity <span class="math notranslate nohighlight">\(\rho_y\)</span> is determined by the <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">setting</span></a> value <code class="code docutils literal notranslate"><span class="pre">scale</span></code> but is updated adaptively using the techniques
 described in <a class="reference internal" href="#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>. Finally,  <span class="math notranslate nohighlight">\(d\)</span>
 is determined by <code class="code docutils literal notranslate"><span class="pre">TAU_FACTOR</span></code> in the code defined in <code class="code docutils literal notranslate"><span class="pre">glbopts.h</span></code>.</p>
+<section id="the-box-cone-s-t-entry">
+<span id="box-t-weight"></span><h3>The box cone’s <span class="math notranslate nohighlight">\(t\)</span> entry<a class="headerlink" href="#the-box-cone-s-t-entry" title="Link to this heading"></a></h3>
+<p>The box cone is <span class="math notranslate nohighlight">\(\{(t, s) \mid t l \leq s \leq t u\}\)</span>. Bounds
+<span class="math notranslate nohighlight">\(l \leq a^\top x \leq u\)</span> are usually posed with <span class="math notranslate nohighlight">\(t\)</span> fixed to one:
+the row of <span class="math notranslate nohighlight">\(A\)</span> for <span class="math notranslate nohighlight">\(t\)</span> is zero and its entry of <span class="math notranslate nohighlight">\(b\)</span> is one,
+so that row is the equality <span class="math notranslate nohighlight">\(s_t = \tau\)</span>, although <span class="math notranslate nohighlight">\(t\)</span> is a cone
+entry. SCS therefore gives the <span class="math notranslate nohighlight">\(t\)</span> entry the weight of an equality row,
+<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>. A box cone of size one is
+<span class="math notranslate nohighlight">\(t \geq 0\)</span> alone, with no bounds, and keeps <span class="math notranslate nohighlight">\(1 / \mathrm{scale}\)</span>
+like a nonnegative row.</p>
+<p>Why: weighted like an inequality row, <span class="math notranslate nohighlight">\(t\)</span> can stop off one by up to the
+primal tolerance, about <span class="math notranslate nohighlight">\(\epsilon (1 + \|Ax\|_\infty)\)</span>, because SCS’s
+primal residual measures <span class="math notranslate nohighlight">\(t - 1\)</span> against the largest entry of
+<span class="math notranslate nohighlight">\(Ax\)</span>. Each bound is then met only up to <span class="math notranslate nohighlight">\(|t - 1|\)</span> times the bound,
+so on problems with large bounds SCS could report solved while a bound was
+violated by more than the tolerance. With the equality weight the box
+projection, whose metric weighs <span class="math notranslate nohighlight">\(t\)</span> by <span class="math notranslate nohighlight">\(1 / \rho_y\)</span>, and the
+linear system both hold <span class="math notranslate nohighlight">\(t\)</span> to <span class="math notranslate nohighlight">\(\tau\)</span> about as tightly as an
+equality.</p>
+<p>This weight needs an exact box projection (see above): with it, a projection
+that stopped short of the true <span class="math notranslate nohighlight">\(t\)</span> made the solve cycle to its iteration
+limit.</p>
+<p>Tradeoff: any positive weight is a valid metric, so this changes the path SCS
+takes, never the solution. Measured on 30 benchmark problems with box cones,
+16 or 8 starting scales each, with every status checked independently against
+the original problem at 10 times the tolerance:</p>
+<ul class="simple">
+<li><p>With the direct solver (QDLDL), 397 of 432 runs met the tolerance against
+272 without the weight (eps <span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span>), the
+shifted geometric mean of the total time over the runs both solve was 0.87
+to 0.95 times (depending on which runs are compared), and the median
+<span class="math notranslate nohighlight">\(|t - 1|\)</span> where SCS stops fell from <span class="math notranslate nohighlight">\(2.5 \times 10^{-4}\)</span> to
+<span class="math notranslate nohighlight">\(2.6 \times 10^{-7}\)</span>.</p></li>
+<li><p>But some starting scales fall into a very slow regime. On pilotnov at eps
+<span class="math notranslate nohighlight">\(10^{-4}\)</span>, 4 of 8 starts took 61,000 to 643,000 iterations instead of
+about 2,000 (all still solved). At eps <span class="math notranslate nohighlight">\(10^{-6}\)</span>, perold reached the
+iteration or time limit on all 16 starts (without the weight SCS stopped on
+its own test on all 16, at points that fail the independent check), and
+pilot took a median of 295,000 iterations against 32,000 (8 of 16 solved
+against 1).</p></li>
+<li><p>With the indirect solver (CG, limited to 60 seconds a solve, 58 runs), no
+run was lost and one more solved; CG reached that limit on the same 30 runs
+with or without the weight.</p></li>
+</ul>
+<p>The weight also makes <span class="math notranslate nohighlight">\(\tau\)</span> smaller at the solution, because the
+<span class="math notranslate nohighlight">\(t\)</span> entry of <span class="math notranslate nohighlight">\(v\)</span> is <span class="math notranslate nohighlight">\(y_t + s_t / \rho_y\)</span> with
+<span class="math notranslate nohighlight">\(s_t = \tau b_t\)</span> (on hs21_tiny_qp, 0.019 against 0.34). In double
+precision this is harmless; in single precision fixed absolute floors on the
+iterate, such as the CG solver’s, cost more accuracy. When you warm-start a new
+workspace, also pass the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> the previous solve ended at
+(<code class="code docutils literal notranslate"><span class="pre">info.scale</span></code>): with adaptive scaling a warm start at another scale is a
+warm start in another metric.</p>
+</section>
 </section>
 <section id="root-plus-function">
 <h2>Root-plus function<a class="headerlink" href="#root-plus-function" title="Link to this heading"></a></h2>

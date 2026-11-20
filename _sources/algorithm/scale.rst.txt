@@ -51,6 +51,23 @@ decomposition below). The box cone projection solves a weighted problem in
 its scalar variable, and the PSD projection applies a diagonal congruence
 before and after the usual eigendecomposition.
 
+The box cone's scalar problem is the minimization of a convex piecewise
+quadratic in :math:`t`, whose derivative is piecewise linear, increasing, and
+changes slope at the breakpoints :math:`t = x_j / u_j` and
+:math:`t = x_j / l_j`. SCS solves it with Newton's method from the previous
+iteration's :math:`t`, kept inside a bracket on the root, and falls back to
+sorting the breakpoints. It stops only when the derivative changes sign
+across an interval that contains no breakpoint, so the result is exact up to
+rounding: there is no tolerance that a short step can meet while the root is
+still far away (see :code:`proj_box_cone` in :code:`src/cones.c`). This
+matters because ADMM relies on the projection being exact. SCS 3.3's version
+stopped on a step-size tolerance, and on a problem with bounds of
+:math:`10^{20}` left finite (no normalization) it returned
+:math:`t \approx 10^{-20}` where the answer was between 0.002 and 0.3. With
+the box cone's :math:`t` weighted as described in :ref:`box_t_weight`, each
+such :math:`t` was the starting point of the next projection and the solve ran
+to its iteration limit.
+
 
 Selecting :math:`R`
 -------------------
@@ -73,20 +90,21 @@ heuristically to improve convergence. Basically
 
     \rho_y \approx (1/\mathrm{scale}) I
 
-with two differences. First, each cone can modify this relationship slightly
-(currently only the zero cone does, which sets
-:math:`\rho_y = 1 / (1000\ \mathrm{scale})`). Second, with
-:code:`adaptive_diag_scale` each row :math:`i` has its own multiplier
-:math:`f_i`, which acts like a scale for that row alone:
+with two differences. First, an equality row gets a smaller entry,
+:math:`\rho_y = 1 / (1000\ \mathrm{scale})`: every row of the zero cone, and the
+first entry :math:`t` of a box cone with bounds (see :ref:`box_t_weight`).
+Second, with :code:`adaptive_diag_scale` each row :math:`i` has its own
+multiplier :math:`f_i`, which acts like a scale for that row alone:
 
 .. math::
 
     \rho_{y,i} = \frac{1}{\mathrm{scale}\ f_i}
 
-for a row outside the zero cone, and
-:math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a row of the zero
-cone. The multipliers start at one, so at the start of a solve on a new
-workspace they change nothing, and they are kept in
+for most rows, and :math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a
+row of the zero cone and for the box cone's :math:`t` entry. The factor 1000 is
+:code:`ZERO_CONE_RY_FACTOR` (and :code:`BOX_T_RY_FACTOR`, equal to it) in
+:code:`include/glbopts.h`. The multipliers start at one, so at the start of a
+solve on a new workspace they change nothing, and they are kept in
 :math:`[10^{-3}, 10^{3}]`. How they are updated is described in
 :ref:`per_row_refinement`. So as scale increases, :math:`\rho_y` decreases
 and vice-versa.
@@ -96,6 +114,65 @@ The quantity :math:`\rho_x` is determined by the :ref:`setting <settings>` value
 <settings>` value :code:`scale` but is updated adaptively using the techniques
 described in :ref:`Dynamic scale updating <updating_scale>`. Finally,  :math:`d`
 is determined by :code:`TAU_FACTOR` in the code defined in :code:`glbopts.h`.
+
+.. _box_t_weight:
+
+The box cone's :math:`t` entry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The box cone is :math:`\{(t, s) \mid t l \leq s \leq t u\}`. Bounds
+:math:`l \leq a^\top x \leq u` are usually posed with :math:`t` fixed to one:
+the row of :math:`A` for :math:`t` is zero and its entry of :math:`b` is one,
+so that row is the equality :math:`s_t = \tau`, although :math:`t` is a cone
+entry. SCS therefore gives the :math:`t` entry the weight of an equality row,
+:math:`\rho_y = 1 / (1000\ \mathrm{scale})`. A box cone of size one is
+:math:`t \geq 0` alone, with no bounds, and keeps :math:`1 / \mathrm{scale}`
+like a nonnegative row.
+
+Why: weighted like an inequality row, :math:`t` can stop off one by up to the
+primal tolerance, about :math:`\epsilon (1 + \|Ax\|_\infty)`, because SCS's
+primal residual measures :math:`t - 1` against the largest entry of
+:math:`Ax`. Each bound is then met only up to :math:`|t - 1|` times the bound,
+so on problems with large bounds SCS could report solved while a bound was
+violated by more than the tolerance. With the equality weight the box
+projection, whose metric weighs :math:`t` by :math:`1 / \rho_y`, and the
+linear system both hold :math:`t` to :math:`\tau` about as tightly as an
+equality.
+
+This weight needs an exact box projection (see above): with it, a projection
+that stopped short of the true :math:`t` made the solve cycle to its iteration
+limit.
+
+Tradeoff: any positive weight is a valid metric, so this changes the path SCS
+takes, never the solution. Measured on 30 benchmark problems with box cones,
+16 or 8 starting scales each, with every status checked independently against
+the original problem at 10 times the tolerance:
+
+- With the direct solver (QDLDL), 397 of 432 runs met the tolerance against
+  272 without the weight (eps :math:`10^{-4}` and :math:`10^{-6}`), the
+  shifted geometric mean of the total time over the runs both solve was 0.87
+  to 0.95 times (depending on which runs are compared), and the median
+  :math:`|t - 1|` where SCS stops fell from :math:`2.5 \times 10^{-4}` to
+  :math:`2.6 \times 10^{-7}`.
+- But some starting scales fall into a very slow regime. On pilotnov at eps
+  :math:`10^{-4}`, 4 of 8 starts took 61,000 to 643,000 iterations instead of
+  about 2,000 (all still solved). At eps :math:`10^{-6}`, perold reached the
+  iteration or time limit on all 16 starts (without the weight SCS stopped on
+  its own test on all 16, at points that fail the independent check), and
+  pilot took a median of 295,000 iterations against 32,000 (8 of 16 solved
+  against 1).
+- With the indirect solver (CG, limited to 60 seconds a solve, 58 runs), no
+  run was lost and one more solved; CG reached that limit on the same 30 runs
+  with or without the weight.
+
+The weight also makes :math:`\tau` smaller at the solution, because the
+:math:`t` entry of :math:`v` is :math:`y_t + s_t / \rho_y` with
+:math:`s_t = \tau b_t` (on hs21_tiny_qp, 0.019 against 0.34). In double
+precision this is harmless; in single precision fixed absolute floors on the
+iterate, such as the CG solver's, cost more accuracy. When you warm-start a new
+workspace, also pass the :code:`scale` the previous solve ended at
+(:code:`info.scale`): with adaptive scaling a warm start at another scale is a
+warm start in another metric.
 
 Root-plus function
 ------------------
