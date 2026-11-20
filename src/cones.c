@@ -2269,14 +2269,14 @@ static scs_int box_kink_near(const scs_float *x, const scs_float *bl,
                              const scs_float *bu, scs_int n, scs_float t,
                              scs_float s) {
   scs_float s2 = 2. * s, du, dl;
-  scs_int j, near = 0;
+  scs_int j, found = 0;
   for (j = 0; j < n; ++j) {
     du = ABS(t * bu[j] - x[j]);
     dl = ABS(t * bl[j] - x[j]);
-    near |= (du <= s2 * ABS(bu[j])) & (du < INFINITY);
-    near |= (dl <= s2 * ABS(bl[j])) & (dl < INFINITY);
+    found |= (du <= s2 * ABS(bu[j])) & (du < INFINITY);
+    found |= (dl <= s2 * ABS(bl[j])) & (dl < INFINITY);
   }
-  return near;
+  return found;
 }
 
 /* g(t) in the residual form, with each row's state at t (for the checks) */
