@@ -345,17 +345,46 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * over A and P for the size of the terms; when g0 misses tol_g, a solve and
  * a multiply per step, and for a direct solver one multiply more (the
  * correction form computes the residual of g0 again). For CG a step costs
- * the CG iterations that reach tol_g: in all, up to about a third of the first
- * solve's on random SOCPs in double precision (two thirds in single), but
- * where CG cannot reach tol_g each step runs to CG's iteration limit (up to
- * five times the first solve, on badly scaled QPs).
+ * the CG iterations that reach tol_g: in all, about 14% of the first solves'
+ * on random SOCPs in double precision (60% in single), but where CG cannot
+ * reach tol_g each step runs to CG's iteration limit (up to five times the
+ * first solve, on badly scaled QPs).
  *
- * G_TOL_EPS: the rounding of the computed residual itself is a few machine
- * epsilons of the size of its terms, so G_TOL_EPS of them is machine
- * precision with room for that rounding. Lower asks for steps that only
- * measure rounding (the halving stop then ends them, after one solve and one
- * multiply each); higher leaves an error in g that SCS repeats in every
- * iteration. The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
+ * G_TOL_EPS: just below the residual that refinement reaches, so that the steps
+ * end at the halving stop, where the linear solver can do no better, rather
+ * than at tol_g: g to about machine precision, modulo what the solver achieves.
+ * Refinement run to that stop ends at 0.3-0.4 machine epsilons of the size of
+ * the terms (median; 99th percentile 0.6-1.1, at most 1.7, over about 30,000
+ * solves in the A/B of this constant and its diagnosis), with QDLDL and CPU
+ * and GPU CG in double and single precision (random SOCPs, residuals computed
+ * in double): the rounding errors of a row's terms partly cancel, so the
+ * computed residual rounds by far less than an epsilon per term. (The "few
+ * epsilons" of rounding level elsewhere, REFINE_ROUNDING_EPS, kkt_terms_inf
+ * in src/scs.c and linsys.h, is a bound with room; this is the typical size.)
+ * A tol_g the solver can meet stops CG early, because a CG step solves only to
+ * tol_g and lands just below it. In single precision that costs time and
+ * solves: an iteration that uses a computed g is exact for the data K g, that
+ * is for c - r_x and b + r_y (r = [c; -b] - K g), so g's residual is a floor
+ * under SCS's residuals, and at eps 1e-6 (about eight single-precision
+ * epsilons) it can be above SCS's tolerance where rows are dense. With
+ * G_TOL_EPS 4, single-precision CG's g stopped at 3.4 epsilons of its terms
+ * (median) on random SOCPs with 100 variables and dense rows, and 72 of 100 ran
+ * to max_iters or the time limit; with 0.25, none did, and over all 500 random
+ * SOCPs single-precision CG was about three times faster
+ * (test_g_accuracy_iteration solves one like them). With 1, CG's g stopped at
+ * 0.8 epsilons and some runs still reached the floor; lower than 0.25 gives the
+ * same g with more rejected steps. In double precision the floor is about 1e-6
+ * of SCS's tolerance at eps 1e-9 either way. Cost: usually one step more per
+ * solve for g, the one that does not halve the residual (a solve and a
+ * multiply); with CG in double precision, up to 2% more CG iterations and
+ * 1-1.5% more time in all on random SOCPs (QDLDL: 0.5%). Where CG's steps run
+ * to its iteration limit the extra step costs most: on badly scaled QPs in
+ * single precision (HUES-MOD and QSCFXM1, 9 starts each) the steps took 2.2
+ * times the CG iterations they took with G_TOL_EPS 4, and the runs 26% more
+ * CG iterations in all, while 15 of the 18 runs solved (KKT-verified)
+ * instead of 9.
+ *
+ * The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
  * (the normwise backward error, which pairs K's largest row with g0's
  * largest entry even where they do not meet): on badly scaled data that was
  * up to 1e9 times larger (regress340, QDLDL), and let most solves for g stop
@@ -367,7 +396,7 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * G_REFINE_MAX_STEPS: LAPACK's ITMAX (xGERFS); the halving stop usually ends
  * the steps sooner. More can only help while each step still halves the
  * residual, at a solve and a multiply each. */
-#define G_TOL_EPS (4.)
+#define G_TOL_EPS (0.25)
 #define G_REFINE_MAX_STEPS (5)
 /* G_FAIL_REL_RES: SCS stops with SCS_FAILED, and a message asking for a bug
  * report, when the solve for g returns an error, g is not finite (or the
@@ -376,16 +405,17 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * leading digit is right. The fraction is at
  * most 1 for every g (g = 0 has 1); a solver solving with an R 1e12 times
  * too large gives 1.00 (test_g_accuracy). The refined g of working solvers
- * is far below it, at about tol_g (1e-15 in double precision, 5e-7 in
- * single) except where the solver itself cannot do better: at most 5e-3
+ * is far below it, at about a machine epsilon or less (with G_TOL_EPS 4 it
+ * was at most 1e-15 in double precision and 5e-7 in single, on the sets
+ * below) except where the solver itself cannot do better: at most 5e-3
  * with CG at its iteration limit (QSCFXM1, double precision), 2e-3 with
  * QDLDL in single precision (neos-4413714-turia), and 1.5e-2 with
  * test_refine_perturbed's solver on R (1 - 0.55); first solves, before
  * refinement, reached 0.17 (single-precision CG, neos-3656078-kumeu) and
- * were refined to 5e-7 (measured with QDLDL and CG in both precisions on
- * the test suite, 250 random SOCPs and 17 badly scaled LPs and QPs, 14 of
- * them with CG in double precision; dense and Accelerate on the test
- * suite). Lower would also stop solvers that are inaccurate rather than
+ * were refined to 5e-7 with G_TOL_EPS 4 (measured with QDLDL and CG in both
+ * precisions on the test suite, 250 random SOCPs and 17 badly scaled LPs and
+ * QPs, 14 of them with CG in double precision; dense and Accelerate on the
+ * test suite). Lower would also stop solvers that are inaccurate rather than
  * broken, which SCS's iterations cope with; higher would let through a g
  * with no correct digit. */
 #define G_FAIL_REL_RES (0.5)

@@ -107,10 +107,11 @@ void scs_free_lin_sys_work(ScsLinSysWork *w);
  *               \f$\|b\|_\infty \le \min(\mathrm{tol}, 10^{-12})\f$.
  *               Direct solvers refine toward it, and ignore it when
  *               `max_refine_steps` is 0. Below the rounding level of the
- *               residual (a few machine epsilons times
+ *               residual (at most a few machine epsilons times
  *               \f$\| |b| + |K|\,|x| \|_\infty\f$, absolute values entry by
- *               entry) a step only measures rounding, and the halving test
- *               stops it.
+ *               entry, and typically a third of one, since the rounding
+ *               errors of a row's terms partly cancel) a step only measures
+ *               rounding, and the halving test stops it.
  *  @param  max_refine_steps  At most this many refinement steps; 0 for none.
  *  @param  res  If not `SCS_NULL`, set to \f$\|b - K x\|_\infty\f$ for the
  *               returned x and the given b, with the multiplies above.

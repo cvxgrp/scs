@@ -1448,11 +1448,12 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
 
 /* || |h| + |K| |g| ||_inf, K = [R_x + P, A'; A, -R_y] from the (normalized)
  * data and diag_r, P's stored upper triangle in both triangles: the size of
- * the terms the residual h - K g is computed from, row by row, so a few
- * machine epsilons times this is the rounding of the residual itself (see
- * "Accuracy of the solve for g" in glbopts.h; refine_next_on uses it too,
- * see REFINE_ROUNDING_EPS). t (n + m) is scratch. One pass over A and P, the
- * cost of a multiply by K. */
+ * the terms the residual h - K g is computed from, row by row, so the
+ * rounding of the residual itself is at most a few machine epsilons times
+ * this, and typically a third of one (the rounding errors of a row's terms
+ * partly cancel; see "Accuracy of the solve for g" in glbopts.h;
+ * refine_next_on uses it too, see REFINE_ROUNDING_EPS). t (n + m) is scratch.
+ * One pass over A and P, the cost of a multiply by K. */
 static scs_float kkt_terms_inf(const ScsWork *w, const scs_float *h,
                                const scs_float *g, scs_float *t) {
   const ScsMatrix *A = w->d->A, *P = w->d->P;
