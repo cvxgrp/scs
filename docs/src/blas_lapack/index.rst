@@ -548,18 +548,18 @@ is the reason the option is left to whoever builds SCS and knows its BLAS.
   small blocks stay serial, many blocks of :math:`3 \times 3` to
   :math:`10 \times 10` get two to four threads, and blocks of
   :math:`16 \times 16` to :math:`32 \times 32` four to six. It does not
-  count where the threads run: on a CPU with several clusters of cores, the
-  lock costs more when the threads of a team are on different clusters. On
-  a DGX Spark (two clusters of Arm Cortex-X925 cores), a team of 3 took 1.65
-  times as long on both clusters as on one (1.3 times with NVPL, which has no
-  lock), and with 10 threads (both clusters) the projection took 1.20 times
-  the time of the previous formula on the block structures whose split
-  changed (0.94 times at 2 to 4 threads on one cluster). An OpenMP build of
-  OpenBLAS does not have this limit. Both checks need the functions
-  :code:`openblas_get_parallel` and :code:`openblas_get_num_threads` visible to
-  SCS: they are off for a static :code:`libopenblas.a` (the weak references
-  can stay unresolved), for an OpenBLAS with suffixed symbol names, and for
-  one loaded privately by another library (libblastrampoline in Julia).
+  count the cores the threads run on. On a DGX Spark (two clusters of Arm
+  Cortex-X925 cores), a team of the same size took 1.45 times as long with
+  10 OpenMP threads on the fast cores of both clusters as with 4 on one
+  cluster (1.26 times with NVPL, which has no lock). With 10 threads the
+  projection took 1.20 times the time of the previous formula on the block
+  structures whose split changed, against 0.94 times at 2 to 4 threads. An
+  OpenMP build of OpenBLAS does not have this limit. Both checks need the
+  functions :code:`openblas_get_parallel` and :code:`openblas_get_num_threads`
+  visible to SCS: they are off for a static :code:`libopenblas.a` (the weak
+  references can stay unresolved), for an OpenBLAS with suffixed symbol names,
+  and for one loaded privately by another library (libblastrampoline in
+  Julia).
 * In all other cases (other platforms, other libraries, another OpenMP
   runtime) SCS does nothing and assumes that the BLAS runs on one thread.
 

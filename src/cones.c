@@ -1092,13 +1092,15 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
  * that, because the smallest blocks lost more. An OpenMP build did not show
  * this (measured on macOS). These were measured with syevr and not again
- * with syevd. The cost also depends on where the threads run, which these
- * constants do not see: on a DGX Spark (two clusters of Cortex-X925 cores),
- * a team of 3 on 33 blocks of n = 4 took 1.65x as long when its threads
- * were on both clusters as on one (NVPL, without the lock: 1.3x). With the
- * estimate of psd_block_cost, the projection took 0.94x the time of the
- * previous estimate with this OpenBLAS at 2 to 4 threads (on one cluster)
- * and 1.20x at 10 threads (on both). */
+ * with syevd. The cost also depends on the cores the threads run on, which
+ * these constants do not see: on a DGX Spark (two clusters of Cortex-X925
+ * cores), a team of the same size took 1.45x as long (geometric mean, 103
+ * structures) with 10 OpenMP threads on the fast cores of both clusters as
+ * with 4 on one cluster; NVPL, without the lock, 1.26x (18 structures). The
+ * cause (placement across the clusters, or the pool's idle threads) was not
+ * isolated. With the estimate of psd_block_cost, the projection took 0.94x
+ * the time of the previous estimate with this OpenBLAS at 2 to 4 threads
+ * and 1.20x at 10. */
 #ifndef PSD_PAR_LOCK_COST
 #define PSD_PAR_LOCK_COST (300.)
 #endif
@@ -1199,9 +1201,8 @@ typedef struct {
  * - OpenBLAS, lock counted (PSD_PAR_LOCK_COST): 0.94x / 1.20x. At 2 to 4
  *   threads 28 pairs are faster by more than 5% and 15 slower. At 10, 3 are
  *   faster and 16 slower (1.08-1.95x: truss2, truss6, and teams of 3 or 4
- *   on 64 or 256 blocks of n = 3 to 6): the threads then run on both
- *   clusters of cores of the DGX Spark, where the lock costs more than that
- *   constant says.
+ *   on 64 or 256 blocks of n = 3 to 6), where the lock costs more than
+ *   PSD_PAR_LOCK_COST says.
  * - Accelerate: 1.06x / 1.12x. Projections of 9 to 62 us (5 to 64 blocks
  *   of n = 3 to 10) now take threads, or more of them: 10 pairs 1.1-2.3x
  *   slower, 2 faster.
