@@ -1091,7 +1091,18 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * size of the block, for n = 3 to 32: about 0.3, 0.5, 1.1, 1.7 and 4.8 us
  * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
  * that, because the smallest blocks lost more. An OpenMP build did not show
- * this (measured on macOS). */
+ * this (measured on macOS). These were measured with syevr and not again
+ * with syevd. The cost also depends on the cores the threads run on, which
+ * these constants do not see: on a DGX Spark (two clusters of Cortex-X925
+ * cores), a team of the same size took about 1.47x as long with 10 OpenMP
+ * threads on the fast cores of both clusters as with 4 on one cluster
+ * (geometric mean over 44 block structures, one ratio per structure and
+ * team size); NVPL, without the lock, 1.31x (10 structures). The 4- and
+ * 10-thread times come from separate sessions, not from paired runs, and
+ * the cause (placement across the clusters, or the pool's idle threads) was
+ * not isolated. With the estimate of psd_block_cost, the projection took
+ * 0.94x the time of the previous estimate with this OpenBLAS at 2 to 4
+ * threads and 1.20x at 10. */
 #ifndef PSD_PAR_LOCK_COST
 #define PSD_PAR_LOCK_COST (300.)
 #endif
@@ -1159,31 +1170,89 @@ typedef struct {
   scs_int blk;
 } PsdBlockCost;
 
-/* Estimated time of the projection of block b, in nanoseconds: a cubic in n
- * fitted to the measured times of single blocks, with 4x the n^3 term for a
- * complex block. It is within 25% of them for n from 2 to 300 on an Apple
- * M4 with Accelerate and on a Cortex-X925 with OpenBLAS, and within 30% of
- * the times of n = 1000 to 2000 on x86-64 with OpenBLAS and with MKL (#505).
- * It is up to 1.5x too low at n = 1000 on the Cortex-X925, and up to 1.9x too
- * low below n = 10 with NVPL, which takes longer for small blocks. Only the
- * relative sizes and the order of magnitude matter. n^3 alone makes small
- * blocks far too cheap: a block of n = 10 takes 1/650 of the time of one of
- * n = 300, not 1/27000. LAPACK takes a short path for n = 2 (0.2 us, but
- * 1.5 us with NVPL), and a block of n = 1 is a clamp.
- * These times were measured with syevr / heevr, and the cubic has not been
- * fitted to syevd / heevd. On the M4 on one thread, with Accelerate and with
- * OpenBLAS 0.3.34, a real block now takes 0.33-0.75x of the estimate for
- * n = 3 to 12 and 0.82-1.04x for n = 16 to 64; with Accelerate 0.55-0.85x
- * for n = 100 to 500. A complex block takes 0.38-0.66x of it for n = 3 to 8
- * and, with Accelerate, 1.13-1.44x for n = 48 to 400. Too high an estimate
- * makes the threads look worth more next to PSD_PAR_THREAD_COST and
- * PSD_PAR_LOCK_COST than they are, mostly for many small real blocks, so
- * those may get more threads than is fastest. */
+/* Estimated time of the projection of block b, in nanoseconds. It decides
+ * the split: blocks go, largest estimate first, to the least loaded thread,
+ * and the estimates of all blocks, next to PSD_PAR_THREAD_COST and
+ * PSD_PAR_LOCK_COST, decide how many threads are used at all. So only the
+ * relative sizes and the order of magnitude matter. n^3 alone would make
+ * small blocks far too cheap: a block of n = 10 takes 1/600 to 1/1100 of the
+ * time of one of n = 300 (the four libraries below), not 1/27000. A block
+ * of n = 2 takes LAPACK's short path, and a block of n = 1 is a clamp.
+ *
+ * Real blocks: a cubic fitted to the times of single blocks with syevd on
+ * one thread, as inside the threads of a parallel projection, with NVPL on
+ * a Cortex-X925 (DGX Spark, Linux): least squares in log(estimate / time)
+ * for n = 3 to 1000. NVPL's times are 0.91-1.17x the estimate, except
+ * n = 64 (1.5x). n = 2 is 200 ns, the time with Accelerate and OpenBLAS
+ * (NVPL: 1.4 us).
+ *
+ * The tradeoff. One formula serves every BLAS, and they differ most for
+ * small blocks: for n = 3 to 10, Accelerate (Apple M4) and OpenBLAS 0.3.31
+ * (pthreads build on one thread, Cortex-X925) take a quarter to two thirds
+ * of NVPL's time, and Accelerate grows more slowly for large blocks (55 ms
+ * at n = 1000, NVPL 116 ms). Too low an estimate keeps blocks serial that
+ * threads would project faster; too high gives threads to projections that
+ * are faster on one. Following NVPL, the highest times of the three, was
+ * the fastest of the fits over all three libraries, but not with each of
+ * them. Against the previous estimate (below), on the block structures
+ * whose split changed (#507's 82 and the SDPs of SDPLIB and the benchmark
+ * suite with several blocks), at 2 to 4 threads / at 10, the projection
+ * took:
+ * - NVPL: 0.84x / 0.89x. 2 to 16 blocks of n = 3 to 16 (hinf14, truss4)
+ *   now take threads, or more of them: 14 pairs 1.1-2.9x faster, one 1.07x
+ *   slower.
+ * - OpenBLAS, lock counted (PSD_PAR_LOCK_COST): 0.94x / 1.20x. At 2 to 4
+ *   threads 28 pairs are faster by more than 5% and 15 slower. At 10, 3 are
+ *   faster and 16 slower, where the lock costs more than PSD_PAR_LOCK_COST
+ *   says: 1.40-1.95x for truss2, truss6 and 64 or 256 blocks of n = 3 to 6
+ *   (teams of 3 or 4 where there were 1 or 2), and 1.08-1.16x for one more
+ *   thread (two for 16 blocks of n = 8) on 16 blocks of n = 6, 10, 16 or
+ *   64 blocks of n = 8, 256 or 1024 blocks of n = 10, and 1000 blocks of
+ *   n = 10 or 5 next to one of n = 100 or four of n = 64.
+ * - Accelerate: 1.06x / 1.12x. Projections of 9 to 62 us (5 to 64 blocks
+ *   of n = 3 to 10) now take threads, or more of them: 10 pairs 1.1-2.3x
+ *   slower, 2 faster.
+ * - All 198 (library, structure, thread count) pairs of these three:
+ *   0.985x. Whole solves of those SDPs (KKT-verified, the same solved count
+ *   and iterates): 0.98x of the wall clock (shifted geometric mean, shift
+ *   10 ms), 0.86x with NVPL, 1.06x with OpenBLAS and 1.07x with Accelerate,
+ *   and 1.08x at 10 threads alone.
+ * - MKL 2026.1, measured afterwards on x86-64 (AMD Zen 3; static MKL on its
+ *   GNU OpenMP layer, as scs-python's mkl_static_threading=gnu_thread):
+ *   0.75x / 0.79x / 0.73x at 2 / 3 / 4 threads (40 pairs; 10 threads not
+ *   timed). Its syevd takes 1.10x this estimate for n = 3 to 10 (1.11x
+ *   NVPL's time) and 1.4-2.7x from n = 20. The 10 pairs that now take
+ *   threads are 2-6x faster, also because a serial projection in that build
+ *   runs each syevd on MKL's own threads, which is slower than one thread
+ *   (6.5-10 us more per call for n <= 24, 1.3-1.8x for n = 32 to 128); the
+ *   30 whose lists only change took 1.02x, as the unchanged controls. Whole
+ *   solves (truss4 at 2 to 4 threads, hinf14 and biggs at 2; the same
+ *   KKT-verified solved count): 0.81x / 0.59x / 0.62x at 2 / 3 / 4
+ *   threads. hinf14's iterates differ at 2 threads, because master's serial
+ *   syevd ran on MKL's threads.
+ * A fit through NVPL and Accelerate together (0.5-0.8x this estimate for
+ * n = 3 to 10) took 1.06x over all pairs (NVPL 1.09x, OpenBLAS 1.09x,
+ * Accelerate 0.99x). NVPL's 1.4 us for n = 2 took 1.00x: NVPL 0.81x (16 or
+ * 64 such blocks 0.4-0.7x), but OpenBLAS 1.05x and Accelerate 1.10x (up to
+ * 2.6x slower on 64 to 1024 of them). OpenBLAS on x86-64 was not measured,
+ * nor MKL on hosts other than Zen 3.
+ *
+ * Complex blocks: the estimate from before syevd (#543), fitted to heevr's
+ * times with Accelerate and OpenBLAS. heevd with NVPL takes 0.9-1.4x of it
+ * for n = 3 to 100 and 1.2-1.55x from n = 150 (Accelerate 1.2-1.3x,
+ * OpenBLAS up to 1.85x at n = 500). The cubic fitted to heevd with NVPL
+ * (1170 + 345 n + 60 n^2 + 0.45 n^3) was slower: 1.20x with NVPL, 1.09x with
+ * OpenBLAS and 1.08x with Accelerate on the complex structures whose split
+ * changed, mostly because one block of n = 300 with four of n = 100 then
+ * looked like a gain of 1.24x, below PSD_PAR_MIN_GAIN, and stayed serial
+ * (1.2-1.55x slower).
+ *
+ * Previous estimate, fitted to syevr: 600 + 250 n + 45 n^2 + 0.06 n^3. */
 static scs_float psd_block_cost(const ScsCone *k, scs_int b) {
   scs_float n = (scs_float)psd_block_n(k, b);
   if (b < k->ssize)
     return n < 3. ? (n < 2. ? 2. : 200.)
-                  : 600. + n * (250. + n * (45. + 0.06 * n));
+                  : 940. + n * (310. + n * (45. + 0.055 * n));
   return n < 3. ? (n < 2. ? 2. : 300.)
                 : 600. + n * (250. + n * (70. + 0.24 * n));
 }
