@@ -117,7 +117,9 @@ that the steps end at that halving stop rather than at the tolerance.
 Refined that far, the residual of :math:`g` is 0.3 to 0.4 machine epsilons
 of the size of its terms (the median with QDLDL and conjugate gradients, on
 the CPU and the GPU, in double and single precision, on random SOCPs; at
-most 1.6): the rounding errors of the terms of a row partly cancel.
+most 1.7): the rounding errors of the terms of a row partly cancel. (The
+rounding level of the per-iteration refinement below, four machine
+epsilons of the terms, is a bound with room; this is the typical size.)
 
 A tolerance the solver can meet would stop it earlier, since conjugate
 gradients solves each step only to the tolerance and so lands just below
@@ -191,7 +193,12 @@ than with a tolerance of :math:`4 \epsilon`), and about 60% in single
 precision, where the more accurate :math:`g` made whole solves about three
 times faster. Where conjugate gradients cannot reach the tolerance within
 its iteration limit (:math:`10 n`), each step runs to that limit, so on such
-problems the refinement can cost up to about five times the first solve.
+problems the refinement can cost up to about five times the first solve,
+and the step more costs most: on two badly scaled QPs in single precision
+(HUES-MOD and QSCFXM1, 9 starts each) the steps took 2.2 times the
+conjugate gradient iterations they took with a tolerance of
+:math:`4 \epsilon`, and the runs 26% more in all, while 15 of the 18 runs
+solved instead of 9.
 
 .. _refinement:
 
@@ -214,7 +221,9 @@ residual is at rounding level: at most four machine epsilons times
 :math:`\|\,|z^k| + |K|\,|u|\,\|_\infty`, the size of the terms the residual
 is computed from, row by row. A residual that small is mostly the rounding of
 its own computation, and refinement cannot lower it by more than a small
-factor. This matters where *tol* goes to zero, on an infeasibility or
+factor. (Four is a bound with room: refined residuals are typically a third
+to a half of an epsilon of their terms, since the rounding errors of a row's
+terms partly cancel.) This matters where *tol* goes to zero, on an infeasibility or
 unboundedness certificate that SCS keeps iterating on: with an absolute floor
 instead (*tol* at least :math:`10^{-12}`, as in an earlier rule), which is
 below rounding level wherever those terms are large, refinement turned on

@@ -354,10 +354,13 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * end at the halving stop, where the linear solver can do no better, rather
  * than at tol_g: g to about machine precision, modulo what the solver achieves.
  * Refinement run to that stop ends at 0.3-0.4 machine epsilons of the size of
- * the terms (median; 99th percentile 0.6-1.1, at most 1.6, over 26,000 solves),
- * with QDLDL and CPU and GPU CG in double and single precision (random SOCPs,
- * residuals computed in double): the rounding errors of a row's terms partly
- * cancel, so the computed residual rounds by far less than an epsilon per term.
+ * the terms (median; 99th percentile 0.6-1.1, at most 1.7, over about 30,000
+ * solves in the A/B of this constant and its diagnosis), with QDLDL and CPU
+ * and GPU CG in double and single precision (random SOCPs, residuals computed
+ * in double): the rounding errors of a row's terms partly cancel, so the
+ * computed residual rounds by far less than an epsilon per term. (The "few
+ * epsilons" of rounding level elsewhere, REFINE_ROUNDING_EPS, kkt_terms_inf
+ * in src/scs.c and linsys.h, is a bound with room; this is the typical size.)
  * A tol_g the solver can meet stops CG early, because a CG step solves only to
  * tol_g and lands just below it. In single precision that costs time and
  * solves: an iteration that uses a computed g is exact for the data K g, that
@@ -374,7 +377,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * of SCS's tolerance at eps 1e-9 either way. Cost: usually one step more per
  * solve for g, the one that does not halve the residual (a solve and a
  * multiply); with CG in double precision, up to 2% more CG iterations and
- * 1-1.5% more time in all on random SOCPs (QDLDL: 0.5%).
+ * 1-1.5% more time in all on random SOCPs (QDLDL: 0.5%). Where CG's steps run
+ * to its iteration limit the extra step costs most: on badly scaled QPs in
+ * single precision (HUES-MOD and QSCFXM1, 9 starts each) the steps took 2.2
+ * times the CG iterations they took with G_TOL_EPS 4, and the runs 26% more
+ * CG iterations in all, while 15 of the 18 runs solved (KKT-verified)
+ * instead of 9.
  *
  * The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
  * (the normwise backward error, which pairs K's largest row with g0's
