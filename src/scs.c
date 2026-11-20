@@ -1316,13 +1316,12 @@ static scs_int refine_next_on(ScsWork *w, scs_float res, scs_float on_factor,
  * missed tol (scs_solve_lin_sys, linsys.h): it computes the residual
  * r = rhs - K u in the full space and, while ||r||_inf is above tol, adds a
  * cold CG solve of K d = r to tol, kept only if it lowers the residual, at
- * most REFINE_CG_MAX_STEPS times. At a check while on, a plain
- * CG solve of the same right-hand side from the same start, into scratch,
- * decides whether to stay on; the iterate stays the refined solution
- * (deciding on the refined residual would turn refinement off as soon as it
- * worked, and the unrefined solves after that would undo the progress).
- * Leaves the solution in u_t[:n+m]; returns the status of the last solve (0:
- * success). */
+ * most REFINE_CG_MAX_STEPS times. At a check while on, a plain CG solve of
+ * the same right-hand side from the same start, into scratch, decides whether
+ * to stay on; the iterate stays the refined solution (deciding on the refined
+ * residual would turn refinement off as soon as it worked, and the unrefined
+ * solves after that would undo the progress). Leaves the solution in
+ * u_t[:n+m]; returns the status of the last solve (0: success). */
 static scs_int solve_indirect(ScsWork *w, scs_int iter,
                               const scs_float *warm_start, scs_float tol) {
   scs_int status, was_on = w->refine_on;

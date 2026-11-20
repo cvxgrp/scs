@@ -174,6 +174,13 @@ static const char *test_refine_perturbed(void) {
             err >= 0 && err <= SOLVE_REFINE_SOL_TOL);
   mu_assert("test_refine_perturbed: refinement did not fire",
             corrections > 0);
+  /* Decisions are made only at iterations that are multiples of
+   * REFINE_CHECK_INTERVAL, once the first convergence check has set
+   * refine_tol (none at iteration 0), so a run of info.iter iterations makes
+   * at most info.iter / REFINE_CHECK_INTERVAL. The bound is tight by
+   * construction (the CG run: 7 checks in 175 iterations), so a change to
+   * when convergence checks run or to how iterations are counted can fail
+   * it with no decision between checks; the bound then changes with it. */
   mu_assert("test_refine_perturbed: a decision between checks",
             checks >= 0 && checks <= info.iter / REFINE_CHECK_INTERVAL);
   if (cg) {

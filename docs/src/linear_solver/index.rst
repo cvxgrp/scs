@@ -193,17 +193,17 @@ factor. This matters where *tol* goes to zero, on an infeasibility or
 unboundedness certificate that SCS keeps iterating on: with an absolute floor
 instead (*tol* at least :math:`10^{-12}`, as in an earlier rule), which is
 below rounding level wherever those terms are large, refinement turned on
-there and stayed on to the end. The size is computed only at a check where
-it can change the outcome (one pass over :math:`A` and :math:`P`, the cost of
-a multiply). Single
-precision has no such test: there refinement also lowers an error of the
-solution that the residual does not show (with conjugate gradients and the
-dense solver, which solve a smaller system), and turning it off at rounding
-level lost problems at :math:`10^{-6}`. With conjugate gradients, in both
-precisions, the thresholds do not go below the solvers' best accuracy
-(:math:`10^{-12}`, :math:`10^{-6}` in single precision), below which they are
-never asked to go: refinement does not turn on while the error is at most
-ten times that, and turns off at the latest once the error is at most that.
+there and stayed on to the end. The size is computed only at a check where it
+can change the outcome (one pass over :math:`A` and :math:`P`, the cost of a
+multiply). Single precision has no such test: there refinement also lowers an
+error of the solution that the residual does not show (with conjugate
+gradients and the dense solver, which solve a smaller system), and turning it
+off at rounding level lost problems at :math:`10^{-6}`. With conjugate
+gradients, in both precisions, the thresholds do not go below the solvers'
+best accuracy (:math:`10^{-12}`, :math:`10^{-6}` in single precision), below
+which they are never asked to go: refinement does not turn on while the error
+is at most ten times that, and turns off at the latest once the error is at
+most that.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
