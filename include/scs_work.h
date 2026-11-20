@@ -66,24 +66,23 @@ struct SCS_WORK {
   scs_float *g;                  /* g = (I + M)^{-1} h */
   /* scratch, n + m each, nothing kept in them between calls: kkt_res and
    * kkt_corr, the right-hand side [c; -b] and the refined candidate of the
-   * solve for g (update_work_cache); kkt_res also the residual and
-   * correction of the indirect solvers' per-iteration refinement
-   * (solve_indirect), and kkt_corr the plain solve that decides at a check
-   * of the direct solvers' (solve_direct) */
+   * solve for g (update_work_cache); kkt_corr also the plain solve that
+   * decides at a check of the per-iteration refinement while it is on
+   * (solve_direct, solve_indirect), and at a decision the right-hand side
+   * whose terms refine_next_on sizes, with kkt_res as its scratch */
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement, reset at the start of each solve (see
    * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,
-   * how many residual checks this solve has made, how many refinement
-   * solves (indirect solvers, solve_indirect), how many iterations were
+   * how many residual checks this solve has made, how many iterations were
    * solved with refinement on (direct solvers, solve_direct: the previous
-   * solution passed as the warm start; the linear solver solves plainly
-   * instead when it is no better a guess than zero, and those iterations
-   * count too) and
-   * how often the safeguard replaced that solution by the plain solve
-   * (direct solvers; read by the tests), and the tol it compares with
-   * (set_refine_tol, at each convergence check; -1 before the first) */
-  scs_int refine_on, refine_checks, refine_steps, refine_on_iters;
-  scs_int refine_safeguards;
+   * solution passed as the warm start, and the linear solver solves plainly
+   * instead when it is no better a guess than zero; indirect solvers,
+   * solve_indirect: with refinement steps allowed, taken only where the CG
+   * solve missed its tolerance), how often the safeguard replaced the
+   * warm-started solution by the plain solve (direct solvers), all read by
+   * the tests, and the tol it compares with (set_refine_tol, at each
+   * convergence check; -1 before the first) */
+  scs_int refine_on, refine_checks, refine_on_iters, refine_safeguards;
   scs_float refine_tol;
   /* direct solvers: the previous iteration's solution (n + m) whenever
    * refinement is on, passed as the warm start of the next iteration's

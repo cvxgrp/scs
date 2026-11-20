@@ -38,16 +38,23 @@
  *   49 safeguards in 10,000 iterations with QDLDL, dense, Accelerate and
  *   cuDSS below its threshold. A safeguard that never fires, or that
  *   compares the wrong residuals, gives none.
- * - CG solvers, delta = RP_DELTA_CONTRACT: CG solves with K', and its
- *   refinement step solves K' d = r for the residual r that SCS computes
- *   with K, which contracts the error by about delta like the direct
- *   solvers' correction form, so the problem is solved with refinement on
- *   (refine_steps > 0), to the same accuracy. A step that does not fire, or
- *   that solves for anything but SCS's residual (a second CG solve of the
- *   right-hand side warm-started from the first one's solution solves with
- *   K' again and cannot remove the mismatch), leaves the error at about
- *   delta and the solve stalls. Measured in double precision at 1e-6: 175
- *   iterations, 101 refinement steps.
+ * - CG solvers, delta = RP_DELTA_CONTRACT: CG solves with K'. While
+ *   refinement is on, each iteration's solve is one call with refinement
+ *   steps (solve_indirect: max_refine_steps REFINE_CG_MAX_STEPS), and each
+ *   step solves K' d = r for the residual r that the shared routine computes
+ *   with K (SCS's products), which contracts the error by about delta like
+ *   the direct solvers' correction form, so the problem is solved with
+ *   refinement on (refine_on_iters > 0), to the same accuracy, and the
+ *   decisions are made only at checks (refine_checks at most one per
+ *   REFINE_CHECK_INTERVAL iterations). A call that takes no steps, or steps
+ *   that solve for anything but the full residual (CG restarted on the
+ *   right-hand side from x solves with K' again and cannot remove the
+ *   mismatch), leaves the error at about delta and the solve stalls.
+ *   Measured in double precision: 175 iterations, 100 with refinement on,
+ *   7 checks; in single precision 200 and 225 iterations, 75 and 100 with
+ *   refinement on, 8 and 9 checks (USE_LAPACK 0 and 1); with the steps
+ *   removed (max_refine_steps 0 while on) it ran to RP_CONTRACT_ITERS
+ *   unsolved, error 8e-4, in both precisions.
  *
  * Skipped where the linear solver measures its residuals with its own K,
  * which follows the update, so that it sees no mismatch and nothing to
@@ -84,7 +91,7 @@ static scs_int rp_kkt_nnz(const ScsData *d) {
  * delta), at most max_iters iterations; returns the status, the counters and
  * the solution's error (solve_refine_kkt_error) */
 static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
-                        scs_int *corrections, scs_int *steps,
+                        scs_int *corrections, scs_int *checks,
                         scs_int *safeguards, scs_float *err) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
@@ -94,7 +101,7 @@ static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
   ScsWork *w;
   scs_int status = SCS_FAILED, i;
   memset(info, 0, sizeof(ScsInfo));
-  *corrections = *steps = *safeguards = -1;
+  *corrections = *checks = *safeguards = -1;
   *err = -1.;
   solve_refine_data(d, k);
   scs_set_default_settings(stgs);
@@ -119,7 +126,7 @@ static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
     if (scs_update_lin_sys_diag_r(w->p, dr) == 0) {
       status = scs_solve(w, sol, info, 0);
       *corrections = w->refine_on_iters;
-      *steps = w->refine_steps;
+      *checks = w->refine_checks;
       *safeguards = w->refine_safeguards;
       *err = solve_refine_kkt_error(d, sol);
     }
@@ -134,7 +141,7 @@ static scs_int rp_solve(scs_float delta, scs_int max_iters, ScsInfo *info,
 }
 
 static const char *test_refine_perturbed(void) {
-  scs_int status, corrections, steps, safeguards, cg, nnz;
+  scs_int status, corrections, checks, safeguards, cg, nnz;
   scs_float err;
   ScsInfo info;
   const char *method = scs_get_lin_sys_method();
@@ -158,22 +165,32 @@ static const char *test_refine_perturbed(void) {
   }
   cg = strstr(method, "indirect") != SCS_NULL;
   status = rp_solve(RP_DELTA_CONTRACT, RP_CONTRACT_ITERS, &info, &corrections,
-                    &steps, &safeguards, &err);
+                    &checks, &safeguards, &err);
   scs_printf("test_refine_perturbed: %s, delta %g: status %li, %li "
-             "iterations, %li with refinement on, %li refinement steps, %li "
+             "iterations, %li with refinement on, %li checks, %li "
              "safeguards, error %.2e\n",
              method, (double)RP_DELTA_CONTRACT, (long)status, (long)info.iter,
-             (long)corrections, (long)steps, (long)safeguards, (double)err);
+             (long)corrections, (long)checks, (long)safeguards, (double)err);
   mu_assert("test_refine_perturbed: not solved", status == SCS_SOLVED);
   mu_assert("test_refine_perturbed: wrong solution",
             err >= 0 && err <= SOLVE_REFINE_SOL_TOL);
   mu_assert("test_refine_perturbed: refinement did not fire",
-            (cg ? steps : corrections) > 0);
+            corrections > 0);
+  /* Decisions are made only at iterations that are multiples of
+   * REFINE_CHECK_INTERVAL, once the first convergence check has set
+   * refine_tol (none at iteration 0), so a run of info.iter iterations makes
+   * at most info.iter / REFINE_CHECK_INTERVAL. The bound is tight by
+   * construction (the CG runs: 7 checks in 175 iterations in double
+   * precision, 9 in 225 in single), so a change to when convergence checks
+   * run or to how iterations are counted can fail it with no decision
+   * between checks; the bound then changes with it. */
+  mu_assert("test_refine_perturbed: a decision between checks",
+            checks >= 0 && checks <= info.iter / REFINE_CHECK_INTERVAL);
   if (cg) {
     return SCS_NULL; /* the safeguard is the direct solvers' */
   }
   status = rp_solve(RP_DELTA_DIVERGE, RP_DIVERGE_ITERS, &info, &corrections,
-                    &steps, &safeguards, &err);
+                    &checks, &safeguards, &err);
   scs_printf("test_refine_perturbed: %s, delta %g: status %li, %li "
              "iterations, %li with refinement on, %li safeguards\n",
              method, (double)RP_DELTA_DIVERGE, (long)status, (long)info.iter,
