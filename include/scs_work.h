@@ -65,10 +65,11 @@ struct SCS_WORK {
   scs_float *h;                  /* h = [c; b] */
   scs_float *g;                  /* g = (I + M)^{-1} h */
   /* scratch, n + m each, nothing kept in them between calls: kkt_res and
-   * kkt_corr, the residual and correction of refine_g (the solve for g);
-   * kkt_res also the residual and correction of the indirect solvers'
-   * per-iteration refinement (solve_indirect), and kkt_corr the plain solve
-   * that decides at a check of the direct solvers' (solve_direct) */
+   * kkt_corr, the right-hand side [c; -b] and the refined candidate of the
+   * solve for g (update_work_cache); kkt_res also the residual and
+   * correction of the indirect solvers' per-iteration refinement
+   * (solve_indirect), and kkt_corr the plain solve that decides at a check
+   * of the direct solvers' (solve_direct) */
   scs_float *kkt_res, *kkt_corr;
   /* per-iteration refinement, reset at the start of each solve (see
    * "Accuracy of each iteration's solve" in glbopts.h): whether it is on,

@@ -146,7 +146,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 static void set_diag_r(ScsWork *w);
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs);
-static void update_work_cache(ScsWork *w);
+static scs_int update_work_cache(ScsWork *w);
 static void reset_tracking(ScsWork *w);
 static scs_int update_work(ScsWork *w, ScsSolution *sol);
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter);
@@ -1255,66 +1255,6 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
   return w;
 }
 
-/* r = [c; -b] - K g with K = [R_x + P, A'; A, -R_y], from the (normalized)
- * problem data, so it is the same for every linear solver. Returns
- * ||r||_inf divided by the largest inf-norm among [c; -b], R g, A' g_y,
- * P g_x + A' g_y and A g_x: the size of the terms whose rounding errors the
- * residual is compared with (P g_x on its own is at most the sum of the two
- * that contain it). */
-static scs_float g_residual(const ScsWork *w, const scs_float *g,
-                            scs_float *r) {
-  scs_int i, n = w->d->n, m = w->d->m;
-  scs_float *rx = r, *ry = &(r[n]), rg, scale;
-  const scs_float *gx = g, *gy = &(g[n]);
-  memset(r, 0, (n + m) * sizeof(scs_float));
-  SCS(accum_by_atrans)(w->d->A, gy, rx);
-  scale = MAX(SCS(norm_inf)(w->d->c, n), SCS(norm_inf)(w->d->b, m));
-  scale = MAX(scale, SCS(norm_inf)(rx, n));
-  if (w->d->P) {
-    SCS(accum_by_p)(w->d->P, gx, rx);
-    scale = MAX(scale, SCS(norm_inf)(rx, n));
-  }
-  SCS(accum_by_a)(w->d->A, gx, ry);
-  scale = MAX(scale, SCS(norm_inf)(ry, m));
-  for (i = 0; i < n; ++i) {
-    rg = w->diag_r[i] * gx[i];
-    scale = MAX(scale, ABS(rg));
-    rx[i] = w->d->c[i] - (rx[i] + rg);
-  }
-  for (i = 0; i < m; ++i) {
-    rg = w->diag_r[n + i] * gy[i];
-    scale = MAX(scale, ABS(rg));
-    ry[i] = -w->d->b[i] - (ry[i] - rg);
-  }
-  return SCS(norm_inf)(r, n + m) / MAX(scale, _DIV_EPS_TOL);
-}
-
-/* Iterative refinement of g, see G_SOLVE_TOL in glbopts.h. */
-static void refine_g(ScsWork *w) {
-  scs_int k, l = w->d->n + w->d->m;
-  scs_float res, res_new;
-  res = g_residual(w, w->g, w->kkt_res);
-  for (k = 0; k < G_REFINE_MAX_STEPS && res > G_SOLVE_TOL; ++k) {
-    /* the candidate g + d is formed in kkt_corr and kept only if it is
-     * better, so a rejected step leaves g exactly as it was */
-    memcpy(w->kkt_corr, w->kkt_res, l * sizeof(scs_float));
-    /* a plain solve for the residual: no warm start, CG to its best
-     * accuracy (direct solvers ignore tol), no steps or res of its own,
-     * since this loop is the refinement and g_residual its measure */
-    scs_solve_lin_sys(w->p, w->kkt_corr, SCS_NULL, CG_BEST_TOL, 0, SCS_NULL);
-    SCS(add_scaled_array)(w->kkt_corr, w->g, l, 1.);
-    res_new = g_residual(w, w->kkt_corr, w->kkt_res);
-    if (!(res_new <= res)) {
-      break; /* the step made it worse (or is not finite): keep g */
-    }
-    memcpy(w->g, w->kkt_corr, l * sizeof(scs_float));
-    if (res_new > 0.5 * res) {
-      break; /* no longer contracting */
-    }
-    res = res_new;
-  }
-}
-
 /* Sets the tol that the per-iteration refinement (solve_indirect for indirect
  * solvers, solve_direct for direct ones) compares with, at a convergence
  * check, right after the residuals are computed: the size of the residuals
@@ -1488,18 +1428,148 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
 }
 #endif
 
-static void update_work_cache(ScsWork *w) {
-  /* g = (I + M)^{-1} [c; -b]
-   * Build g = [c; -b] directly in one pass, avoiding a separate memcpy of h
-   * followed by a negate pass over g[n:]. */
-  scs_int i, n = w->d->n, m = w->d->m;
-  memcpy(w->g, w->d->c, n * sizeof(scs_float));
-  for (i = 0; i < m; ++i) {
-    w->g[n + i] = -w->d->b[i];
+/* || |h| + |K| |g| ||_inf, K = [R_x + P, A'; A, -R_y] from the (normalized)
+ * data and diag_r, P's stored upper triangle in both triangles: the size of
+ * the terms the residual h - K g is computed from, row by row, so a few
+ * machine epsilons times this is the rounding of the residual itself (see
+ * "Accuracy of the solve for g" in glbopts.h). t (n + m) is scratch. One
+ * pass over A and P, the cost of a multiply by K. */
+static scs_float kkt_terms_inf(const ScsWork *w, const scs_float *h,
+                               const scs_float *g, scs_float *t) {
+  const ScsMatrix *A = w->d->A, *P = w->d->P;
+  scs_int i, j, p, n = w->d->n, m = w->d->m;
+  scs_float v, nrm = 0.;
+  for (i = 0; i < n + m; ++i) {
+    t[i] = ABS(h[i]) + ABS(w->diag_r[i] * g[i]);
   }
-  /* cold, CG to its best accuracy; refine_g checks and refines it */
-  scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL, 0, SCS_NULL);
-  refine_g(w);
+  for (j = 0; j < n; ++j) {
+    for (p = A->p[j]; p < A->p[j + 1]; ++p) {
+      v = ABS(A->x[p]);
+      t[j] += v * ABS(g[n + A->i[p]]); /* row j of A' g_y */
+      t[n + A->i[p]] += v * ABS(g[j]); /* row A->i[p] of A g_x */
+    }
+    if (P) {
+      for (p = P->p[j]; p < P->p[j + 1]; ++p) {
+        i = P->i[p];
+        v = ABS(P->x[p]);
+        t[i] += v * ABS(g[j]);
+        if (i != j) {
+          t[j] += v * ABS(g[i]);
+        }
+      }
+    }
+  }
+  for (i = 0; i < n + m; ++i) {
+    nrm = MAX(nrm, t[i]);
+  }
+  return nrm;
+}
+
+/* 1 if every entry of x is finite (neither NaN nor infinite), else 0 */
+static scs_int all_finite(const scs_float *x, scs_int len) {
+  scs_int i;
+  for (i = 0; i < len; ++i) {
+    if (!isfinite(x[i])) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+/* The message of a failed solve for g: what failed (with the residual and
+ * its ratio to the size of the terms when rel >= 0), and that it is a bug. */
+static void g_solve_failed(const char *what, scs_float res, scs_float rel) {
+  scs_printf("ERROR: SCS could not solve the linear system K g = (c, -b) "
+             "that every iteration uses: %s",
+             what);
+  if (rel >= 0) {
+    scs_printf(" (||(c, -b) - K g||_inf = %.2e, %.2g times the size of its "
+               "terms; at most %.2g expected)",
+               (double)res, (double)rel, (double)G_FAIL_REL_RES);
+  }
+  scs_printf(".\nThis should never happen: it indicates a bug in SCS or in "
+             "its linear solver, not a property of your problem. Please open "
+             "an issue at https://github.com/cvxgrp/scs/issues, with the "
+             "problem data if you can (the write_data_filename setting saves "
+             "it).\n");
+}
+
+/* g = K^{-1} [c; -b] to about machine precision, see "Accuracy of the solve
+ * for g" in glbopts.h. h = [c; -b] is kept in kkt_res for the refinement;
+ * kkt_corr holds the refined candidate. Returns 0, or -1 with a message if
+ * the solve failed (the caller stops with SCS_FAILED). */
+static scs_int update_work_cache(ScsWork *w) {
+  scs_int i, n = w->d->n, m = w->d->m, nm = n + m, refined = 0;
+  scs_float *h = w->kkt_res, *gc = w->kkt_corr;
+  scs_float res0, res, scale, tol_g;
+  memcpy(h, w->d->c, n * sizeof(scs_float));
+  for (i = 0; i < m; ++i) {
+    h[n + i] = -w->d->b[i];
+  }
+  if (!all_finite(h, nm)) {
+    /* the data, not SCS: no g can be finite */
+    scs_printf("ERROR: b or c contains a NaN or infinite entry, so SCS "
+               "cannot solve K g = (c, -b).\n");
+    return -1;
+  }
+  /* g0: a plain solve (no warm start, no steps; for CG a cold solve to
+   * CG_BEST_TOL, the one CG harvests its deflation vectors from) with its
+   * residual res0, for one multiply. tol_g depends on g0, so the refinement
+   * cannot be asked for in this call. */
+  memcpy(w->g, h, nm * sizeof(scs_float));
+  if (scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL, 0, &res0) != 0) {
+    g_solve_failed("the linear solver returned an error", 0., -1.);
+    return -1;
+  }
+  /* checked entry by entry, since SCS(norm_inf) may skip a NaN entry (res0
+   * and the size below would then look finite). Steps from a g0 that is not
+   * finite cannot help: every solve spreads its NaN or Inf entries. */
+  if (!all_finite(w->g, nm)) {
+    g_solve_failed("the solution is not finite (NaN or Inf)", 0., -1.);
+    return -1;
+  }
+  /* the size of the terms res0 is computed from; gc is scratch here */
+  scale = kkt_terms_inf(w, h, w->g, gc);
+  if (!isfinite(scale)) {
+    g_solve_failed("the size of the terms of its residual overflows", 0.,
+                   -1.);
+    return -1;
+  }
+  tol_g = G_TOL_EPS * SCS_MACH_EPS * scale;
+  res = res0;
+  if (res0 > tol_g) {
+    /* the solve again with g0 as its warm start, to tol_g: for a direct
+     * solver the correction form g0 + K^{-1}(h - K g0), for CG a CG solve
+     * from g0 to tol_g. That is the first of the G_REFINE_MAX_STEPS steps,
+     * so the solve may take one fewer; it keeps each only if it lowers the
+     * residual, and stops after one that does not halve it. The first is
+     * checked here, against res0; res is the residual of the result. */
+    memcpy(gc, h, nm * sizeof(scs_float));
+    if (scs_solve_lin_sys(w->p, gc, w->g, tol_g, G_REFINE_MAX_STEPS - 1,
+                          &res) != 0) {
+      g_solve_failed("the linear solver returned an error", 0., -1.);
+      return -1;
+    }
+    /* (the residual's norm may skip a NaN entry, hence the check) */
+    if (res < res0 && all_finite(gc, nm)) {
+      memcpy(w->g, gc, nm * sizeof(scs_float));
+      refined = 1;
+    } else {
+      res = res0;
+    }
+  }
+  /* g is finite here: g0 was checked, and gc is kept only if finite */
+  if (!(res <= G_FAIL_REL_RES * scale) && refined) {
+    /* scale is that of g0; the test is of the refined g against the size of
+     * its own terms. Computed only here, when the test against g0's would
+     * fail, so a solve that passes pays no pass for it. */
+    scale = kkt_terms_inf(w, h, w->g, gc);
+  }
+  if (!(res <= G_FAIL_REL_RES * scale)) {
+    g_solve_failed("its residual is far too large", res, res / scale);
+    return -1;
+  }
+  return 0;
 }
 
 /* Reset quantities specific to current solve */
@@ -1542,8 +1612,7 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
    * solve, which the (re)start above has just discarded */
   SCS(reset_cone_cache)(w->cone_work);
 
-  update_work_cache(w);
-  return 0;
+  return update_work_cache(w);
 }
 
 /* will update if the factor is outside of range */
@@ -1726,7 +1795,9 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     }
 
     /* update pre-solved quantities */
-    update_work_cache(w);
+    if (update_work_cache(w) != 0) {
+      return -1;
+    }
 
     /* reset acceleration so that old iterates aren't affecting new values */
     if (w->accel) {
@@ -1984,7 +2055,10 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   SCS(tic)(&solve_timer);
   strcpy(info->lin_sys_solver, scs_get_lin_sys_method());
   info->status_val = SCS_UNFINISHED; /* not yet converged */
-  update_work(w, sol);
+  if (update_work(w, sol) != 0) {
+    return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
+                   "error in the solve for g (see above)", "failure");
+  }
   SCS(open_csv_log_file)(w);
 
   if (w->stgs->verbose) {

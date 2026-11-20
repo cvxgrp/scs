@@ -30,10 +30,14 @@
  *   about delta / (1 + delta) = -1.2, so it grows from iteration to
  *   iteration until SCS's safeguard replaces it by the plain solve at a
  *   check (refine_safeguards > 0). The problem cannot be solved with such a
- *   factorization; the test runs RP_DIVERGE_ITERS iterations. Measured in
- *   double precision: 29 to 49 safeguards in 10,000 iterations with QDLDL,
- *   dense, Accelerate and cuDSS below its threshold. A safeguard that never
- *   fires, or that compares the wrong residuals, gives none.
+ *   factorization; the test runs RP_DIVERGE_ITERS iterations. Nor can the
+ *   solve for g be refined to machine precision: its residual is 0.19 of
+ *   the size of its terms before refinement and 1.5e-2 after (QDLDL, dense
+ *   and Accelerate, double and single precision), which is not a failed
+ *   solve (G_FAIL_REL_RES, glbopts.h). Measured in double precision: 29 to
+ *   49 safeguards in 10,000 iterations with QDLDL, dense, Accelerate and
+ *   cuDSS below its threshold. A safeguard that never fires, or that
+ *   compares the wrong residuals, gives none.
  * - CG solvers, delta = RP_DELTA_CONTRACT: CG solves with K', and its
  *   refinement step solves K' d = r for the residual r that SCS computes
  *   with K, which contracts the error by about delta like the direct
