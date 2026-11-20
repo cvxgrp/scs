@@ -66,10 +66,11 @@
 #endif
 
 /* The limit on g's measure, in both tests. SCS refines g until a step no
- * longer halves its residual, which ends at 0.3-0.45 machine epsilons of the
- * terms (median over random SOCPs, at most 1.7; 0.1-0.7 in these tests with
- * QDLDL, CG, the dense solver, Accelerate, GPU CG and cuDSS, in both
- * precisions). A refinement that stops at a looser target is above 2: with
+ * longer halves its residual, which ends at 0.3-0.4 machine epsilons of the
+ * terms (median over random SOCPs; at most 1.6 in 26,000 solves) and at
+ * 0.06-0.97 in these tests (QDLDL, CG, the dense solver, Accelerate, MKL
+ * Pardiso, GPU CG and cuDSS, in both precisions, on macOS, Linux and
+ * Windows). A refinement that stops at a looser target is above 2: with
  * G_TOL_EPS 4, CG's g measured 2.3 (single precision, first factorization)
  * and 3.9 (double, after scale updates) in test_g_accuracy, and 2.9-3.9 in
  * test_g_accuracy_iteration. A plain solve is far above it (printed). The

@@ -311,31 +311,31 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * reach tol_g each step runs to CG's iteration limit (up to five times the
  * first solve, on badly scaled QPs).
  *
- * G_TOL_EPS: just below the residual that refinement reaches, so that the
- * steps end at the halving stop, where the linear solver can do no better,
- * rather than at tol_g: g to about machine precision, modulo what the solver
- * achieves. Refinement run to that stop ends at 0.3-0.45 machine epsilons of
- * the size of the terms (median; at most 1.7 in about 3,000 solves), with
- * QDLDL and CG in double and single precision (random SOCPs, residuals
- * computed in double): the rounding errors of a row's terms partly cancel,
- * so the computed residual rounds by far less than an epsilon per term. A
- * tol_g the solver can meet stops CG early, because a CG step solves only to
+ * G_TOL_EPS: just below the residual that refinement reaches, so that the steps
+ * end at the halving stop, where the linear solver can do no better, rather
+ * than at tol_g: g to about machine precision, modulo what the solver achieves.
+ * Refinement run to that stop ends at 0.3-0.4 machine epsilons of the size of
+ * the terms (median; 99th percentile 0.6-1.1, at most 1.6, over 26,000 solves),
+ * with QDLDL and CPU and GPU CG in double and single precision (random SOCPs,
+ * residuals computed in double): the rounding errors of a row's terms partly
+ * cancel, so the computed residual rounds by far less than an epsilon per term.
+ * A tol_g the solver can meet stops CG early, because a CG step solves only to
  * tol_g and lands just below it. In single precision that costs time and
- * solves: an iteration that uses a computed g is exact for the data K g,
- * that is for c - r_x and b + r_y (r = [c; -b] - K g), so g's residual is a
- * floor under SCS's residuals, and at eps 1e-6 (about eight single-precision
+ * solves: an iteration that uses a computed g is exact for the data K g, that
+ * is for c - r_x and b + r_y (r = [c; -b] - K g), so g's residual is a floor
+ * under SCS's residuals, and at eps 1e-6 (about eight single-precision
  * epsilons) it can be above SCS's tolerance where rows are dense. With
  * G_TOL_EPS 4, single-precision CG's g stopped at 3.4 epsilons of its terms
- * (median) on random SOCPs with 100 variables and dense rows, and 72 of 100
- * ran to max_iters or the time limit; with 0.25, none did, and over all 500
- * random SOCPs single-precision CG was about three times faster
- * (test_g_accuracy_iteration solves one like them). With 1, CG's g stopped
- * at 0.8 epsilons and some runs still reached the floor; lower than 0.25
- * gives the same g with more rejected steps. In double precision the floor
- * is about 1e-6 of SCS's tolerance at eps 1e-9 either way. Cost: usually
- * one step more per solve for g, the one that does not halve the residual
- * (a solve and a multiply); with CG in double precision, 1-2% more CG
- * iterations in all on random SOCPs.
+ * (median) on random SOCPs with 100 variables and dense rows, and 72 of 100 ran
+ * to max_iters or the time limit; with 0.25, none did, and over all 500 random
+ * SOCPs single-precision CG was about three times faster
+ * (test_g_accuracy_iteration solves one like them). With 1, CG's g stopped at
+ * 0.8 epsilons and some runs still reached the floor; lower than 0.25 gives the
+ * same g with more rejected steps. In double precision the floor is about 1e-6
+ * of SCS's tolerance at eps 1e-9 either way. Cost: usually one step more per
+ * solve for g, the one that does not halve the residual (a solve and a
+ * multiply); with CG in double precision, up to 2% more CG iterations and
+ * 1-1.5% more time in all on random SOCPs (QDLDL: 0.5%).
  *
  * The size is taken row by row, not as ||[c; -b]|| + ||K|| ||g0||
  * (the normwise backward error, which pairs K's largest row with g0's

@@ -114,10 +114,10 @@ no better. The tolerance it passes to the solve,
 ``include/glbopts.h``), with :math:`\epsilon` the machine epsilon of the
 precision SCS is built in, is set just below what refinement reaches, so
 that the steps end at that halving stop rather than at the tolerance.
-Refined that far, the residual of :math:`g` is 0.3 to 0.45 machine epsilons
-of the size of its terms (the median with QDLDL and conjugate gradients, in
-double and single precision, on random SOCPs): the rounding errors of the
-terms of a row partly cancel.
+Refined that far, the residual of :math:`g` is 0.3 to 0.4 machine epsilons
+of the size of its terms (the median with QDLDL and conjugate gradients, on
+the CPU and the GPU, in double and single precision, on random SOCPs; at
+most 1.6): the rounding errors of the terms of a row partly cancel.
 
 A tolerance the solver can meet would stop it earlier, since conjugate
 gradients solves each step only to the tolerance and so lands just below
@@ -185,13 +185,13 @@ the solver can meet. With a direct solver each solve reuses the existing
 factorization, so this is cheap next to factorizing. With the indirect
 solvers each step costs the conjugate gradient iterations that reach the
 tolerance: on random SOCPs the refinement took about 14% of the first
-solves' conjugate gradient iterations in double precision (1-2% more
-conjugate gradient iterations over whole solves than with a tolerance of
-:math:`4 \epsilon`), and about 60% in single precision, where the more
-accurate :math:`g` made whole solves about three times faster. Where
-conjugate gradients cannot reach the tolerance within its iteration limit
-(:math:`10 n`), each step runs to that limit, so on such problems the
-refinement can cost up to about five times the first solve.
+solves' conjugate gradient iterations in double precision (over whole
+solves, up to 2% more conjugate gradient iterations and 1 to 1.5% more time
+than with a tolerance of :math:`4 \epsilon`), and about 60% in single
+precision, where the more accurate :math:`g` made whole solves about three
+times faster. Where conjugate gradients cannot reach the tolerance within
+its iteration limit (:math:`10 n`), each step runs to that limit, so on such
+problems the refinement can cost up to about five times the first solve.
 
 .. _refinement:
 
