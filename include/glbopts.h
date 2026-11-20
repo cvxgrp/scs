@@ -232,6 +232,45 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * for most problems. */
 #define TAU_FACTOR (10.)
 
+/* The R_y entry (rho_y) of an equality row, a zero-cone row, is
+ * 1 / (ZERO_CONE_RY_FACTOR * scale); a row of any other cone gets 1 / scale
+ * (see SCS(set_r_y) in cones.c). The zero cone's dual is free, so a small
+ * rho_y there costs nothing in the cone projection and lets the linear system
+ * solve determine those rows almost entirely. Tradeoff: the larger the factor,
+ * the more tightly the equalities are held each iteration, and the more the
+ * linear system, rather than the projection, has to move them. The adaptive
+ * per-row multipliers (DIAG_SCALE_MULT_MIN/MAX) act around this base. */
+#define ZERO_CONE_RY_FACTOR (1000.)
+
+/* The R_y entry of the box cone's first entry t is
+ * 1 / (BOX_T_RY_FACTOR * scale), the weight of an equality row (box cones of
+ * size 2 or more; a box cone of size 1 is t >= 0 alone, a nonnegative entry,
+ * and keeps 1 / scale). In the box cone's usual form, l <= a'x <= u written as
+ * (1, b - A x) in {(t, s) : t l <= s <= t u}, the row of A for t is zero and
+ * its b entry is 1, so the row says s_t = tau: an equality, although t is a
+ * cone entry. Weighted like an inequality row (1 / scale), t could stop
+ * several percent away from 1 while SCS's residual still passed: that
+ * residual weighs t - 1 against the largest entry of A x, but every bound is
+ * met only up to |t - 1| times the bound, so problems with large bounds
+ * stopped with their bounds violated. Weighted like an equality row, t tracks
+ * tau b_t about as tightly as an equality is held, and the box rows are
+ * clipped to bounds at their stated scale. See SCS(set_r_y) for how the weight
+ * acts. It needs the box projection to be exact (proj_box_cone): with the
+ * weight, a projection that stopped short of t* made ADMM cycle.
+ * Tradeoff: any positive weight is a valid metric, so this changes the path,
+ * never the solution. Over 30 benchmark problems with box cones (QDLDL,
+ * statuses independently verified) more runs meet the tolerance (397 of 432
+ * against 272) in less time, but some starting scales fall into a very slow
+ * regime: pilotnov at eps 1e-4 took 61,000 to 643,000 iterations on 4 of 8
+ * starts (about 2,000 on the others), and at eps 1e-6 perold reached the
+ * limits on all 16 starts and pilot took a median of 295,000 iterations
+ * (32,000 without the weight; 8 of 16 solved against 1). It also makes tau
+ * smaller at the solution, since the t entry of v is y_t + s_t / rho_y with
+ * s_t = tau b_t (hs21_tiny_qp: 0.019 against 0.34): harmless in double
+ * precision, but fixed absolute floors on the iterate, such as the CG floor
+ * in single precision, count for more (docs/src/algorithm/scale.rst). */
+#define BOX_T_RY_FACTOR (ZERO_CONE_RY_FACTOR)
+
 /* --- Anderson Acceleration (AA) parameters --- */
 /* Default AA type: 1 = type-I (better empirical performance, default),
  * 0 = type-II (more numerically stable but typically slower). */

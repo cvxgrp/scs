@@ -58,7 +58,6 @@ typedef struct {
 #endif
 
 /* Constants */
-#define BOX_CONE_MAX_ITERS (25)
 /* Power cone projection: POW_CONE_TOL is the tolerance relative to |v| for
  * the Newton solve and the membership checks, POW_CONE_START_SLOPE bounds
  * |dx/dr| and |dy/dr| at r = rh for the Newton solve to start there, and
@@ -346,6 +345,8 @@ void SCS(finish_cone)(ScsConeWork *c) {
     scs_free(c->cone_boundaries_psd_n);
   if (c->r_box_inv)
     scs_free(c->r_box_inv);
+  if (c->box_kinks)
+    scs_free(c->box_kinks);
   if (c->s)
     scs_free(c->s);
 
@@ -391,11 +392,39 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
      * dual free cone, this effectively decreases penalty on those entries
      * and lets them be determined almost entirely by the linear system solve
      */
-    r_y[i] = 1.0 / (1000. * scale);
+    r_y[i] = 1.0 / (ZERO_CONE_RY_FACTOR * scale);
   }
   /* Remaining cones */
   for (i = c->k->z; i < c->m; ++i) {
     r_y[i] = 1.0 / scale;
+  }
+  /* Box cone t entry: weighted like an equality row (BOX_T_RY_FACTOR in
+   * glbopts.h says why). A smaller rho_y on this entry acts in the two places
+   * rho_y enters:
+   * - The linear system. In the usual form the t row of A is zero, so the
+   *   row is decoupled from x: it gives y_t = v_t - tau b_t / rho_y, and adds
+   *   b_t^2 / rho_y to the leading coefficient of the quadratic for tau
+   *   (root_plus), as a zero-cone row with b != 0 does.
+   * - The box projection, whose metric weighs t by rho_t = 1 / rho_y
+   *   (proj_cone hands proj_box_cone the slice of r_y that starts at this
+   *   entry). project_cones hands proj_dual_cone 2 y_t - v_t, which it
+   *   negates and multiplies by rho_y, so with y_t from the linear system as
+   *   above (tau its root_plus value) the t input is
+   *   t0 = -rho_y (2 y_t - v_t) = 2 tau b_t - rho_y v_t. At t* = K / H (see
+   *   proj_box_cone) the clipped rows pull t away from t0 by
+   *   sum_j r_j b_j (x_j - t0 b_j) / H, with H = rho_t + S and
+   *   S = sum_j r_j b_j^2 over them (b_j the bound row j is clipped to). A
+   *   rho_t BOX_T_RY_FACTOR times larger shrinks that pull by
+   *   (rho_t + S) / (BOX_T_RY_FACTOR rho_t + S), by up to BOX_T_RY_FACTOR when
+   *   S does not dominate, so the box rows are clipped to a t nearer tau b_t.
+   * Everything else reads the entry from diag_r: the linear system,
+   * root_plus, the remap of v at a scale update and warm starts. With
+   * adaptive_diag_scale the row's own multiplier divides it, as it divides a
+   * zero-cone row's. So this is the one place it is set.
+   * A box cone of size 1 is t >= 0 alone, with no bounds for t to scale: a
+   * nonnegative entry, which keeps 1 / scale. */
+  if (c->k->bsize > 1) {
+    r_y[c->k->z + c->k->l] = 1.0 / (BOX_T_RY_FACTOR * scale);
   }
 }
 
@@ -2026,18 +2055,633 @@ static void normalize_box_cone(ScsCone *k, scs_float *D, scs_int bsize) {
   }
 }
 
-/* Project onto { (t, s) | t * l <= s <= t * u, t >= 0 }, Newton's method on t
+/* Box cone projection.
+ *
+ * proj_box_cone projects (t0, x) = tx onto
+ *   K = { (t, s) : t l <= s <= t u, t >= 0 }
+ * in the metric rho_t (t - t0)^2 + sum_j r_j (s_j - x_j)^2, where
+ * rho_t = 1 / r_box[0] and r_j = 1 / r_box[j + 1] (all one without r_box).
+ * For a fixed t the best s is x clipped to [t l, t u], so the projection is
+ * the minimiser t* over t >= 0 of the convex piecewise quadratic
+ *   f(t) = rho_t (t - t0)^2 / 2 + sum_j r_j dist(x_j, [t l_j, t u_j])^2 / 2.
+ * Its derivative is
+ *   g(t) = rho_t (t - t0) + sum_{j in U(t)} r_j (t u_j - x_j) u_j
+ *                         + sum_{j in L(t)} r_j (t l_j - x_j) l_j,
+ * where U(t) = { j : x_j > t u_j } and L(t) = { j : x_j < t l_j } are the rows
+ * clipped at their upper and at their lower bound (never both, as l <= u).
+ * g is continuous and strictly increasing (its slope is at least rho_t > 0),
+ * so t* = 0 if g(0) >= 0 and otherwise t* is the root of g.
+ *
+ * Each of a row's three states (clipped above, clipped below, free) is cut out
+ * by inequalities linear in t, so each holds on an interval of t. A row's
+ * state therefore changes only at its kinks t = x_j / u_j and t = x_j / l_j,
+ * and if a row has the same state at two points it has it at every point
+ * between them. Between consecutive kinks, where U and L are fixed, g is the
+ * line g(t) = H t - K with
+ *   H = rho_t + sum_U r_j u_j^2 + sum_L r_j l_j^2,
+ *   K = rho_t t0 + sum_U r_j x_j u_j + sum_L r_j x_j l_j,
+ * so t* = K / H on the piece where g changes sign. Infinite bounds never clip
+ * (t * inf = inf for t > 0; at t = 0, 0 * inf = NaN compares false, which
+ * gives the closure of K there).
+ *
+ * The two methods below, A1 (box_t_sort) and A2 (box_t_newton), both end
+ * with a bracket on which g changes sign, shown by g evaluated at its two
+ * ends, and a single set of clipped rows that is right on the whole bracket,
+ * so that g is one line there. They return the root of that line: A1 as
+ * K / H, with H and K summed from scratch in one pass over the rows, A2 as
+ * t - g(t) / H from a point t on that line close enough to the root that H's
+ * rounding does not matter. The sums that set the result are compensated
+ * (box_twosum), so the result is t* up to the rounding of the products in the
+ * terms and of the final division, a bound that does not grow with the number
+ * of rows:
+ *   A1: |t - t*| <= ~3 eps (t* + (rho_t |t0| + sum |r_j x_j b_j|) / H),
+ *   A2: |t - t*| <= ~3 eps (t* + sum |r_j (t b_j - x_j) b_j| / H),
+ * the sums over the clipped rows (validated against an exact rational t*: at
+ * most 4 eps max(t*, 1) max(1, cond), cond the A1 bound's sum over
+ * H max(t*, 1)). There is no tolerance and no iteration limit that can stop
+ * either short of the root. The two agree to that rounding, not bit for bit.
+ * Every sign of g is taken from g in the residual form above, compensated,
+ * with each row's state decided by the exact sign of t b - x (box_resid). A row
+ * is thus never counted as clipped at a point where it is not, and a steep row
+ * (large r b^2) contributes nothing at its own kink.
+ *
+ * Why exact: SCS 3.3's Newton loop stopped when |t - t_prev| or |g / H| fell
+ * below about 1e-11 max(t, 1), and after 25 iterations. A step that small
+ * does not show that t is near t*: when a steep row (large r b^2, e.g. a
+ * bound of 1e20 left finite by normalize = 0) has its kink next to t, its
+ * curvature makes the step tiny while t* lies beyond the kink. In
+ * qafiro_tiny_qp without normalization (bounds of 1e20) it returned t of
+ * about 1e-20 from a warm start near 0 where t* was 0.002 to 0.3: on 12 of
+ * 2,931 calls with the 3.3 weights, from which ADMM recovered, and on 75,000
+ * of 100,154 with the box t entry weighted like an equality row
+ * (BOX_T_RY_FACTOR), where each such t was the next call's warm start and
+ * ADMM cycled to its iteration limit. An inexact projection can stall ADMM
+ * like that, so the methods below have no tolerance to meet: they stop only
+ * on a sign change of g across an interval with no kink in it.
+ *
+ *   box_t_sort (A1): collect and sort the kinks, walk the pieces. O(m log m)
+ *     per call (m = bsize - 1), no state carried between calls.
+ *   box_t_newton (A2): Newton's method on g from the previous call's t, one
+ *     O(m) pass per point, kept inside a bracket; stops when no kink lies
+ *     between a point and the root of its line, or when two consecutive points
+ *     on either side of the root have the same clipped sets. After
+ *     BOX_NEWTON_MAX_PASSES passes, or a step that leaves the bracket, it hands
+ *     the bracket to A1. Worst case O(m log m), typically one to three passes.
+ *
+ * proj_box_cone uses A2, with A1 as its fallback. Tradeoff: per call A2
+ * costs about 1.7x the 3.3 loop on box cones dumped from real solves (the
+ * compensated sums, the per-row states and the kink sweep; A1 alone costs
+ * about 3.8x), which came to 2.5% more time per SCS iteration (geomean, -0.1%
+ * to +5.5%) on the 10 benchmark problems with the largest box cones, where
+ * the box projection is 2-20% of an iteration. In exchange no tolerance can
+ * stop it short of t*. Validated against an exact rational t* on 5,849
+ * instances (dumped SCS inputs and adversarial families: steep kinks next to
+ * the root, bounds from 1e-6 to 1e12, ties, warm starts far off): within
+ * 4 eps max(t*, 1) max(1, cond) on every one.
+ */
+/* A2: points evaluated (passes over the rows) before what is left of the
+ * bracket goes to A1. Tradeoff: more passes let Newton finish more calls
+ * without the O(m log m) sort, but a call that needs more than a few is one
+ * where Newton is making little progress (slope of g dropping towards t*),
+ * and A1 then finishes it in one sort. Inside SCS A2 took 1.9 passes per call
+ * on average (53,514 calls, 14 problems); on the validation instances 8
+ * passes ran out on 8 of 5,849. */
+#define BOX_NEWTON_MAX_PASSES (8)
+/* A2: a bound on the rounding of a Newton step's target tn, in eps times
+ * (tn + sum |terms of g| / H): each term of g carries a few roundings, its
+ * compensated sum one more, and the step and the division one each (see
+ * box_t_newton). The next point is put this far past the predicted root.
+ * Tradeoff: too small and that point can land on the same side of t* (no
+ * sign change, another pass); too large and it can step past a nearby kink
+ * (a state change, another pass). Either way it costs passes, not accuracy:
+ * every stop is still a sign change of g across an interval with no kink. */
+#define BOX_NEWTON_OVERSHOOT (16.)
+
+typedef struct {
+  scs_float t;  /* the kink */
+  scs_int code; /* 2 j for the upper bound of row j, 2 j + 1 for its lower */
+} BoxKink;
+
+#ifdef SFLOAT
+#define BOX_FMA fmaf
+#define BOX_NEXT nextafterf
+#define BOX_EPS FLT_EPSILON
+#else
+#define BOX_FMA fma
+#define BOX_NEXT nextafter
+#define BOX_EPS DBL_EPSILON
+#endif
+/* below this fraction of |x|, t b - x is formed with a single rounding (fma),
+ * whose sign is exact. Above it the plain t * b - x cannot have the wrong
+ * sign: its two roundings are at most a few eps |x|, far below |x| / 8.
+ * Tradeoff: any fraction above a few eps would keep the sign exact; a larger
+ * one sends more rows through the fma, which is slower on targets without a
+ * hardware fma, a smaller one leaves less margin over the roundings. */
+#define BOX_RESID_EXACT (0.125)
+
+/* t b - x for a bound b: the residual of row j's term in g, < 0 exactly when
+ * an upper bound b clips and > 0 exactly when a lower bound b clips. Near the
+ * kink x / b the product and the difference cancel, and t * b - x can be wrong
+ * by an ulp of x, sign included; so when |t b - x| < |x| / 8 it is formed with
+ * one rounding (fma), whose sign is exact. Further out its two roundings cost
+ * a few ulps of the result and cannot change its sign. An infinite bound gives
+ * +-inf (t > 0) or NaN (t = 0), neither of which clips. */
+static inline scs_float box_resid(scs_float t, scs_float b, scs_float x) {
+  scs_float d = t * b - x;
+  if (ABS(d) < BOX_RESID_EXACT * ABS(x))
+    d = BOX_FMA(t, b, -x);
+  return d;
+}
+
+/* (*s, *c) += v: Knuth's TwoSum, *s the rounded running sum and *c the sum of
+ * its rounding errors, so that *s + *c is v's total to a few ulps whatever the
+ * number of terms or the cancellation between them. Needs IEEE arithmetic (no
+ * -ffast-math, which would drop the error terms). */
+static inline void box_twosum(scs_float *s, scs_float *c, scs_float v) {
+  scs_float t = *s + v, bp = t - *s;
+  *c += (*s - (t - bp)) + (v - bp);
+  *s = t;
+}
+
+/* H += r b^2, K += r x b, compensated (A1's last pass) */
+static inline void box_hk(scs_float *h, scs_float *k, scs_float r, scs_float xj,
+                          scs_float b) {
+  box_twosum(&h[0], &h[1], r * b * b);
+  box_twosum(&k[0], &k[1], r * xj * b);
+}
+
+/* One pass over the rows at t (A2): g(t) in the residual form, compensated
+ * (box_twosum), the slope H of the piece at t, and *sg = sum |terms of g|, the
+ * scale of g's rounding. With st, the state of every row is written there
+ * (1 clipped above, -1 below, 0 free); with cmp also, the return value is the
+ * number of rows whose state differs from the one st held (else 0). */
+static scs_int box_pass(const scs_float *x, const scs_float *bl,
+                        const scs_float *bu, scs_int n, scs_float t0,
+                        scs_float rho_t, const scs_float *rinv, scs_float t,
+                        signed char *st, scs_int cmp, scs_float *g,
+                        scs_float *h, scs_float *sg) {
+  scs_float gt[2] = {rho_t * (t - t0), 0.}, ht = rho_t, sgt = ABS(gt[0]), r,
+            b = 0., d, v;
+  scs_int j, nchg = 0;
+  signed char sj;
+  for (j = 0; j < n; ++j) {
+    sj = 0;
+    d = box_resid(t, bu[j], x[j]);
+    if (d < 0.) {
+      b = bu[j];
+      sj = 1;
+    } else {
+      d = box_resid(t, bl[j], x[j]);
+      if (d > 0.) {
+        b = bl[j];
+        sj = -1;
+      }
+    }
+    if (sj) {
+      r = rinv ? rinv[j] : 1.0;
+      v = r * d * b;
+      box_twosum(&gt[0], &gt[1], v);
+      sgt += ABS(v);
+      ht += r * b * b;
+    }
+    if (st) {
+      if (cmp)
+        nchg += (st[j] != sj);
+      st[j] = sj;
+    }
+  }
+  *g = gt[0] + gt[1];
+  *h = ht;
+  if (sg)
+    *sg = sgt;
+  return nchg;
+}
+
+/* 1 if some row has a kink within s of t, at which its state could change.
+ * The kink of bound b is at distance |t b - x| / |b| from t; the test is
+ * |t b - x| <= 2 s |b|, the factor 2 covering the rounding of t b - x (at most
+ * eps |t b| when not fused, and s >= 16 eps t where it is used). An infinite
+ * bound (t b - x infinite, or NaN at t = 0) has no kink; a zero one has none
+ * either unless x = 0, when it is reported, which is only conservative. No
+ * branch and no state carried between rows except the flag, so the loop
+ * vectorises: it costs a fraction of a box_pass. */
+static scs_int box_kink_near(const scs_float *x, const scs_float *bl,
+                             const scs_float *bu, scs_int n, scs_float t,
+                             scs_float s) {
+  scs_float s2 = 2. * s, du, dl;
+  scs_int j, found = 0;
+  for (j = 0; j < n; ++j) {
+    du = ABS(t * bu[j] - x[j]);
+    dl = ABS(t * bl[j] - x[j]);
+    found |= (du <= s2 * ABS(bu[j])) & (du < INFINITY);
+    found |= (dl <= s2 * ABS(bl[j])) & (dl < INFINITY);
+  }
+  return found;
+}
+
+/* g(t) in the residual form, with each row's state at t (for the checks) */
+static inline scs_float box_g_term(scs_float t, scs_float xj, scs_float l,
+                                   scs_float u, scs_float r) {
+  scs_float d = box_resid(t, u, xj);
+  if (d < 0.)
+    return r * d * u;
+  d = box_resid(t, l, xj);
+  if (d > 0.)
+    return r * d * l;
+  return 0.;
+}
+
+/* The last pass of A1, on the piece (a, b) that holds m: H and K over the
+ * clipped sets at m, and g at a and at b, each with the rows' states there
+ * (b = inf: gb is not formed). */
+static void box_piece(const scs_float *x, const scs_float *bl,
+                      const scs_float *bu, scs_int n, scs_float t0,
+                      scs_float rho_t, const scs_float *rinv, scs_float a,
+                      scs_float m, scs_float b, scs_float *h, scs_float *k,
+                      scs_float *ga, scs_float *gb) {
+  scs_float ht[2] = {rho_t, 0.}, kt[2] = {rho_t * t0, 0.},
+            gat[2] = {rho_t * (a - t0), 0.}, gbt[2] = {rho_t * (b - t0), 0.}, r;
+  scs_int j, fb = b < INFINITY;
+  for (j = 0; j < n; ++j) {
+    r = rinv ? rinv[j] : 1.0;
+    if (box_resid(m, bu[j], x[j]) < 0.)
+      box_hk(ht, kt, r, x[j], bu[j]);
+    else if (box_resid(m, bl[j], x[j]) > 0.)
+      box_hk(ht, kt, r, x[j], bl[j]);
+    box_twosum(&gat[0], &gat[1], box_g_term(a, x[j], bl[j], bu[j], r));
+    if (fb)
+      box_twosum(&gbt[0], &gbt[1], box_g_term(b, x[j], bl[j], bu[j], r));
+  }
+  *h = ht[0] + ht[1];
+  *k = kt[0] + kt[1];
+  *ga = gat[0] + gat[1];
+  *gb = fb ? gbt[0] + gbt[1] : INFINITY;
+}
+
+/* Neumaier's compensated sum: (*s + *c) += v. The walk over the kinks adds and
+ * removes rows from H and K; this keeps a large term that leaves from
+ * swamping the small ones that stay. */
+static inline void box_csum(scs_float *s, scs_float *c, scs_float v) {
+  scs_float t = *s + v;
+  if (ABS(*s) >= ABS(v))
+    *c += (*s - t) + v;
+  else
+    *c += (v - t) + *s;
+  *s = t;
+}
+
+/* Introsort of the kinks by t: quicksort (median of three, Hoare partition),
+ * insertion sort below 16 entries, heapsort past 2 log2(n) levels, so
+ * O(n log n) in the worst case. Deterministic. */
+static void box_kink_isort(BoxKink *a, scs_int n) {
+  scs_int i, j;
+  BoxKink v;
+  for (i = 1; i < n; ++i) {
+    v = a[i];
+    for (j = i; j > 0 && a[j - 1].t > v.t; --j)
+      a[j] = a[j - 1];
+    a[j] = v;
+  }
+}
+
+static void box_kink_sift(BoxKink *a, scs_int i, scs_int n) {
+  BoxKink v = a[i];
+  scs_int c;
+  while ((c = 2 * i + 1) < n) {
+    if (c + 1 < n && a[c + 1].t > a[c].t)
+      ++c;
+    if (!(a[c].t > v.t))
+      break;
+    a[i] = a[c];
+    i = c;
+  }
+  a[i] = v;
+}
+
+static void box_kink_qsort(BoxKink *a, scs_int n, scs_int depth) {
+  BoxKink v;
+  scs_float p;
+  scs_int i, j, m;
+  while (n > 16) {
+    if (depth-- <= 0) { /* heapsort */
+      for (i = n / 2 - 1; i >= 0; --i)
+        box_kink_sift(a, i, n);
+      for (i = n - 1; i > 0; --i) {
+        v = a[0];
+        a[0] = a[i];
+        a[i] = v;
+        box_kink_sift(a, 0, i);
+      }
+      return;
+    }
+    m = n / 2;
+    if (a[m].t < a[0].t) {
+      v = a[m];
+      a[m] = a[0];
+      a[0] = v;
+    }
+    if (a[n - 1].t < a[0].t) {
+      v = a[n - 1];
+      a[n - 1] = a[0];
+      a[0] = v;
+    }
+    if (a[n - 1].t < a[m].t) {
+      v = a[n - 1];
+      a[n - 1] = a[m];
+      a[m] = v;
+    }
+    p = a[m].t;
+    i = -1;
+    j = n;
+    for (;;) {
+      do
+        ++i;
+      while (a[i].t < p);
+      do
+        --j;
+      while (p < a[j].t);
+      if (i >= j)
+        break;
+      v = a[i];
+      a[i] = a[j];
+      a[j] = v;
+    }
+    /* a[0 .. j] <= p <= a[j + 1 .. n - 1], both parts non-empty: recurse on
+     * the shorter part, loop on the longer */
+    if (j + 1 < n - j - 1) {
+      box_kink_qsort(a, j + 1, depth);
+      a += j + 1;
+      n -= j + 1;
+    } else {
+      box_kink_qsort(a + j + 1, n - j - 1, depth);
+      n = j + 1;
+    }
+  }
+  box_kink_isort(a, n);
+}
+
+static void box_kink_sort(BoxKink *a, scs_int n) {
+  scs_int depth = 0, m = n;
+  while (m > 1) {
+    m >>= 1;
+    depth += 2;
+  }
+  box_kink_qsort(a, n, depth);
+}
+
+/* Bound b of row j clips on the interval (ca, cb) of t > 0 (ca in {0, kink},
+ * cb in {kink, inf}); returns 0 if it never clips. upper: it clips where
+ * x > t b, else where x < t b. */
+static scs_int box_clip_interval(scs_float xj, scs_float b, scs_int upper,
+                                 scs_float *ca, scs_float *cb) {
+  if (!(ABS(b) < INFINITY))
+    return 0;
+  if (upper ? b > 0. : b < 0.) { /* clips for t below the kink */
+    if (upper ? !(xj > 0.) : !(xj < 0.))
+      return 0;
+    *ca = 0.;
+    *cb = xj / b;
+  } else if (b != 0.) { /* clips for t above the kink */
+    *ca = (upper ? xj >= 0. : xj <= 0.) ? 0. : xj / b;
+    *cb = INFINITY;
+  } else { /* b = 0: clips for every t > 0 or never */
+    if (upper ? !(xj > 0.) : !(xj < 0.))
+      return 0;
+    *ca = 0.;
+    *cb = INFINITY;
+  }
+  return 1;
+}
+
+/* First index k in [k0, k1) with g(kk[k].t) >= 0 (k1 if none), by bisection
+ * with g in the residual form */
+static scs_int box_kink_search(const scs_float *x, const scs_float *bl,
+                               const scs_float *bu, scs_int n, scs_float t0,
+                               scs_float rho_t, const scs_float *rinv,
+                               const BoxKink *kk, scs_int k0, scs_int k1) {
+  scs_float g, h;
+  scs_int mid;
+  while (k0 < k1) {
+    mid = k0 + (k1 - k0) / 2;
+    box_pass(x, bl, bu, n, t0, rho_t, rinv, kk[mid].t, SCS_NULL, 0, &g, &h,
+             SCS_NULL);
+    if (g >= 0.)
+      k1 = mid;
+    else
+      k0 = mid + 1;
+  }
+  return k0;
+}
+
+/* A1: t* in [lo, hi], given hi = inf or g(hi) >= 0, and g(lo) < 0 if lo_neg
+ * (else lo = 0 and the sign of g(0) is not known yet). kk: workspace of
+ * 2 n kinks.
+ * 1. One pass: the kinks in (lo, hi), and H and K on the first piece (lo, .).
+ * 2. lo = 0 and not lo_neg: g(0) = -K, so t* = 0 if K <= 0.
+ * 3. Sort the kinks and walk them in order, updating H and K (compensated) as
+ *    rows enter and leave, until g = H c - K >= 0 at a kink c. At c, the rows
+ *    whose kink c is are left out of g: their term is zero there. t* is then
+ *    on the piece (a, b) that ends at c.
+ * 4. One pass (box_piece): H and K from scratch over the clipped sets at the
+ *    midpoint m of (a, b), and g at a and at b with the rows' own states
+ *    there. If those say t* is outside [a, b] (the walk's running sums can
+ *    misjudge a sign only within their rounding), the piece is found again by
+ *    bisection over the sorted kinks with g in the residual form, O(log m)
+ *    passes, and step 4 is repeated once on it without the check.
+ * 5. Return K / H clamped to [a, b]. The clamp matters only when a kink lies
+ *    within an ulp inside a or b, so that the line of m does not hold right
+ *    up to that end: g changes sign on [a, b], so t* is then within that ulp of
+ *    the end it is clamped to. If no double lies strictly inside (a, b), t* is
+ *    within an ulp of b, which is returned.
+ * Termination: each step is a pass over the rows, a sort, a walk over a finite
+ * list or a bisection over it, and step 4 runs at most twice. */
+static scs_float box_t_sort(const scs_float *x, const scs_float *bl,
+                            const scs_float *bu, scs_int n, scs_float t0,
+                            scs_float rho_t, const scs_float *rinv,
+                            scs_float lo, scs_int lo_neg, scs_float hi,
+                            BoxKink *kk) {
+  scs_float hs = rho_t, hc = 0., ks = rho_t * t0, kc = 0., r, ca, cb, c, a,
+            b, m, h, k, ga, gb, bd, t;
+  scs_int j, ne = 0, i, i2, code, lower, repaired;
+  for (j = 0; j < n; ++j) {
+    for (lower = 0; lower < 2; ++lower) {
+      bd = lower ? bl[j] : bu[j];
+      if (!box_clip_interval(x[j], bd, !lower, &ca, &cb))
+        continue;
+      if (ca <= lo && lo < cb) {
+        r = rinv ? rinv[j] : 1.0;
+        box_csum(&hs, &hc, r * bd * bd);
+        box_csum(&ks, &kc, r * x[j] * bd);
+      }
+      code = 2 * j + lower;
+      if (ca > lo && ca < hi) {
+        kk[ne].t = ca;
+        kk[ne++].code = code;
+      }
+      if (cb > lo && cb < hi) {
+        kk[ne].t = cb;
+        kk[ne++].code = code;
+      }
+    }
+  }
+  if (!lo_neg && !(ks + kc > 0.)) { /* g(0) = -K >= 0 */
+    return 0.;
+  }
+  box_kink_sort(kk, ne);
+  i = 0;
+  while (i < ne) {
+    c = kk[i].t;
+    for (i2 = i; i2 < ne && kk[i2].t == c; ++i2) {
+      code = kk[i2].code;
+      j = code >> 1;
+      lower = code & 1;
+      bd = lower ? bl[j] : bu[j];
+      if (!(lower ? bd > 0. : bd < 0.)) { /* leaves at c */
+        r = rinv ? rinv[j] : 1.0;
+        box_csum(&hs, &hc, -(r * bd * bd));
+        box_csum(&ks, &kc, -(r * x[j] * bd));
+      }
+    }
+    if ((hs + hc) * c - (ks + kc) >= 0.)
+      break;
+    for (; i < i2; ++i) {
+      code = kk[i].code;
+      j = code >> 1;
+      lower = code & 1;
+      bd = lower ? bl[j] : bu[j];
+      if (lower ? bd > 0. : bd < 0.) { /* enters at c */
+        r = rinv ? rinv[j] : 1.0;
+        box_csum(&hs, &hc, r * bd * bd);
+        box_csum(&ks, &kc, r * x[j] * bd);
+      }
+    }
+  }
+  /* t* on the piece (a, b) = (kk[i - 1].t, kk[i].t), or ending at lo / hi */
+  for (repaired = 0;; repaired = 1) {
+    a = i > 0 ? kk[i - 1].t : lo;
+    b = i < ne ? kk[i].t : hi;
+    m = b < INFINITY ? a + (b - a) / 2 : (a > 0. ? 2 * a : 1.);
+    if (!(m > a && m < b)) /* no double strictly inside */
+      return b;
+    box_piece(x, bl, bu, n, t0, rho_t, rinv, a, m, b, &h, &k, &ga, &gb);
+    if (!repaired && b < hi && gb < 0.) { /* t* > b */
+      i = box_kink_search(x, bl, bu, n, t0, rho_t, rinv, kk, i + 1, ne);
+    } else if (!repaired && i > 0 && ga >= 0.) { /* t* <= a */
+      i = box_kink_search(x, bl, bu, n, t0, rho_t, rinv, kk, 0, i - 1);
+    } else {
+      t = k / h;
+      t = MIN(MAX(t, a), b);
+      return MAX(t, 0.);
+    }
+  }
+}
+
+/* A2: Newton's method on g from the warm start t_wm (the previous call's t*),
+ * kept inside a bracket [lo, hi] on t*. Each point t costs one pass over the
+ * rows (box_pass): g(t) in the residual form (compensated), the slope H of
+ * t's piece, and the rows' states, compared with those at the previous point.
+ * The root of the line of t's piece is tn = t - g / H (0 if that is
+ * negative), up to a rounding bound err = BOX_NEWTON_OVERSHOOT eps
+ * (tn + sum |terms of g| / H).
+ * - Stop, one point: no kink within |tn - t| + err of t (box_kink_near, a
+ *   branch-free sweep over the rows), so g is that line up to tn and tn is t*
+ *   (if clamped at 0, g(0) >= 0 and t* = 0). Also required:
+ *   n |tn - t| <= max(tn, 1), so that the rounding of H, a plain sum (at most
+ *   n eps relative), moves tn by under an ulp of max(t*, 1). This is the
+ *   usual end when the previous call's t* is on the right piece and no kink
+ *   is nearer to t than the step: one pass and one sweep.
+ * - Stop, two points: g < 0 at one of two consecutive points and g >= 0 at the
+ *   other, with the same state in every row. Every row then keeps its state
+ *   between them (see above), so g is one line there and t* = tn from the
+ *   second point, which lies within the overshoot below of t*: H's rounding
+ *   does not matter there.
+ * - Adjacent doubles lo < hi with g(lo) < 0 <= g(hi): t* is within an ulp of
+ *   hi, which is returned (as A1 does).
+ * - g(0) >= 0 at t = 0: t* = 0.
+ * - Otherwise the next point is tn moved on by err past the root it predicts
+ *   (towards hi when g < 0, towards lo when g >= 0). The step lands within its
+ *   rounding of that root, where g has either sign; the overshoot puts the
+ *   point on the far side, so that when the root is on the current piece the
+ *   next pass sees g change sign with the same states and stops. A step below
+ *   the rounding of t still moves the point, so the root is confirmed by a
+ *   sign change: a step that small does not show that the root is near t when
+ *   a steep row's kink lies within that rounding of t (the trap of the
+ *   original loop's stopping test). A point that would fall outside the
+ *   bracket is taken without the overshoot.
+ * - Every point narrows [lo, hi] by the sign of g there. A step that does not
+ *   land strictly inside the bracket (Newton overshoots where the slope of g
+ *   drops towards t*), or BOX_NEWTON_MAX_PASSES passes, hands the bracket to
+ *   A1, which finds t* in it.
+ * Termination: at most BOX_NEWTON_MAX_PASSES passes, then A1, which
+ * terminates (see box_t_sort). The states of the previous point are kept in
+ * A1's workspace, which A1 only uses after the last pass. */
+static scs_float box_t_newton(const scs_float *x, const scs_float *bl,
+                              const scs_float *bu, scs_int n, scs_float t0,
+                              scs_float rho_t, const scs_float *rinv,
+                              scs_float t_wm, BoxKink *kk) {
+  scs_float t = t_wm, g, h, sg, tn, to, err, gp = 0., lo = 0., hi = INFINITY;
+  scs_int pass, lo_neg = 0, nchg;
+  signed char *st = (signed char *)kk;
+  if (!(t >= 0. && t < INFINITY))
+    t = 1.;
+  for (pass = 1;; ++pass) {
+    nchg = box_pass(x, bl, bu, n, t0, rho_t, rinv, t, st, pass > 1, &g, &h,
+                    &sg);
+    /* the root of the line of t's piece (0 if that is negative), and a bound
+     * on its rounding */
+    tn = MAX(t - g / h, 0.);
+    err = BOX_NEWTON_OVERSHOOT * BOX_EPS * (tn + sg / h);
+    if ((pass > 1 && nchg == 0 && (g >= 0.) != (gp >= 0.)) ||
+        ((scs_float)n * ABS(tn - t) <= MAX(tn, 1.) &&
+         !box_kink_near(x, bl, bu, n, t, ABS(tn - t) + err))) {
+      /* g changed sign since the previous point with no state change, which
+       * puts the root within the overshoot of t; or no kink lies within the
+       * step and its rounding, so g is t's line up to the root (g(0) >= 0 if
+       * clamped), and the step is short enough that H's rounding (H a plain
+       * sum, at most n eps relative) moves the root by under an ulp of
+       * max(t*, 1) */
+      return tn;
+    }
+    if (g >= 0.) {
+      if (t <= 0.) {
+        return 0.;
+      }
+      hi = t;
+    } else {
+      lo = t;
+      lo_neg = 1;
+    }
+    if (lo_neg && hi < INFINITY && BOX_NEXT(lo, hi) == hi) {
+      return hi;
+    }
+    /* the Newton step, moved on past the root it predicts (towards hi when
+     * g < 0, towards lo when g >= 0) */
+    to = MAX(g < 0. ? tn + err : tn - err, 0.);
+    if (to < hi && (to > lo || (to == 0. && !lo_neg)))
+      tn = to;
+    if (!(tn < hi && (tn > lo || (tn == 0. && !lo_neg)))) {
+      break;
+    }
+    if (pass >= BOX_NEWTON_MAX_PASSES) {
+      break;
+    }
+    t = tn;
+    gp = g;
+  }
+  return box_t_sort(x, bl, bu, n, t0, rho_t, rinv, lo, lo_neg, hi, kk);
+}
+
+/* Project onto { (t, s) | t * l <= s <= t * u, t >= 0 } (see above).
    tx = [t; s], total length = bsize, under Euclidean metric 1/r_box.
 */
 static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
                                const scs_float *bu, scs_int bsize,
                                scs_float t_wm, scs_float *r_box,
-                               scs_float *r_box_inv) {
+                               scs_float *r_box_inv, BoxKink *kk) {
   scs_float *x = &(tx[1]);
-  scs_float gt, ht, t = t_wm, t_prev, r;
-  scs_float rho_t = 1.0;
-  scs_float *rho = SCS_NULL;
-  scs_int iter, j;
+  scs_float t, rho_t = 1.0;
+  const scs_float *rinv = SCS_NULL;
+  scs_int j;
 
   if (bsize == 1) {
     tx[0] = MAX(tx[0], 0.0);
@@ -2045,43 +2689,16 @@ static scs_float proj_box_cone(scs_float *tx, const scs_float *bl,
   }
   if (r_box) {
     rho_t = 1.0 / r_box[0];
-    rho = &(r_box[1]);
-    /* Precompute reciprocals once, used across all Newton iterations */
+    /* Precompute reciprocals once, used across all passes */
     if (r_box_inv) {
       for (j = 0; j < bsize - 1; j++) {
-        r_box_inv[j] = 1.0 / rho[j];
+        r_box_inv[j] = 1.0 / r_box[j + 1];
       }
+      rinv = r_box_inv;
     }
   }
 
-  /* Newton's method for t */
-  for (iter = 0; iter < BOX_CONE_MAX_ITERS; iter++) {
-    t_prev = t;
-    gt = rho_t * (t - tx[0]);
-    ht = rho_t;
-
-    for (j = 0; j < bsize - 1; j++) {
-      r = (rho && r_box_inv) ? r_box_inv[j] : 1.0;
-      if (x[j] > t * bu[j]) {
-        gt += r * (t * bu[j] - x[j]) * bu[j];
-        ht += r * bu[j] * bu[j];
-      } else if (x[j] < t * bl[j]) {
-        gt += r * (t * bl[j] - x[j]) * bl[j];
-        ht += r * bl[j] * bl[j];
-      }
-    }
-
-    t = MAX(t - gt / MAX(ht, 1e-8), 0.0);
-
-    /*
-     * TODO: sometimes this check can fail (ie, declare convergence before it
-     * should) if ht is very large, which can happen with some pathological
-     * problems.
-     */
-    if (ABS(gt / MAX(ht, (scs_float)1e-6)) < 1e-12 * MAX(t, 1.) ||
-        ABS(t - t_prev) < 1e-11 * MAX(t, 1.))
-      break;
-  }
+  t = box_t_newton(x, bl, bu, bsize - 1, tx[0], rho_t, rinv, t_wm, kk);
 
   /* Apply calculated t to x */
   for (j = 0; j < bsize - 1; j++) {
@@ -2380,7 +2997,7 @@ static scs_int proj_cone(scs_float *x, const ScsCone *k, ScsConeWork *c,
       r_box = &(r_y[count]);
     c->box_t_warm_start = proj_box_cone(&(x[count]), k->bl, k->bu, k->bsize,
                                         c->box_t_warm_start, r_box,
-                                        c->r_box_inv);
+                                        c->r_box_inv, (BoxKink *)c->box_kinks);
     count += k->bsize;
   }
 
@@ -2515,6 +3132,13 @@ ScsConeWork *SCS(init_cone)(ScsCone *k, scs_int m) {
   if (k->bsize > 1) {
     c->r_box_inv =
         (scs_float *)scs_calloc(k->bsize - 1, sizeof(scs_float));
+    /* kinks of g for the box projection's sort (A1), at most two per row;
+     * A2 keeps the rows' states in the same space */
+    c->box_kinks = scs_calloc(2 * (k->bsize - 1), sizeof(BoxKink));
+    if (!c->r_box_inv || !c->box_kinks) {
+      SCS(finish_cone)(c);
+      return SCS_NULL;
+    }
   }
 
   /* PSD blocks: offsets and threads (the workspaces are set up below) */

@@ -76,7 +76,10 @@ struct SCS_CONE_WORK {
   scs_int m;            /* total length of cone */
   /* box cone quantities */
   scs_float box_t_warm_start;
-  scs_float *r_box_inv; /* precomputed 1/r_box[j] for box cone Newton */
+  scs_float *r_box_inv; /* precomputed 1/r_box[j] for the box projection */
+  /* kinks of the box projection's derivative, 2 (bsize - 1) entries (see
+   * proj_box_cone in cones.c); NULL without a box cone of size 2 or more */
+  void *box_kinks;
 
   /* Eigendecomposition workspaces (with LAPACK), one per thread: psd_tw[t]
    * serves the PSD blocks of list t and is sized for them alone; psd_tw[0]

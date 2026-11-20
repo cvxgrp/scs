@@ -9,7 +9,7 @@
 
 /* test read / write logic */
 static const char *hs21_tiny_qp_rw(void) {
-  scs_int cold_iter;
+  scs_float scale, ws_ratio;
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -111,15 +111,24 @@ static const char *hs21_tiny_qp_rw(void) {
   mu_assert("hs21_tiny_qp: SCS failed to produce outputflag SCS_SOLVED",
             success);
   fail = verify_solution_correct(d, k, stgs, &info, sol, exitflag);
-  cold_iter = info.iter;
 
-  /* test warm-starting */
+  /* test warm-starting as hs21_tiny_qp.h does, and for the reasons given
+   * there: start from the scale the cold solve ended at (info.scale), and
+   * check the first iterate, not the number of iterations the warm-started
+   * solve takes. */
+  scale = stgs->scale;
+  stgs->scale = info.scale;
+  ws_ratio = warm_start_first_iterate_ratio(d, k, stgs, sol);
+  scs_printf("hs21_tiny_qp_rw: warm-start first iterate ratio %.2e "
+             "(limit %.2e)\n",
+             ws_ratio, WARM_START_FIRST_ITER_TOL);
+  mu_assert("hs21_tiny_qp_rw: warm-start failure",
+            ws_ratio <= WARM_START_FIRST_ITER_TOL);
   stgs->warm_start = 1;
   exitflag = scs(d, k, stgs, sol, &info);
-  /* relative to the cold solve: an absolute cap encodes the iteration
-   * count of one particular metric and breaks whenever the scaling
-   * changes, even though the warm solve is correct */
-  mu_assert("hs21_tiny_qp_rw: warm-start failure", info.iter <= cold_iter / 2);
+  stgs->scale = scale;
+  perr = info.pobj - opt;
+  derr = info.dobj - opt;
   success = ABS(perr) < SOL_TOL && ABS(derr) < SOL_TOL &&
             exitflag == SCS_SOLVED;
 
