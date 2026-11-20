@@ -50,9 +50,11 @@
  *   that solve for anything but the full residual (CG restarted on the
  *   right-hand side from x solves with K' again and cannot remove the
  *   mismatch), leaves the error at about delta and the solve stalls.
- *   Measured: 175 iterations, 100 with refinement on in double precision
- *   (75 in single), 7 checks; with the steps removed (max_refine_steps 0
- *   while on) it ran to RP_CONTRACT_ITERS unsolved, error 8e-4, in both.
+ *   Measured in double precision: 175 iterations, 100 with refinement on,
+ *   7 checks; in single precision 200 and 225 iterations, 75 and 100 with
+ *   refinement on, 8 and 9 checks (USE_LAPACK 0 and 1); with the steps
+ *   removed (max_refine_steps 0 while on) it ran to RP_CONTRACT_ITERS
+ *   unsolved, error 8e-4, in both precisions.
  *
  * Skipped where the linear solver measures its residuals with its own K,
  * which follows the update, so that it sees no mismatch and nothing to
@@ -178,9 +180,10 @@ static const char *test_refine_perturbed(void) {
    * REFINE_CHECK_INTERVAL, once the first convergence check has set
    * refine_tol (none at iteration 0), so a run of info.iter iterations makes
    * at most info.iter / REFINE_CHECK_INTERVAL. The bound is tight by
-   * construction (the CG run: 7 checks in 175 iterations), so a change to
-   * when convergence checks run or to how iterations are counted can fail
-   * it with no decision between checks; the bound then changes with it. */
+   * construction (the CG runs: 7 checks in 175 iterations in double
+   * precision, 9 in 225 in single), so a change to when convergence checks
+   * run or to how iterations are counted can fail it with no decision
+   * between checks; the bound then changes with it. */
   mu_assert("test_refine_perturbed: a decision between checks",
             checks >= 0 && checks <= info.iter / REFINE_CHECK_INTERVAL);
   if (cg) {
