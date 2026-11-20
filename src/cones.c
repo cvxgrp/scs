@@ -1092,8 +1092,13 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * with 2, 3, 4, 5 and 10 threads. The constants are a third above the fit to
  * that, because the smallest blocks lost more. An OpenMP build did not show
  * this (measured on macOS). These were measured with syevr and not again
- * with syevd; the rule, with the estimate of psd_block_cost, was checked by
- * that estimate's A/B (0.95x the time with this OpenBLAS). */
+ * with syevd. The cost also depends on where the threads run, which these
+ * constants do not see: on a DGX Spark (two clusters of Cortex-X925 cores),
+ * a team of 3 on 33 blocks of n = 4 took 1.65x as long when its threads
+ * were on both clusters as on one (NVPL, without the lock: 1.3x). With the
+ * estimate of psd_block_cost, the projection took 0.94x the time of the
+ * previous estimate with this OpenBLAS at 2 to 4 threads (on one cluster)
+ * and 1.20x at 10 threads (on both). */
 #ifndef PSD_PAR_LOCK_COST
 #define PSD_PAR_LOCK_COST (300.)
 #endif
@@ -1183,18 +1188,34 @@ typedef struct {
  * of NVPL's time, and Accelerate grows more slowly for large blocks (55 ms
  * at n = 1000, NVPL 116 ms). Too low an estimate keeps blocks serial that
  * threads would project faster; too high gives threads to projections that
- * are faster on one. Following NVPL, the highest times, was faster with two
- * of the three libraries. On the block structures whose split changed
+ * are faster on one. Following NVPL, the highest times, was the fastest of
+ * the fits over all three libraries, but not with each of them. Against the
+ * previous estimate (below), on the block structures whose split changed
  * (#507's 82 and the SDPs of SDPLIB and the benchmark suite with several
- * blocks, 2 to 4 threads), the projection took, against the previous
- * estimate (below), 0.86x the time with NVPL (4 blocks of n = 5 and 6 of
- * n = 3 now take threads, 1.6-2.8x faster), 0.95x with OpenBLAS (lock
- * counted, PSD_PAR_LOCK_COST) and 1.05x with Accelerate, where projections
- * of 9 to 16 us made of 8 to 16 blocks of n = 3 to 6 now take threads and
- * are up to 2.3x slower. A fit through NVPL and Accelerate together
- * (0.5-0.8x this estimate for n = 3 to 10) took 1.10x with NVPL, 1.18x with
- * OpenBLAS and 1.00x with Accelerate. NVPL's 1.4 us for n = 2 took 0.4-0.7x
- * with NVPL on 16 to 64 such blocks, but up to 1.8x with the other two.
+ * blocks), at 2 to 4 threads / at 10, the projection took:
+ * - NVPL: 0.84x / 0.89x. 2 to 16 blocks of n = 3 to 16 (hinf14, truss4)
+ *   now take threads, or more of them: 14 pairs 1.1-2.9x faster, one 1.07x
+ *   slower.
+ * - OpenBLAS, lock counted (PSD_PAR_LOCK_COST): 0.94x / 1.20x. At 2 to 4
+ *   threads 28 pairs are faster by more than 5% and 15 slower. At 10, 3 are
+ *   faster and 16 slower (1.08-1.95x: truss2, truss6, and teams of 3 or 4
+ *   on 64 or 256 blocks of n = 3 to 6): the threads then run on both
+ *   clusters of cores of the DGX Spark, where the lock costs more than that
+ *   constant says.
+ * - Accelerate: 1.06x / 1.12x. Projections of 9 to 62 us (5 to 64 blocks
+ *   of n = 3 to 10) now take threads, or more of them: 10 pairs 1.1-2.3x
+ *   slower, 2 faster.
+ * - All 198 (library, structure, thread count) pairs: 0.985x. Whole solves
+ *   of those SDPs (KKT-verified, the same solved count and iterates): 0.98x
+ *   of the wall clock (shifted geometric mean, shift 10 ms), 0.86x with
+ *   NVPL, 1.06x with OpenBLAS and 1.07x with Accelerate, and 1.08x at 10
+ *   threads alone.
+ * A fit through NVPL and Accelerate together (0.5-0.8x this estimate for
+ * n = 3 to 10) took 1.06x over all pairs (NVPL 1.09x, OpenBLAS 1.09x,
+ * Accelerate 0.99x). NVPL's 1.4 us for n = 2 took 1.00x: NVPL 0.81x (16 or
+ * 64 such blocks 0.4-0.7x), but OpenBLAS 1.05x and Accelerate 1.10x (up to
+ * 2.6x slower on 64 to 1024 of them). x86-64 (MKL, OpenBLAS) was not
+ * measured.
  *
  * Complex blocks: the estimate from before syevd (#543), fitted to heevr's
  * times with Accelerate and OpenBLAS. heevd with NVPL takes 0.9-1.4x of it
