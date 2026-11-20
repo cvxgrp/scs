@@ -152,16 +152,14 @@ badly scaled or ill-conditioned <span class="math notranslate nohighlight">\(K\)
 tolerance. So SCS checks the solves it depends on, by computing their
 residuals, and when one is not accurate enough it refines it: it solves with
 <span class="math notranslate nohighlight">\(K\)</span> for the residual and adds the correction to the solution that
-residual belongs to. For the <span class="math notranslate nohighlight">\((c, -b)\)</span> solve and with the indirect solvers that is an
-extra solve; for the direct solvers’ per-iteration solves it takes the place
-of the plain solve (see below). Two solves are checked, each in its own way:</p>
+residual belongs to. For the <span class="math notranslate nohighlight">\((c, -b)\)</span> solve and with the indirect
+solvers that is an extra solve; for the direct solvers’ per-iteration solves
+it takes the place of the plain solve (see below). Two solves are checked, each in its own way:</p>
 <ul class="simple">
 <li><p>the solve for the right-hand side <span class="math notranslate nohighlight">\((c, -b)\)</span>, made at the start of a
 solve and whenever <span class="math notranslate nohighlight">\(R\)</span> changes and used in every iteration until the
-next change, is checked every time it is made against a fixed relative
-threshold (<span class="math notranslate nohighlight">\(10^{-12}\)</span>, <span class="math notranslate nohighlight">\(10^{-5}\)</span> in single precision), and
-refined for at most three steps while it is above it (see
-<a class="reference internal" href="#g-refinement"><span class="std std-ref">The solve for (c, -b)</span></a>);</p></li>
+next change, is solved to about machine precision every time it is made,
+with at most five refinement steps (see <a class="reference internal" href="#g-refinement"><span class="std std-ref">The solve for (c, -b)</span></a>);</p></li>
 <li><p>each iteration’s solve is checked every 25 iterations (every iteration
 while an indirect solver is refining) against SCS’s own residuals, and made
 more accurate while its error would hold the iterates back (see
@@ -183,9 +181,11 @@ solve when its factorization had to perturb a pivot (<code class="docutils liter
 <p>SCS’s linear solve takes a warm start, a tolerance and a number of refinement
 steps (see <a class="reference internal" href="#new-linear-solver"><span class="std std-ref">Implementing a new linear solver</span></a>). With the direct solvers, the
 per-iteration refinement passes the previous iteration’s solution as the warm
-start and decides when; with the indirect solvers, and for the solve for
-<span class="math notranslate nohighlight">\((c, -b)\)</span>, SCS refines with plain solves and its own products (see
-below).</p>
+start and decides when; with the indirect solvers, SCS refines each
+iteration’s solve with plain solves and its own products (see below). The
+solve for <span class="math notranslate nohighlight">\((c, -b)\)</span> passes its first solution as the warm start, a
+tolerance at about machine precision and at most five steps in all, with
+every solver (see below).</p>
 <section id="the-solve-for-c-b">
 <span id="g-refinement"></span><h3>The solve for <span class="math notranslate nohighlight">\((c, -b)\)</span><a class="headerlink" href="#the-solve-for-c-b" title="Link to this heading"></a></h3>
 <p><strong>When and why.</strong> At the start of every solve, and whenever the scaling
@@ -196,36 +196,70 @@ function in <a class="reference internal" href="../algorithm/scale.html#scaling"
 is subtracted from that iteration’s solve. An error in an iteration’s own
 solve affects one iteration; an error in <span class="math notranslate nohighlight">\(g\)</span> is repeated in every
 iteration rather than averaged out, and can limit the accuracy SCS reaches. So
-<span class="math notranslate nohighlight">\(g\)</span> is checked every time it is computed, against a fixed small
-threshold, rather than against SCS’s current residuals as each iteration’s
-solve is.</p>
-<p><strong>The check.</strong> After the solve, SCS computes the residual <span class="math notranslate nohighlight">\(r = (c, -b) -
-K g\)</span> with its own products from the problem data, also with a linear solver
-that computes the per-iteration products itself (see “Who computes the
-multiplies” in <a class="reference internal" href="#refinement"><span class="std std-ref">Accuracy of each iteration’s solve</span></a>), and divides <span class="math notranslate nohighlight">\(\|r\|_\infty\)</span> by the
-size of the terms whose rounding errors it is compared with: the largest
-<span class="math notranslate nohighlight">\(\infty\)</span>-norm among <span class="math notranslate nohighlight">\((c, -b)\)</span>, <span class="math notranslate nohighlight">\(R g\)</span>, <span class="math notranslate nohighlight">\(A^\top g_y\)</span>,
-<span class="math notranslate nohighlight">\(P g_x + A^\top g_y\)</span> and <span class="math notranslate nohighlight">\(A g_x\)</span>. If this relative residual is
-above <span class="math notranslate nohighlight">\(10^{-12}\)</span> (<span class="math notranslate nohighlight">\(10^{-5}\)</span> in single precision, which cannot
-reach <span class="math notranslate nohighlight">\(10^{-12}\)</span>; <code class="docutils literal notranslate"><span class="pre">G_SOLVE_TOL</span></code> in <code class="docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), SCS refines
-<span class="math notranslate nohighlight">\(g\)</span>.</p>
-<p><strong>The refinement.</strong> Each step solves <span class="math notranslate nohighlight">\(K d = r\)</span> and computes the residual
-of <span class="math notranslate nohighlight">\(g + d\)</span>. SCS keeps <span class="math notranslate nohighlight">\(g + d\)</span> unless its residual is larger (or
-not finite), in which case it keeps <span class="math notranslate nohighlight">\(g\)</span> and stops. It also stops once
-the residual is at most the threshold, after a step that does not at least
-halve the residual, or after three steps (<code class="docutils literal notranslate"><span class="pre">G_REFINE_MAX_STEPS</span></code>). So the
-refined <span class="math notranslate nohighlight">\(g\)</span> never has a larger residual than the first solve.</p>
-<p><strong>Cost.</strong> One multiply by <span class="math notranslate nohighlight">\(K\)</span> each time <span class="math notranslate nohighlight">\(g\)</span> is solved for, paid
-even when the first solve is already accurate enough, plus one solve and one
-multiply per refinement step. With a direct solver each solve reuses the
-existing factorization, so this is cheap next to factorizing. With the
-indirect solvers the solve for <span class="math notranslate nohighlight">\(g\)</span> is a conjugate gradient solve
-started from zero, to the solvers’ best accuracy (<code class="code docutils literal notranslate"><span class="pre">CG_BEST_TOL</span></code>).
-Conjugate gradients stops on the absolute residual of its reduced system,
-which on badly scaled data can leave a much larger relative residual here, so
-<span class="math notranslate nohighlight">\(g\)</span> is checked and refined with them too. There each refinement step is
-another conjugate gradient solve from zero, which can take up to about as
-many conjugate gradient iterations as the solve for <span class="math notranslate nohighlight">\(g\)</span> itself.</p>
+<span class="math notranslate nohighlight">\(g\)</span> is solved to about machine precision every time it is computed,
+rather than as accurately as SCS’s current residuals need, as each
+iteration’s solve is.</p>
+<p><strong>The tolerance.</strong> A plain solve (with conjugate gradients: from zero, to
+the solvers’ best accuracy, <code class="code docutils literal notranslate"><span class="pre">CG_BEST_TOL</span></code>) gives <span class="math notranslate nohighlight">\(g_0\)</span> and its
+residual <span class="math notranslate nohighlight">\(r = (c, -b) - K g_0\)</span>. Computing <span class="math notranslate nohighlight">\(r\)</span> rounds each row by
+a few machine epsilons <span class="math notranslate nohighlight">\(\epsilon\)</span> of the size of the terms it is
+computed from, so SCS asks for</p>
+<div class="math notranslate nohighlight">
+\[\|(c, -b) - K g\|_\infty \le 4 \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty\]</div>
+<p>(absolute values entry by entry; <code class="code docutils literal notranslate"><span class="pre">G_TOL_EPS</span></code> in
+<code class="docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), with <span class="math notranslate nohighlight">\(\epsilon\)</span> the machine epsilon of the
+precision SCS is built in. The size is computed row by row, from the
+entries each row actually multiplies, rather than as
+<span class="math notranslate nohighlight">\(\|(c, -b)\|_\infty + \|K\|_\infty \|g_0\|_\infty\)</span> (the normwise
+backward error), which pairs the largest row of <span class="math notranslate nohighlight">\(K\)</span> with the largest
+entry of <span class="math notranslate nohighlight">\(g_0\)</span> even where they do not meet: on badly scaled problems
+that was up to <span class="math notranslate nohighlight">\(10^9\)</span> times larger, and would have accepted residuals
+far above rounding. It is one number, the largest row’s, because the
+tolerance of the solve bounds the largest entry of the residual; so a row
+whose terms are much smaller than the largest row’s is held to the largest
+row’s rounding, not to its own.</p>
+<p><strong>The refinement.</strong> If <span class="math notranslate nohighlight">\(g_0\)</span> misses the tolerance, the solve is
+repeated with <span class="math notranslate nohighlight">\(g_0\)</span> as its warm start, to the tolerance, with at most
+five steps in all (<code class="code docutils literal notranslate"><span class="pre">G_REFINE_MAX_STEPS</span></code>). For a direct solver the
+first step is the correction form from <span class="math notranslate nohighlight">\(g_0\)</span>; for conjugate gradients
+it is a solve started from <span class="math notranslate nohighlight">\(g_0\)</span>. Each further step computes the
+residual with <span class="math notranslate nohighlight">\(K\)</span> and adds the solution of <span class="math notranslate nohighlight">\(K d = r\)</span> (by
+conjugate gradients from zero to the tolerance, with them). A step is kept
+only if it lowers the residual, the steps stop after one that does not at
+least halve it, and SCS keeps <span class="math notranslate nohighlight">\(g_0\)</span> unless the result is better, so
+<span class="math notranslate nohighlight">\(g\)</span> never has a larger residual than the first solve. Conjugate
+gradients solves a reduced system and computes <span class="math notranslate nohighlight">\(g_y\)</span> from
+<span class="math notranslate nohighlight">\(g_x\)</span>, so on badly scaled data its own rounding can be far above that
+of <span class="math notranslate nohighlight">\(K\)</span>’s residual: the solve started from <span class="math notranslate nohighlight">\(g_0\)</span> is limited by
+that rounding, but each further step solves only for the correction, so it
+is not.</p>
+<p><strong>If it fails.</strong> The solve should never fail. If the linear solver returns
+an error, <span class="math notranslate nohighlight">\(g\)</span> is not finite, or the residual of the refined <span class="math notranslate nohighlight">\(g\)</span>
+is more than half the size of its terms (<code class="code docutils literal notranslate"><span class="pre">G_FAIL_REL_RES</span></code>: not even
+the leading digit right; with working solvers it measured at most about
+<span class="math notranslate nohighlight">\(10^{-2}\)</span> of the size, and that only where the solver could do no
+better, such as conjugate gradients at its iteration limit), SCS stops with
+status <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> (see <a class="reference internal" href="../api/exit_flags.html#exit-flags"><span class="std std-ref">Exit flags</span></a>) and prints what failed,
+that this indicates a bug in SCS or its linear solver, and a request to open
+an issue at <a class="reference external" href="https://github.com/cvxgrp/scs/issues">https://github.com/cvxgrp/scs/issues</a> with the problem data (the
+<code class="docutils literal notranslate"><span class="pre">write_data_filename</span></code> setting saves it). If <span class="math notranslate nohighlight">\(b\)</span> or <span class="math notranslate nohighlight">\(c\)</span>
+contains a NaN or infinite entry, SCS stops with <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> and says
+so instead.</p>
+<p><strong>Cost.</strong> One multiply by <span class="math notranslate nohighlight">\(K\)</span> each time <span class="math notranslate nohighlight">\(g\)</span> is solved for (the
+residual of <span class="math notranslate nohighlight">\(g_0\)</span>) and one pass over <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> for the
+size of the terms, paid even when the first solve is already accurate
+enough; when it is not, one solve and one multiply per step, and with a
+direct solver one multiply more (the correction form computes the residual
+of <span class="math notranslate nohighlight">\(g_0\)</span> again). With a direct solver each solve reuses the existing
+factorization, so this is cheap next to factorizing. With the indirect
+solvers each step costs the conjugate gradient iterations that reach the
+tolerance. On random
+SOCPs the refinement took up to about 30% of the first solve’s conjugate
+gradient iterations in double precision, and up to about two thirds in
+single precision. Where conjugate gradients cannot reach the tolerance
+within its iteration limit (<span class="math notranslate nohighlight">\(10 n\)</span>), each step runs to that limit, so
+on such problems the refinement can cost up to about five times the first
+solve.</p>
 </section>
 <section id="accuracy-of-each-iteration-s-solve">
 <span id="refinement"></span><h3>Accuracy of each iteration’s solve<a class="headerlink" href="#accuracy-of-each-iteration-s-solve" title="Link to this heading"></a></h3>
@@ -372,8 +406,9 @@ OpenMP, and stays deterministic: each entry is summed by one thread in a fixed
 order). MKL Pardiso computes them with MKL’s threaded sparse matrix-vector
 product instead, and cuDSS from 60,000 nonzeros in <span class="math notranslate nohighlight">\(K\)</span> computes them on
 the GPU, where the residual stays (the warm start is copied to the GPU). The
-decisions above are the same either way; only the cost of the multiply and
-its rounding change.</p>
+solve for <span class="math notranslate nohighlight">\((c, -b)\)</span> makes its multiplies the same way. The decisions
+above are the same either way; only the cost of the multiply and its
+rounding change.</p>
 <p>What the solver’s own multiplies buy is a cheaper iteration while the
 correction form is on. With cuDSS on 10 large LPs, QPs and SOCPs at
 <span class="math notranslate nohighlight">\(10^{-8}\)</span> (NVIDIA GB10), such an iteration cost 1.19 times a plain one
@@ -764,10 +799,12 @@ correction form from it, and solve plainly when <span class="math notranslate no
 \ge \|b\|_\infty\)</span>. With <code class="code docutils literal notranslate"><span class="pre">max_refine_steps</span></code> above 0 it must take at most
 that many steps <span class="math notranslate nohighlight">\(x + K^{-1}(b - K x)\)</span> (a CG solver too, with the
 residual computed in the full space and solved from zero), keep a step only
-if it lowers the residual, and stop after one that does not halve it. A
-direct solver that ignores <code class="code docutils literal notranslate"><span class="pre">s</span></code> still gives correct answers, but SCS’s
-refinement then cannot make its solves more accurate, which on badly scaled
-problems can keep SCS from reaching tight tolerances.</p>
+if it lowers the residual, and stop after one that does not halve it. SCS
+asks for such steps to solve for <span class="math notranslate nohighlight">\((c, -b)\)</span> (see <a class="reference internal" href="#g-refinement"><span class="std std-ref">The solve for (c, -b)</span></a>),
+and stops with an error if that solve fails. A direct solver that ignores
+<code class="code docutils literal notranslate"><span class="pre">s</span></code> still gives correct answers, but SCS’s refinement then cannot make
+its solves more accurate, which on badly scaled problems can keep SCS from
+reaching tight tolerances.</p>
 <p><strong>Tests.</strong> <code class="code docutils literal notranslate"><span class="pre">test_lin_sys_solve</span></code> in the test suite checks the contract
 against residuals it computes itself: warm starts near and far from the
 solution (the correction form and its fallback), refinement and its limits
@@ -779,7 +816,10 @@ that SCS’s refinement fires (and, with a mismatch too large to contract, its
 safeguard); a solver that measures with its own <span class="math notranslate nohighlight">\(K\)</span> follows the update,
 sees no mismatch, and is skipped there with a message (MKL Pardiso, unless
 built with <code class="docutils literal notranslate"><span class="pre">MKL_NO_OWN_PRODUCTS</span></code>; cuDSS from <code class="code docutils literal notranslate"><span class="pre">CUDSS_MIN_PRODUCT_NNZ</span></code>
-nonzeros).</p>
+nonzeros). <code class="code docutils literal notranslate"><span class="pre">test_g_accuracy</span></code> checks that the solve for
+<span class="math notranslate nohighlight">\((c, -b)\)</span> reaches machine precision on a badly scaled problem, and
+that a solver given a far different <span class="math notranslate nohighlight">\(R\)</span> (skipped likewise) makes SCS
+stop with <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> and the message asking to open an issue.</p>
 <p><strong>From SCS 3.3.</strong> The solve was <code class="code docutils literal notranslate"><span class="pre">scs_solve_lin_sys(w,</span> <span class="pre">b,</span> <span class="pre">s,</span> <span class="pre">tol)</span></code>.
 <code class="code docutils literal notranslate"><span class="pre">max_refine_steps</span></code> and <code class="code docutils literal notranslate"><span class="pre">res</span></code> are new, so a solver written for 3.3
 no longer compiles. Rename its solve <code class="code docutils literal notranslate"><span class="pre">plain_solve</span></code> (it keeps its 3.3
@@ -855,7 +895,7 @@ them, become a residual function as above.</p>
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
 <li><p><strong>b</strong> – Right-hand side, n + m entries; overwritten with the solution. </p></li>
 <li><p><strong>s</strong> – Warm start, a guess of the solution (n + m entries; CG reads the first n), or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. Not changed; must not alias <code class="docutils literal notranslate"><span class="pre">b</span></code>. </p></li>
-<li><p><strong>tol</strong> – The accuracy asked for, as <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>. CG solvers stop at it (smaller is more accurate and costs more CG iterations), and their refinement steps solve to it; they need <code class="docutils literal notranslate"><span class="pre">tol</span></code> &gt; 0. SCS’s CG solvers return x = 0 for a b with <span class="math notranslate nohighlight">\(\|b\|_\infty \le 10^{-12}\)</span>, and the CPU one makes no CG iteration from a residual below 1e-12, so a smaller <code class="docutils literal notranslate"><span class="pre">tol</span></code> is not reached. Direct solvers refine toward it, and ignore it when <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> is 0. Below the rounding level of the residual (about machine epsilon times <span class="math notranslate nohighlight">\(\|b\|_\infty + \|K\|_\infty \|x\|_\infty\)</span>) a step only measures rounding, and the halving test stops it. </p></li>
+<li><p><strong>tol</strong> – The accuracy asked for, as <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>. CG solvers stop at it, also below 1e-12 (smaller is more accurate and costs more CG iterations), and their refinement steps solve to it; they need <code class="docutils literal notranslate"><span class="pre">tol</span></code> &gt; 0, and return x = 0 without iterating when <span class="math notranslate nohighlight">\(\|b\|_\infty \le \min(\mathrm{tol}, 10^{-12})\)</span>. Direct solvers refine toward it, and ignore it when <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> is 0. Below the rounding level of the residual (a few machine epsilons times <span class="math notranslate nohighlight">\(\| |b| + |K|\,|x| \|_\infty\)</span>, absolute values entry by entry) a step only measures rounding, and the halving test stops it. </p></li>
 <li><p><strong>max_refine_steps</strong> – At most this many refinement steps; 0 for none. </p></li>
 <li><p><strong>res</strong> – If not <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, set to <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span> for the returned x and the given b, with the multiplies above. Cost: a copy of b and a multiply by K, unless refinement computed it. Asking for it never changes x. A NaN entry of the residual may be missed by the max (as by SCS’s <code class="docutils literal notranslate"><span class="pre">norm_inf</span></code>), so a finite <code class="docutils literal notranslate"><span class="pre">*res</span></code> does not show that x is finite. </p></li>
 </ul>
