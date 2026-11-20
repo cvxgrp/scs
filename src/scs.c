@@ -147,6 +147,8 @@ static void set_diag_r(ScsWork *w);
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs);
 static scs_int update_work_cache(ScsWork *w);
+static scs_float kkt_terms_inf(const ScsWork *w, const scs_float *h,
+                               const scs_float *g, scs_float *t);
 static void reset_tracking(ScsWork *w);
 static scs_int update_work(ScsWork *w, ScsSolution *sol);
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter);
@@ -1258,92 +1260,110 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 /* Sets the tol that the per-iteration refinement (solve_indirect for indirect
  * solvers, solve_direct for direct ones) compares with, at a convergence
  * check, right after the residuals are computed: the size of the residuals
- * SCS is driving to zero (normalized, tau not divided out), but not below
- * REFINE_TOL_FLOOR:
- * one of them can be zero (an infeasibility or unboundedness certificate),
- * and refinement would then chase rounding errors on every remaining
- * iteration. It is kept here rather than read from r_normalized when the
- * refinement runs because logging to CSV (log_csv_filename) recomputes
- * r_normalized every iteration, and logging must not change the iterates. */
+ * SCS is driving to zero (normalized, tau not divided out). One of them can
+ * be zero (an infeasibility or unboundedness certificate), so each decision
+ * also compares the residual with its own rounding level (refine_next_on).
+ * It is kept here rather than read from r_normalized when the refinement
+ * runs because logging to CSV (log_csv_filename) recomputes r_normalized
+ * every iteration, and logging must not change the iterates. */
 static void set_refine_tol(ScsWork *w) {
-  scs_float tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
+  w->refine_tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
                       SCS(norm_inf)(w->r_normalized->px_aty_ctau, w->d->n));
-  w->refine_tol = MAX(tol, REFINE_TOL_FLOOR);
+}
+
+/* Whether the per-iteration refinement is on after a check, given res, the
+ * residual ||rhs - K u||_inf of this iteration's plain solve. It turns on
+ * above on_factor * tol and, once on, stays on above off_factor * tol (the
+ * gap keeps it from switching off and on again), where tol is refine_tol
+ * but at least min_reach / off_factor: min_reach is the smallest residual a
+ * plain solve is asked for (CG: CG_BEST_TOL; 0 for a factorization), so the
+ * off threshold is not below it. And in double precision res must also be
+ * above rounding level, REFINE_ROUNDING_EPS machine epsilons of
+ * || |rhs| + |K| |u_t| ||_inf, the size of the terms the residual is computed
+ * from (see glbopts.h; single precision has no such test): without it
+ * refinement stayed on to the end, chasing rounding, where refine_tol goes
+ * to zero (a certificate). That size is computed only when it can change the
+ * outcome: a pass over A and P, with rhs rebuilt in kkt_corr and kkt_res as
+ * scratch. u_t is the iterate: at a check while refinement is on that is the
+ * refined (CG) or correction-form (direct) solution, not the plain solve
+ * whose res is tested, which was in kkt_corr and is overwritten here. The
+ * two differ by about the plain solve's error, far below the size of the
+ * terms, so the threshold barely moves. Depends only on the iterates
+ * (deterministic). */
+static scs_int refine_next_on(ScsWork *w, scs_float res, scs_float on_factor,
+                              scs_float off_factor, scs_float min_reach) {
+  scs_float tol = MAX(w->refine_tol, min_reach / off_factor);
+  if (!(res > (w->refine_on ? off_factor : on_factor) * tol)) {
+    return 0;
+  }
+  if (REFINE_ROUNDING_EPS <= 0.) {
+    return 1;
+  }
+  iter_rhs(w, w->kkt_corr);
+  return res > REFINE_ROUNDING_EPS * SCS_MACH_EPS *
+                   kkt_terms_inf(w, w->kkt_corr, w->u_t, w->kkt_res);
 }
 
 #if INDIRECT > 0
-/* r = rhs - K u with K = [R_x + P, A'; A, -R_y] and rhs = [R_x v_x; -R_y v_y],
- * the right-hand side of this iteration's solve (iter_rhs), with SCS's
- * products from the (normalized) problem data; returns ||r||_inf. rhs is
- * rebuilt from v and diag_r (v does not change in project_lin_sys), in its
- * own statement so that it is rounded as it is in iter_rhs. r may not alias
- * u. The CG solvers' refinement step needs r itself, not only its norm, so
- * SCS computes it here rather than asking scs_solve_lin_sys for res. */
-static scs_float cg_residual(const ScsWork *w, const scs_float *u,
-                             scs_float *r) {
-  scs_int i, n = w->d->n, m = w->d->m;
-  const scs_float *v = w->v, *dr = w->diag_r;
-  scs_float rhs;
-  memset(r, 0, (n + m) * sizeof(scs_float));
-  SCS(accum_by_atrans)(w->d->A, &(u[n]), r);
-  if (w->d->P) {
-    SCS(accum_by_p)(w->d->P, u, r);
-  }
-  SCS(accum_by_a)(w->d->A, u, &(r[n]));
-  for (i = 0; i < n; ++i) {
-    rhs = v[i] * dr[i];
-    r[i] = rhs - (r[i] + dr[i] * u[i]);
-  }
-  for (i = n; i < n + m; ++i) {
-    rhs = -v[i] * dr[i];
-    r[i] = rhs - (r[i] - dr[i] * u[i]);
-  }
-  return SCS(norm_inf)(r, n + m);
-}
-
 /* Indirect solvers: this iteration's solve, CG from warm_start to tol, with
- * the refinement of REFINE_CHECK_INTERVAL, REFINE_INDIRECT_ON_FACTOR and
- * REFINE_INDIRECT_OFF_FACTOR (glbopts.h). At every check, and at every
- * iteration while refinement is on (none before the first convergence
- * check, which sets tol), SCS computes the solve's residual r = rhs - K u
- * (cg_residual, one multiply): refinement turns on above
- * REFINE_INDIRECT_ON_FACTOR * tol and stays on until ||r||_inf is at or below
- * REFINE_INDIRECT_OFF_FACTOR * tol, a gap that keeps it from switching off and
- * on again. While on, the refinement step adds to u a cold CG solve of
- * K d = r, to CG_BEST_TOL: iterative refinement in the full space, where r
- * is computed. (A second CG solve of rhs warm-started from u is the same in
- * exact arithmetic but not in floating point: it works on CG's reduced
- * residual and recomputes y from x, so it cannot remove the rounding that r
- * measures; see glbopts.h for what that cost.) Leaves the solution in
- * u_t[:n+m]; returns the status of the last solve. */
+ * the refinement of REFINE_CHECK_INTERVAL, REFINE_INDIRECT_ON_FACTOR,
+ * REFINE_INDIRECT_OFF_FACTOR and REFINE_CG_MAX_STEPS ("Accuracy of each
+ * iteration's solve" in glbopts.h). Every decision is a function of the
+ * iterates and the residuals, never of timings. While off: one CG solve, and
+ * at every REFINE_CHECK_INTERVAL-th iteration (from the first convergence
+ * check on, which sets refine_tol) its residual ||rhs - K u||_inf decides
+ * whether to turn on. While on: one call that refines the CG solve where it
+ * missed tol (scs_solve_lin_sys, linsys.h): it computes the residual
+ * r = rhs - K u in the full space and, while ||r||_inf is above tol, adds a
+ * cold CG solve of K d = r to tol, kept only if it lowers the residual, at
+ * most REFINE_CG_MAX_STEPS times. At a check while on, a plain CG solve of
+ * the same right-hand side from the same start, into scratch, decides whether
+ * to stay on; the iterate stays the refined solution (deciding on the refined
+ * residual would turn refinement off as soon as it worked, and the unrefined
+ * solves after that would undo the progress). Leaves the solution in
+ * u_t[:n+m]; returns the status of the last solve (0: success). */
 static scs_int solve_indirect(ScsWork *w, scs_int iter,
                               const scs_float *warm_start, scs_float tol) {
-  scs_int status, nm = w->d->n + w->d->m;
-  scs_float res;
-  /* the CG solve of SCS 3.3 (no refinement steps, no res: the rule below
-   * needs r itself, which cg_residual computes) */
-  status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol, 0, SCS_NULL);
-  if (status != 0 || w->refine_tol < 0 ||
-      (!w->refine_on && iter % REFINE_CHECK_INTERVAL != 0)) {
+  scs_int status, was_on = w->refine_on;
+  /* no check before the first convergence check, which sets refine_tol */
+  scs_int check = iter % REFINE_CHECK_INTERVAL == 0 && w->refine_tol >= 0;
+  scs_float res = -1.;
+  /* The CG solve of SCS 3.3, from warm_start to tol. While on, with up to
+   * REFINE_CG_MAX_STEPS refinement steps toward tol (one multiply by K for
+   * the residual, and CG iterations only where the solve missed tol). res
+   * only at a check while off: it costs a multiply, and while on it would be
+   * the refined residual, not the plain one that decides. */
+  status = scs_solve_lin_sys(w->p, w->u_t, warm_start, tol,
+                             was_on ? REFINE_CG_MAX_STEPS : 0,
+                             check && !was_on ? &res : SCS_NULL);
+  if (status != 0) {
     return status;
   }
-  res = cg_residual(w, w->u_t, w->kkt_res);
-  w->refine_checks++;
-  w->refine_on = res > (w->refine_on ? REFINE_INDIRECT_OFF_FACTOR
-                                     : REFINE_INDIRECT_ON_FACTOR) *
-                           w->refine_tol;
-  if (!w->refine_on) {
+  if (was_on) {
+    w->refine_on_iters++;
+  }
+  if (!check) {
     return 0;
   }
-  /* u_t += K^{-1} r: one CG solve, cold (no warm start), to the CG solvers'
-   * best accuracy, with no refinement steps of its own (it is the step) */
-  status = scs_solve_lin_sys(w->p, w->kkt_res, SCS_NULL, CG_BEST_TOL, 0,
-                             SCS_NULL);
-  if (status == 0) {
-    SCS(add_scaled_array)(w->u_t, w->kkt_res, nm, 1.);
-    w->refine_steps++;
+  if (was_on) {
+    /* the plain solve that decides, in kkt_corr: the CG solve the call above
+     * started with (same right-hand side, start and tol, no steps), with its
+     * res. (With eigCG deflation it is that solve exactly unless a step of
+     * the call, a cold solve, harvested the first deflation vectors since R
+     * last changed; the decision is still a function of the iterates.) One
+     * more CG solve per REFINE_CHECK_INTERVAL iterations while on. */
+    iter_rhs(w, w->kkt_corr);
+    status = scs_solve_lin_sys(w->p, w->kkt_corr, warm_start, tol, 0, &res);
+    if (status != 0) {
+      return status;
+    }
   }
-  return status;
+  w->refine_checks++;
+  /* the decision, on the plain solve's residual (refine_next_on; CG is never
+   * asked for less than CG_BEST_TOL) */
+  w->refine_on = refine_next_on(w, res, REFINE_INDIRECT_ON_FACTOR,
+                                REFINE_INDIRECT_OFF_FACTOR, CG_BEST_TOL);
+  return 0;
 }
 
 #else
@@ -1413,12 +1433,10 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
   }
   if (check) {
     w->refine_checks++;
-    /* on above REFINE_DIRECT_ON_FACTOR * tol, off only at or below
-     * REFINE_DIRECT_OFF_FACTOR * tol: the gap keeps it from switching off
-     * and on again */
-    w->refine_on = res > (was_on ? REFINE_DIRECT_OFF_FACTOR
-                                 : REFINE_DIRECT_ON_FACTOR) *
-                             w->refine_tol;
+    /* the decision, on the plain solve's residual (refine_next_on; a
+     * factorization's plain solve has no tolerance of its own) */
+    w->refine_on = refine_next_on(w, res, REFINE_DIRECT_ON_FACTOR,
+                                  REFINE_DIRECT_OFF_FACTOR, 0.);
   }
   if (w->refine_on) {
     /* the warm start of the next iteration's solve */
@@ -1432,8 +1450,9 @@ static scs_int solve_direct(ScsWork *w, scs_int iter) {
  * data and diag_r, P's stored upper triangle in both triangles: the size of
  * the terms the residual h - K g is computed from, row by row, so a few
  * machine epsilons times this is the rounding of the residual itself (see
- * "Accuracy of the solve for g" in glbopts.h). t (n + m) is scratch. One
- * pass over A and P, the cost of a multiply by K. */
+ * "Accuracy of the solve for g" in glbopts.h; refine_next_on uses it too,
+ * see REFINE_ROUNDING_EPS). t (n + m) is scratch. One pass over A and P, the
+ * cost of a multiply by K. */
 static scs_float kkt_terms_inf(const ScsWork *w, const scs_float *h,
                                const scs_float *g, scs_float *t) {
   const ScsMatrix *A = w->d->A, *P = w->d->P;
@@ -1593,7 +1612,6 @@ static void reset_tracking(ScsWork *w) {
    * the first convergence check on */
   w->refine_on = 0;
   w->refine_checks = 0;
-  w->refine_steps = 0;
   w->refine_on_iters = 0;
   w->refine_safeguards = 0;
   w->refine_tol = -1.;

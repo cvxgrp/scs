@@ -49,16 +49,16 @@ residuals, and when one is not accurate enough it refines it: it solves with
 :math:`K` for the residual and adds the correction to the solution that
 residual belongs to. For the :math:`(c, -b)` solve and with the indirect
 solvers that is an extra solve; for the direct solvers' per-iteration solves
-it takes the place of the plain solve (see below). Two solves are checked, each in its own way:
+it takes the place of the plain solve (see below). Two solves are checked,
+each in its own way:
 
 - the solve for the right-hand side :math:`(c, -b)`, made at the start of a
   solve and whenever :math:`R` changes and used in every iteration until the
   next change, is solved to about machine precision every time it is made,
   with at most five refinement steps (see :ref:`g_refinement`);
-- each iteration's solve is checked every 25 iterations (every iteration
-  while an indirect solver is refining) against SCS's own residuals, and made
-  more accurate while its error would hold the iterates back (see
-  :ref:`refinement`).
+- each iteration's solve is checked every 25 iterations against SCS's own
+  residuals, and made more accurate while its error would hold the iterates
+  back (see :ref:`refinement`).
 
 There is nothing to set: both always run, with every linear solver (direct
 and indirect, on the CPU and the GPU) and in every interface, and no setting
@@ -76,13 +76,12 @@ solve when its factorization had to perturb a pivot (``iparm[7] = 0`` with
 ``iparm[9] = 13``, see :ref:`mkl`).
 
 SCS's linear solve takes a warm start, a tolerance and a number of refinement
-steps (see :ref:`new_linear_solver`). With the direct solvers, the
-per-iteration refinement passes the previous iteration's solution as the warm
-start and decides when; with the indirect solvers, SCS refines each
-iteration's solve with plain solves and its own products (see below). The
-solve for :math:`(c, -b)` passes its first solution as the warm start, a
-tolerance at about machine precision and at most five steps in all, with
-every solver (see below).
+steps (see :ref:`new_linear_solver`). The per-iteration refinement uses it
+for both kinds of solver and decides only when: with the direct solvers it
+passes the previous iteration's solution as the warm start, and with the
+indirect solvers it asks for refinement steps. The solve for :math:`(c, -b)`
+passes its first solution as the warm start, a tolerance at about machine
+precision and at most five steps in all, with every solver (see below).
 
 .. _g_refinement:
 
@@ -182,9 +181,29 @@ error would hold the iterates back.
 **The check.** Every 25 iterations SCS computes the residual of that
 iteration's solve, :math:`\|z^k - K u\|_\infty` with :math:`K` the matrix
 above, and compares it with *tol*, the smaller of SCS's own primal and dual
-residuals at its last convergence check (but at least :math:`10^{-12}`,
-:math:`10^{-5}` in single precision). While refinement is off, the check costs
-one multiply by :math:`K` every 25 iterations.
+residuals at its last convergence check. While refinement is off, the check
+costs one multiply by :math:`K` every 25 iterations.
+
+**Rounding level.** In double precision refinement is never on while that
+residual is at rounding level: at most four machine epsilons times
+:math:`\|\,|z^k| + |K|\,|u|\,\|_\infty`, the size of the terms the residual
+is computed from, row by row. A residual that small is mostly the rounding of
+its own computation, and refinement cannot lower it by more than a small
+factor. This matters where *tol* goes to zero, on an infeasibility or
+unboundedness certificate that SCS keeps iterating on: with an absolute floor
+instead (*tol* at least :math:`10^{-12}`, as in an earlier rule), which is
+below rounding level wherever those terms are large, refinement turned on
+there and stayed on to the end. The size is computed only at a check where it
+can change the outcome (one pass over :math:`A` and :math:`P`, the cost of a
+multiply). Single precision has no such test: there refinement also lowers an
+error of the solution that the residual does not show (with conjugate
+gradients and the dense solver, which solve a smaller system), and turning it
+off at rounding level lost problems at :math:`10^{-6}`. With conjugate
+gradients, in both precisions, the thresholds do not go below the solvers'
+best accuracy (:math:`10^{-12}`, :math:`10^{-6}` in single precision), below
+which they are never asked to go: refinement does not turn on while the error
+is at most ten times that, and turns off at the latest once the error is at
+most that.
 
 **Direct solvers** (sparse direct, dense, Apple Accelerate, MKL Pardiso,
 cuDSS). When the residual of a check is above :math:`0.01\,` *tol*, each
@@ -230,20 +249,26 @@ iterations on the badly scaled problems.
 **Indirect solvers** (CPU and GPU conjugate gradients). Conjugate gradients
 already solves to a tolerance tied to SCS's residuals, and its error is set by
 that tolerance rather than by the size of the right-hand side, so the
-correction form would not make it more accurate. When a check finds the
-residual above *tol*, that iteration's solve and each following one is
-followed by one refinement step: one more conjugate gradient solve, from
-zero and to the solvers' best accuracy, for the residual SCS computed, added
-to the solution. While this is on, every iteration is a check (one multiply
-by :math:`K`, of the solve before its refinement step), and it turns off at
-the first that finds the residual at most :math:`0.1\,` *tol*. This fires
-only when a conjugate gradient solve misses its tolerance. The step solves
-for the residual of the whole system: a second solve of the same right-hand
-side started from the first one's solution, the same in exact arithmetic,
-works with the residual of the smaller system conjugate gradients solves,
-which cannot see all of the rounding error: in single precision it solved
-16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12 times the
-time.
+correction form would not make it more accurate. What goes wrong is that a
+solve misses its tolerance: it stops at its iteration limit, the residual it
+tracks drifts from the true one (in single precision), or :math:`y`, which it
+computes from :math:`x`, carries rounding that its smaller system does not
+see. When a check finds the residual above *tol*, each following iteration's
+solve also refines itself: it computes the residual of the whole system (one
+multiply by :math:`K`) and, while that is above the conjugate gradient
+tolerance, solves for it with conjugate gradients from zero, to that
+tolerance, and adds the correction, keeping each such step only if it lowers
+the residual, and at most two. So refinement costs one multiply per
+iteration, and conjugate gradient iterations only where a solve missed its
+tolerance. At each check while it is on, SCS also makes a plain conjugate
+gradient solve of the same right-hand side, only to measure its error, and
+turns refinement off once that error is at most :math:`0.1\,` *tol*, as for
+the direct solvers. The steps solve for the residual of the whole system:
+restarting conjugate gradients on the same right-hand side from the
+solution, the same in exact arithmetic, works with the residual of the
+smaller system and cannot see all of the rounding error: in single precision
+it solved 16 of 25 random SOCPs at :math:`10^{-5}` instead of 25, in 12
+times the time.
 
 **What to expect** (direct solvers):
 
@@ -274,16 +299,38 @@ time.
   iterations: on 26 SDPs and QPs that stall at :math:`10^{-4}` to
   :math:`10^{-6}` (78 runs), it was on for 19% of the iterations and for most
   of the solve in 11 runs, which solved one run more and took 6% more time.
-  In single precision it tends to stay on once it turns on, because the
-  threshold to turn it off is near or below what a single-precision solve can
-  reach.
+  In single precision it tends to stay on once it turns on (see "Rounding
+  level" above).
 
-**Who computes the multiplies.** With the direct solvers the multiplies by
-:math:`K` are made inside the linear solve (:code:`scs_solve_lin_sys`, see
-:ref:`new_linear_solver`); SCS keeps each iteration's solution and passes it
-to the next solve as its warm start. With the indirect solvers SCS computes
-the residual itself, with its own products, since the refinement step solves
-for that vector. Per iteration SCS asks for:
+**What to expect** (indirect solvers):
+
+- Refinement is decided only at the checks, as for the direct solvers, so
+  once it turns on it stays on for at least 25 iterations, until a check
+  finds the plain solve within :math:`0.1\,` *tol*.
+- In double precision it rarely turns on: never on 500 random SOCPs at
+  :math:`10^{-9}`, for 2% of the iterations on badly scaled LPs and QPs at
+  :math:`10^{-4}`, and for 13% to 24% on the Netlib and SDPLIB infeasible
+  problems at :math:`10^{-4}` and :math:`10^{-6}`, mostly on certificates
+  that SCS keeps iterating on and on problems that stall. There each
+  iteration with a step costs conjugate gradient solves, and the 25-iteration
+  minimum adds up: an LP run for a fixed 2,000 iterations took 2.3 times as
+  long as with an earlier rule that decided at every iteration while on.
+  Deciding at every iteration was measured too: it cost 2% to 5% more time
+  overall in single precision, where refinement is on most of the time.
+- In single precision at tight tolerances (:math:`10^{-6}`) it is on for
+  60% to 86% of the iterations of random SOCPs, and it is what lets many of
+  those solves converge. There the outcome of a run can flip with rounding
+  from one starting point to the next.
+- While it is on, an iteration costs one more multiply by :math:`K`, and
+  conjugate gradient solves only where its plain solve missed the tolerance
+  (in single precision almost always: 1.5 to 1.8 steps per iteration on
+  average), plus one more plain solve at each check.
+
+**Who computes the multiplies.** The multiplies by :math:`K` are made inside
+the linear solve (:code:`scs_solve_lin_sys`, see :ref:`new_linear_solver`).
+With the direct solvers SCS keeps each iteration's solution and passes it to
+the next solve as its warm start; with the indirect solvers it asks for
+refinement steps. Per iteration SCS asks for:
 
 .. list-table::
    :header-rows: 1
@@ -292,22 +339,29 @@ for that vector. Per iteration SCS asks for:
      - Solves
      - Multiplies by :math:`K`
    * - Off, not a check
-     - one plain solve
+     - one plain solve (CG: from the warm start)
      - none
    * - Off, a check (every 25)
      - one plain solve, with its residual
      - 1
-   * - On, not a check
+   * - Direct, on, not a check
      - one solve warm-started from the previous solution (correction form)
      - 1
-   * - On, a check
+   * - Direct, on, a check
      - the warm-started solve with its residual, and a plain solve with its
        residual
      - 3
-   * - CG, a check or refinement on
-     - CG, and SCS's residual of it; while on, a second CG solve, of that
-       residual, from zero
-     - 1
+   * - CG, on, not a check
+     - CG with refinement steps: its residual and, where the solve missed its
+       tolerance, up to two CG solves from zero for the residual
+     - 1, and 1 per step
+   * - CG, on, a check
+     - the same, and a plain CG solve with its residual
+     - 2, and 1 per step
+
+In double precision a check whose residual is above the threshold also makes
+one pass over :math:`A` and :math:`P`, about the cost of a multiply, for the
+rounding level (see "Rounding level" above).
 
 By default the multiplies are SCS's own products with the problem data (the
 multiply by :math:`A^\top` runs on OpenMP's threads when SCS is built with
