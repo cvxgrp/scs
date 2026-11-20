@@ -24,13 +24,15 @@
 /*
  * SCS solves K g = [c; -b], K = [R_x + P, A'; A, -R_y], once per
  * factorization and uses g in every iteration until the next one, so it
- * solves for g to about machine precision: a residual ||[c; -b] - K g||_inf
- * of at most G_TOL_EPS machine epsilons of the size of the terms it is
- * computed from, || |[c; -b]| + |K| |g| ||_inf, and stops with SCS_FAILED,
- * asking for a bug report, if that solve fails (glbopts.h, "Accuracy of the
- * solve for g"). This test checks both, for every linear solver the test
- * binary is built with, on a badly scaled QP that is not normalized (so that
- * K keeps the bad scaling), with that measure computed here:
+ * solves for g to about machine precision: it refines g until a step no
+ * longer halves the residual ||[c; -b] - K g||_inf, measured against the size
+ * of the terms it is computed from, || |[c; -b]| + |K| |g| ||_inf, and stops
+ * with SCS_FAILED, asking for a bug report, if that solve fails (glbopts.h,
+ * "Accuracy of the solve for g"). test_g_accuracy checks both, for every
+ * linear solver the test binary is built with, on a badly scaled QP that is
+ * not normalized (so that K keeps the bad scaling), with that measure
+ * computed here (test_g_accuracy_iteration below checks that g is as
+ * accurate as the iteration needs):
  * 1. the g of the first factorization (a one-iteration solve), where a plain
  *    solve's is far above machine precision (printed);
  * 2. the g after a solve with scale updates (the update path: g solved again
@@ -63,11 +65,16 @@
 #define G_ACC_COL_SCALE (1e3)
 #endif
 
-/* SCS refines g until its own residual is at most G_TOL_EPS machine epsilons
- * of the terms; the residual recomputed here rounds differently, by up to a
- * few epsilons of the terms, hence the factor of 4. A plain solve is far
- * above it (printed). */
-#define G_ACC_LIMIT (4 * G_TOL_EPS * SCS_MACH_EPS)
+/* The limit on g's measure, in both tests. SCS refines g until a step no
+ * longer halves its residual, which ends at 0.3-0.45 machine epsilons of the
+ * terms (median over random SOCPs, at most 1.7; 0.1-0.7 in these tests with
+ * QDLDL, CG, the dense solver, Accelerate, GPU CG and cuDSS, in both
+ * precisions). A refinement that stops at a looser target is above 2: with
+ * G_TOL_EPS 4, CG's g measured 2.3 (single precision, first factorization)
+ * and 3.9 (double, after scale updates) in test_g_accuracy, and 2.9-3.9 in
+ * test_g_accuracy_iteration. A plain solve is far above it (printed). The
+ * limit is not tied to G_TOL_EPS, so that a looser G_TOL_EPS fails it. */
+#define G_ACC_LIMIT (2 * SCS_MACH_EPS)
 /* the factor on R of the solver in check 4: K' then solves for a g whose
  * measure against K is close to 1 (printed in the message), the most a g can
  * have */
@@ -115,8 +122,8 @@ static void g_acc_data(ScsData *d, ScsCone *k, ScsSolution *opt_sol) {
 
 /* ||[c; -b] - K g||_inf over || |[c; -b]| + |K| |g| ||_inf, the size of the
  * terms the residual is computed from (the measure SCS refines g by), both
- * computed here, in double whatever scs_float is. P is diagonal in this
- * instance. */
+ * computed here, in double whatever scs_float is. P is diagonal or absent in
+ * these instances. */
 static double g_acc_rel_res(const ScsWork *w, const scs_float *g) {
   scs_int i, j, p, n = w->d->n, m = w->d->m;
   const ScsMatrix *A = w->d->A, *P = w->d->P;
@@ -134,7 +141,7 @@ static double g_acc_rel_res(const ScsWork *w, const scs_float *g) {
     t[n + i] = fabs((double)w->d->b[i]) + fabs(v);
   }
   for (j = 0; j < n; ++j) {
-    for (p = P->p[j]; p < P->p[j + 1]; ++p) { /* diagonal */
+    for (p = P ? P->p[j] : 0; P && p < P->p[j + 1]; ++p) { /* diagonal */
       v = (double)P->x[p] * g[j];
       r[j] -= v;
       t[j] += fabs(v);
@@ -353,6 +360,89 @@ static const char *test_g_accuracy(void) {
   scs_finish(w);
   scs_free(b);
   scs_free(dr);
+  SCS(free_data)(d);
+  SCS(free_cone)(k);
+  SCS(free_sol)(sol);
+  SCS(free_sol)(opt_sol);
+  scs_free(stgs);
+  return fail;
+}
+
+/*
+ * test_g_accuracy_iteration: g as accurate as the iteration needs. An
+ * iteration that uses a computed g is exact for the data K g, that is for
+ * c - r_x and b + r_y (r = [c; -b] - K g), so g's residual is a floor under
+ * SCS's residuals that no number of iterations removes. Relative to SCS's
+ * tolerance it is largest where the precision is coarse and the rows are
+ * dense (many terms per row, so a large size of the terms and of g's
+ * rounding): in single precision at eps 1e-6, about eight machine epsilons,
+ * on this random SOCP (100 variables, 130 rows, every entry of A nonzero, 50
+ * linear rows and one second-order cone of 80). With G_TOL_EPS 4, the
+ * refinement of single-precision CG stopped at 2.9-3.9 epsilons of g's
+ * terms, and this problem ran to max_iters at every start tried (10,000
+ * iterations, the dual residual stuck at 1e-5 to 3e-5); refined to the
+ * halving stop (0.3-0.6 epsilons) it solved in 400 to 900 iterations at the
+ * same 9 starts (initial scale moved by up to 4 ulps; Mac). The test runs in
+ * every build: in double precision, and with the direct solvers in single,
+ * g was accurate enough either way. Checked: solved within G_ITER_MAX_ITERS,
+ * and g's measure at the end at most G_ACC_LIMIT.
+ */
+#define G_ITER_N (100)
+#define G_ITER_SEED (4)
+/* eps_abs = eps_rel, set with scs_update_settings after scs_init, which in
+ * single-precision builds of this suite raises every tolerance to at least
+ * 1e-4 (problem_utils.h): at 1e-4 the floor is far below the tolerance */
+#define G_ITER_EPS (1e-6)
+/* about five times the most iterations it took at those starts: with the
+ * floor above the tolerance, no number of iterations would do */
+#define G_ITER_MAX_ITERS (5000)
+
+static const char *test_g_accuracy_iteration(void) {
+  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsSolution *opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsInfo info = {0};
+  ScsWork *w;
+  scs_int exitflag, n = G_ITER_N, m = 13 * G_ITER_N / 10;
+  double res;
+  const char *fail = SCS_NULL;
+
+  d->n = n;
+  d->m = m;
+  k->qsize = 1;
+  k->q = (scs_int *)scs_calloc(1, sizeof(scs_int));
+  k->q[0] = 4 * n / 5;
+  k->l = m - k->q[0];
+  /* col_nnz = m: every entry of A is nonzero */
+  gen_random_prob_data(m * n, m, d, k, opt_sol, G_ITER_SEED);
+  scs_set_default_settings(stgs);
+  stgs->verbose = 0;
+  w = scs_init(d, k, stgs);
+  mu_assert("test_g_accuracy_iteration: scs_init returned NULL",
+            w != SCS_NULL);
+  stgs->eps_abs = stgs->eps_rel = G_ITER_EPS;
+  stgs->max_iters = G_ITER_MAX_ITERS;
+  if (scs_update_settings(w, stgs) != 0) {
+    fail = "test_g_accuracy_iteration: scs_update_settings failed";
+  } else {
+    exitflag = scs_solve(w, sol, &info, 0);
+    res = g_acc_rel_res(w, w->g);
+    scs_printf("test_g_accuracy_iteration: %s, eps %.0e: exit %li after %li "
+               "iterations (%li scale updates), res_pri %.2e, res_dual "
+               "%.2e; last g relative residual %.2e (limit %.2e)\n",
+               scs_get_lin_sys_method(), G_ITER_EPS, (long)exitflag,
+               (long)info.iter, (long)info.scale_updates, info.res_pri,
+               info.res_dual, res, (double)G_ACC_LIMIT);
+    if (exitflag != SCS_SOLVED) {
+      fail = "test_g_accuracy_iteration: not solved within max_iters "
+             "(g not as accurate as the iteration needs?)";
+    } else if (!(res <= G_ACC_LIMIT)) {
+      fail = "test_g_accuracy_iteration: g not accurate";
+    }
+  }
+  scs_finish(w);
   SCS(free_data)(d);
   SCS(free_cone)(k);
   SCS(free_sol)(sol);
