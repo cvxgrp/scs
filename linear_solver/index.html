@@ -200,15 +200,37 @@ rather than as accurately as SCS’s current residuals need, as each
 iteration’s solve is.</p>
 <p><strong>The tolerance.</strong> A plain solve (with conjugate gradients: from zero, to
 the solvers’ best accuracy, <code class="code docutils literal notranslate"><span class="pre">CG_BEST_TOL</span></code>) gives <span class="math notranslate nohighlight">\(g_0\)</span> and its
-residual <span class="math notranslate nohighlight">\(r = (c, -b) - K g_0\)</span>. Computing <span class="math notranslate nohighlight">\(r\)</span> rounds each row by
-a few machine epsilons <span class="math notranslate nohighlight">\(\epsilon\)</span> of the size of the terms it is
-computed from, so SCS asks for</p>
+residual <span class="math notranslate nohighlight">\(r = (c, -b) - K g_0\)</span>. SCS then refines <span class="math notranslate nohighlight">\(g\)</span> until a
+step no longer halves the residual, which is where the linear solver can do
+no better. The tolerance it passes to the solve,</p>
 <div class="math notranslate nohighlight">
-\[\|(c, -b) - K g\|_\infty \le 4 \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty\]</div>
+\[\|(c, -b) - K g\|_\infty \le \tfrac{1}{4} \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty\]</div>
 <p>(absolute values entry by entry; <code class="code docutils literal notranslate"><span class="pre">G_TOL_EPS</span></code> in
 <code class="docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>), with <span class="math notranslate nohighlight">\(\epsilon\)</span> the machine epsilon of the
-precision SCS is built in. The size is computed row by row, from the
-entries each row actually multiplies, rather than as
+precision SCS is built in, is set just below what refinement reaches, so
+that the steps end at that halving stop rather than at the tolerance.
+Refined that far, the residual of <span class="math notranslate nohighlight">\(g\)</span> is 0.3 to 0.4 machine epsilons
+of the size of its terms (the median with QDLDL and conjugate gradients, on
+the CPU and the GPU, in double and single precision, on random SOCPs; at
+most 1.7): the rounding errors of the terms of a row partly cancel. (The
+rounding level of the per-iteration refinement below, four machine
+epsilons of the terms, is a bound with room; this is the typical size.)</p>
+<p>A tolerance the solver can meet would stop it earlier, since conjugate
+gradients solves each step only to the tolerance and so lands just below
+it, and in single precision that matters. An iteration that uses a computed
+<span class="math notranslate nohighlight">\(g\)</span> is exact for the data <span class="math notranslate nohighlight">\(K g\)</span>, that is for <span class="math notranslate nohighlight">\(c - r_x\)</span> and
+<span class="math notranslate nohighlight">\(b + r_y\)</span> with <span class="math notranslate nohighlight">\(r = (c, -b) - K g\)</span>, so the residual of <span class="math notranslate nohighlight">\(g\)</span>
+is a floor under SCS’s residuals that no number of iterations removes. At
+<span class="math notranslate nohighlight">\(10^{-6}\)</span>, about eight single-precision epsilons, that floor can reach
+SCS’s tolerance where the rows are dense: with a tolerance of
+<span class="math notranslate nohighlight">\(4 \epsilon\)</span>, single-precision conjugate gradients left <span class="math notranslate nohighlight">\(g\)</span> at
+3.4 epsilons of its terms on random SOCPs with 100 variables and dense rows,
+and 72 of 100 ran to <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> or the time limit; refined to the
+halving stop, none did, and single precision with conjugate gradients was
+about three times faster over 500 random SOCPs. In double precision the
+floor is about <span class="math notranslate nohighlight">\(10^{-6}\)</span> of SCS’s tolerance at <span class="math notranslate nohighlight">\(10^{-9}\)</span>.</p>
+<p>The size is computed row by row, from the entries each row actually
+multiplies, rather than as
 <span class="math notranslate nohighlight">\(\|(c, -b)\|_\infty + \|K\|_\infty \|g_0\|_\infty\)</span> (the normwise
 backward error), which pairs the largest row of <span class="math notranslate nohighlight">\(K\)</span> with the largest
 entry of <span class="math notranslate nohighlight">\(g_0\)</span> even where they do not meet: on badly scaled problems
@@ -249,16 +271,24 @@ residual of <span class="math notranslate nohighlight">\(g_0\)</span>) and one p
 size of the terms, paid even when the first solve is already accurate
 enough; when it is not, one solve and one multiply per step, and with a
 direct solver one multiply more (the correction form computes the residual
-of <span class="math notranslate nohighlight">\(g_0\)</span> again). With a direct solver each solve reuses the existing
+of <span class="math notranslate nohighlight">\(g_0\)</span> again). The steps run until one no longer halves the
+residual, which usually takes one step more than stopping at a tolerance
+the solver can meet. With a direct solver each solve reuses the existing
 factorization, so this is cheap next to factorizing. With the indirect
 solvers each step costs the conjugate gradient iterations that reach the
-tolerance. On random
-SOCPs the refinement took up to about 30% of the first solve’s conjugate
-gradient iterations in double precision, and up to about two thirds in
-single precision. Where conjugate gradients cannot reach the tolerance
-within its iteration limit (<span class="math notranslate nohighlight">\(10 n\)</span>), each step runs to that limit, so
-on such problems the refinement can cost up to about five times the first
-solve.</p>
+tolerance: on random SOCPs the refinement took about 14% of the first
+solves’ conjugate gradient iterations in double precision (over whole
+solves, up to 2% more conjugate gradient iterations and 1 to 1.5% more time
+than with a tolerance of <span class="math notranslate nohighlight">\(4 \epsilon\)</span>), and about 60% in single
+precision, where the more accurate <span class="math notranslate nohighlight">\(g\)</span> made whole solves about three
+times faster. Where conjugate gradients cannot reach the tolerance within
+its iteration limit (<span class="math notranslate nohighlight">\(10 n\)</span>), each step runs to that limit, so on such
+problems the refinement can cost up to about five times the first solve,
+and the step more costs most: on two badly scaled QPs in single precision
+(HUES-MOD and QSCFXM1, 9 starts each) the steps took 2.2 times the
+conjugate gradient iterations they took with a tolerance of
+<span class="math notranslate nohighlight">\(4 \epsilon\)</span>, and the runs 26% more in all, while 15 of the 18 runs
+solved instead of 9.</p>
 </section>
 <section id="accuracy-of-each-iteration-s-solve">
 <span id="refinement"></span><h3>Accuracy of each iteration’s solve<a class="headerlink" href="#accuracy-of-each-iteration-s-solve" title="Link to this heading"></a></h3>
@@ -276,7 +306,9 @@ residual is at rounding level: at most four machine epsilons times
 <span class="math notranslate nohighlight">\(\|\,|z^k| + |K|\,|u|\,\|_\infty\)</span>, the size of the terms the residual
 is computed from, row by row. A residual that small is mostly the rounding of
 its own computation, and refinement cannot lower it by more than a small
-factor. This matters where <em>tol</em> goes to zero, on an infeasibility or
+factor. (Four is a bound with room: refined residuals are typically a third
+to a half of an epsilon of their terms, since the rounding errors of a row’s
+terms partly cancel.) This matters where <em>tol</em> goes to zero, on an infeasibility or
 unboundedness certificate that SCS keeps iterating on: with an absolute floor
 instead (<em>tol</em> at least <span class="math notranslate nohighlight">\(10^{-12}\)</span>, as in an earlier rule), which is
 below rounding level wherever those terms are large, refinement turned on
@@ -948,7 +980,7 @@ them, become a residual function as above.</p>
 <li><p><strong>w</strong> – Linear system private workspace. </p></li>
 <li><p><strong>b</strong> – Right-hand side, n + m entries; overwritten with the solution. </p></li>
 <li><p><strong>s</strong> – Warm start, a guess of the solution (n + m entries; CG reads the first n), or <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>. Not changed; must not alias <code class="docutils literal notranslate"><span class="pre">b</span></code>. </p></li>
-<li><p><strong>tol</strong> – The accuracy asked for, as <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>. CG solvers stop at it, also below 1e-12 (smaller is more accurate and costs more CG iterations), and their refinement steps solve to it; they need <code class="docutils literal notranslate"><span class="pre">tol</span></code> &gt; 0, and return x = 0 without iterating when <span class="math notranslate nohighlight">\(\|b\|_\infty \le \min(\mathrm{tol}, 10^{-12})\)</span>. Direct solvers refine toward it, and ignore it when <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> is 0. Below the rounding level of the residual (a few machine epsilons times <span class="math notranslate nohighlight">\(\| |b| + |K|\,|x| \|_\infty\)</span>, absolute values entry by entry) a step only measures rounding, and the halving test stops it. </p></li>
+<li><p><strong>tol</strong> – The accuracy asked for, as <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span>. CG solvers stop at it, also below 1e-12 (smaller is more accurate and costs more CG iterations), and their refinement steps solve to it; they need <code class="docutils literal notranslate"><span class="pre">tol</span></code> &gt; 0, and return x = 0 without iterating when <span class="math notranslate nohighlight">\(\|b\|_\infty \le \min(\mathrm{tol}, 10^{-12})\)</span>. Direct solvers refine toward it, and ignore it when <code class="docutils literal notranslate"><span class="pre">max_refine_steps</span></code> is 0. Below the rounding level of the residual (at most a few machine epsilons times <span class="math notranslate nohighlight">\(\| |b| + |K|\,|x| \|_\infty\)</span>, absolute values entry by entry, and typically a third of one, since the rounding errors of a row’s terms partly cancel) a step only measures rounding, and the halving test stops it. </p></li>
 <li><p><strong>max_refine_steps</strong> – At most this many refinement steps; 0 for none. </p></li>
 <li><p><strong>res</strong> – If not <code class="docutils literal notranslate"><span class="pre">SCS_NULL</span></code>, set to <span class="math notranslate nohighlight">\(\|b - K x\|_\infty\)</span> for the returned x and the given b, with the multiplies above. Cost: a copy of b and a multiply by K, unless refinement computed it. Asking for it never changes x. A NaN entry of the residual may be missed by the max (as by SCS’s <code class="docutils literal notranslate"><span class="pre">norm_inf</span></code>), so a finite <code class="docutils literal notranslate"><span class="pre">*res</span></code> does not show that x is finite. </p></li>
 </ul>

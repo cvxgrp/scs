@@ -102,18 +102,42 @@ iteration's solve is.
 
 **The tolerance.** A plain solve (with conjugate gradients: from zero, to
 the solvers' best accuracy, :code:`CG_BEST_TOL`) gives :math:`g_0` and its
-residual :math:`r = (c, -b) - K g_0`. Computing :math:`r` rounds each row by
-a few machine epsilons :math:`\epsilon` of the size of the terms it is
-computed from, so SCS asks for
+residual :math:`r = (c, -b) - K g_0`. SCS then refines :math:`g` until a
+step no longer halves the residual, which is where the linear solver can do
+no better. The tolerance it passes to the solve,
 
 .. math::
 
-  \|(c, -b) - K g\|_\infty \le 4 \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty
+  \|(c, -b) - K g\|_\infty \le \tfrac{1}{4} \epsilon \, \big\| |(c, -b)| + |K|\,|g_0| \big\|_\infty
 
 (absolute values entry by entry; :code:`G_TOL_EPS` in
 ``include/glbopts.h``), with :math:`\epsilon` the machine epsilon of the
-precision SCS is built in. The size is computed row by row, from the
-entries each row actually multiplies, rather than as
+precision SCS is built in, is set just below what refinement reaches, so
+that the steps end at that halving stop rather than at the tolerance.
+Refined that far, the residual of :math:`g` is 0.3 to 0.4 machine epsilons
+of the size of its terms (the median with QDLDL and conjugate gradients, on
+the CPU and the GPU, in double and single precision, on random SOCPs; at
+most 1.7): the rounding errors of the terms of a row partly cancel. (The
+rounding level of the per-iteration refinement below, four machine
+epsilons of the terms, is a bound with room; this is the typical size.)
+
+A tolerance the solver can meet would stop it earlier, since conjugate
+gradients solves each step only to the tolerance and so lands just below
+it, and in single precision that matters. An iteration that uses a computed
+:math:`g` is exact for the data :math:`K g`, that is for :math:`c - r_x` and
+:math:`b + r_y` with :math:`r = (c, -b) - K g`, so the residual of :math:`g`
+is a floor under SCS's residuals that no number of iterations removes. At
+:math:`10^{-6}`, about eight single-precision epsilons, that floor can reach
+SCS's tolerance where the rows are dense: with a tolerance of
+:math:`4 \epsilon`, single-precision conjugate gradients left :math:`g` at
+3.4 epsilons of its terms on random SOCPs with 100 variables and dense rows,
+and 72 of 100 ran to :code:`max_iters` or the time limit; refined to the
+halving stop, none did, and single precision with conjugate gradients was
+about three times faster over 500 random SOCPs. In double precision the
+floor is about :math:`10^{-6}` of SCS's tolerance at :math:`10^{-9}`.
+
+The size is computed row by row, from the entries each row actually
+multiplies, rather than as
 :math:`\|(c, -b)\|_\infty + \|K\|_\infty \|g_0\|_\infty` (the normwise
 backward error), which pairs the largest row of :math:`K` with the largest
 entry of :math:`g_0` even where they do not meet: on badly scaled problems
@@ -157,16 +181,24 @@ residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the
 size of the terms, paid even when the first solve is already accurate
 enough; when it is not, one solve and one multiply per step, and with a
 direct solver one multiply more (the correction form computes the residual
-of :math:`g_0` again). With a direct solver each solve reuses the existing
+of :math:`g_0` again). The steps run until one no longer halves the
+residual, which usually takes one step more than stopping at a tolerance
+the solver can meet. With a direct solver each solve reuses the existing
 factorization, so this is cheap next to factorizing. With the indirect
 solvers each step costs the conjugate gradient iterations that reach the
-tolerance. On random
-SOCPs the refinement took up to about 30% of the first solve's conjugate
-gradient iterations in double precision, and up to about two thirds in
-single precision. Where conjugate gradients cannot reach the tolerance
-within its iteration limit (:math:`10 n`), each step runs to that limit, so
-on such problems the refinement can cost up to about five times the first
-solve.
+tolerance: on random SOCPs the refinement took about 14% of the first
+solves' conjugate gradient iterations in double precision (over whole
+solves, up to 2% more conjugate gradient iterations and 1 to 1.5% more time
+than with a tolerance of :math:`4 \epsilon`), and about 60% in single
+precision, where the more accurate :math:`g` made whole solves about three
+times faster. Where conjugate gradients cannot reach the tolerance within
+its iteration limit (:math:`10 n`), each step runs to that limit, so on such
+problems the refinement can cost up to about five times the first solve,
+and the step more costs most: on two badly scaled QPs in single precision
+(HUES-MOD and QSCFXM1, 9 starts each) the steps took 2.2 times the
+conjugate gradient iterations they took with a tolerance of
+:math:`4 \epsilon`, and the runs 26% more in all, while 15 of the 18 runs
+solved instead of 9.
 
 .. _refinement:
 
@@ -189,7 +221,9 @@ residual is at rounding level: at most four machine epsilons times
 :math:`\|\,|z^k| + |K|\,|u|\,\|_\infty`, the size of the terms the residual
 is computed from, row by row. A residual that small is mostly the rounding of
 its own computation, and refinement cannot lower it by more than a small
-factor. This matters where *tol* goes to zero, on an infeasibility or
+factor. (Four is a bound with room: refined residuals are typically a third
+to a half of an epsilon of their terms, since the rounding errors of a row's
+terms partly cancel.) This matters where *tol* goes to zero, on an infeasibility or
 unboundedness certificate that SCS keeps iterating on: with an absolute floor
 instead (*tol* at least :math:`10^{-12}`, as in an earlier rule), which is
 below rounding level wherever those terms are large, refinement turned on
