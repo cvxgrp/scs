@@ -354,4 +354,88 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
   return 0;
 }
 
+/* Warm-start check: a warm start makes SCS start from the (x, y, s) it is
+ * given, so the first iterate of a solve warm-started from a solution is close
+ * to that solution, and the first iterate of a cold start is not. For each of
+ * the blocks x, y and s this compares the two first iterates' distances from
+ * sol, ||x1 - x||_inf and so on, and returns the largest ratio, warm over
+ * cold. Both solves use stgs with max_iters = 1, so the result does not
+ * depend on where a solve happens to stop; sol is not changed.
+ *
+ * A test asserts that the ratio is at most WARM_START_FIRST_ITER_TOL, set
+ * between what a working warm start and a broken one give. Measured on
+ * hs21_tiny_qp (Mac clang and Spark gcc, double and single precision, QDLDL,
+ * CG, dense LAPACK and Accelerate, 2,000 starting scales around the default,
+ * also with the box cone's t weighted like the other rows of the cone), a
+ * working warm start gives at most 1.6e-2: its first iterate moves off the
+ * solution by up to 1.6% of a cold start's distance where the solve it starts
+ * from stopped mid-swing (see hs21_tiny_qp).
+ * Deliberately broken warm starts in SCS give at least 1 when it is ignored
+ * (a cold start), 0.95 with x left at zero, 1.1 with s dropped from
+ * v = (x, y + R^{-1} s, 1), 4.0 when v is not normalized, 750 with s scaled
+ * by R instead of R^{-1}, and 0.12 and 0.24 with y dropped or negated, the
+ * subtlest since hs21's y is small. A block where a cold start's first
+ * iterate is already at sol cannot tell the two apart; it fails the check
+ * unless the warm start's is there too. */
+#define WARM_START_FIRST_ITER_TOL (5e-2)
+
+/* max(a, b), except that it is NaN if a or b is NaN, so once a running
+ * maximum has met a NaN it stays NaN whatever is compared after it */
+static scs_float warm_start_nan_max(scs_float a, scs_float b) {
+  if (isnan(a)) {
+    return a;
+  }
+  return (isnan(b) || b > a) ? b : a;
+}
+
+scs_float warm_start_first_iterate_ratio(const ScsData *d, const ScsCone *k,
+                                         const ScsSettings *stgs,
+                                         const ScsSolution *sol) {
+  scs_int n = d->n, m = d->m, i, b, warm, len[3];
+  scs_float dist[2][3] = {{0.}}, ratio = 0., e;
+  const scs_float *ref[3];
+  scs_float *it[3];
+  ScsSettings st = *stgs;
+  ScsSolution first = {SCS_NULL, SCS_NULL, SCS_NULL};
+  ScsInfo info = {0};
+  first.x = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  first.y = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  first.s = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  ref[0] = sol->x;
+  ref[1] = sol->y;
+  ref[2] = sol->s;
+  it[0] = first.x;
+  it[1] = first.y;
+  it[2] = first.s;
+  len[0] = n;
+  len[1] = len[2] = m;
+  st.max_iters = 1;
+  for (warm = 0; warm < 2; ++warm) {
+    st.warm_start = warm;
+    for (b = 0; b < 3; ++b) {
+      memcpy(it[b], ref[b], len[b] * sizeof(scs_float));
+    }
+    scs(d, k, &st, &first, &info);
+    /* a NaN anywhere in a block makes its distance NaN */
+    for (b = 0; b < 3; ++b) {
+      for (i = 0; i < len[b]; ++i) {
+        dist[warm][b] =
+            warm_start_nan_max(dist[warm][b], ABS(it[b][i] - ref[b][i]));
+      }
+    }
+  }
+  /* a NaN distance in any block, warm or cold, makes the ratio NaN, which
+   * fails a ratio <= tolerance check */
+  for (b = 0; b < 3; ++b) {
+    e = (dist[1][b] == 0. && !isnan(dist[0][b]))
+            ? 0.
+            : dist[1][b] / dist[0][b];
+    ratio = warm_start_nan_max(ratio, e);
+  }
+  scs_free(first.x);
+  scs_free(first.y);
+  scs_free(first.s);
+  return ratio;
+}
+
 #endif
