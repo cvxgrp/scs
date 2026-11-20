@@ -414,33 +414,46 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * and CG iterations only where its solve missed. At a check while on, a
  * plain CG solve of the same right-hand side from the same start, made only
  * for the decision, decides whether to stay on, as for the direct solvers
- * (one more CG solve per REFINE_CHECK_INTERVAL iterations while on). Before
- * 3.4.0 every iteration while on was a check, with SCS's own residual, and
- * was followed by a cold CG solve of r to CG_BEST_TOL whether or not the
- * solve had missed. Deciding only at checks costs this: once on, refinement
- * stays on for at least REFINE_CHECK_INTERVAL iterations, where the old
- * rule's episodes often lasted one. Against the old rule (KKT-verified at
- * 10 times eps; CPU CG with clang on Apple silicon and GCC on ARM, GPU CG on
- * a GB10; random SOCPs at 1e-9 and, in single precision, 1e-6, the Netlib and
- * SDPLIB certificate problems, badly scaled QPs and LPs at 1e-4; from one
- * start, and from 8 more for every problem that moved): no double-precision
- * run was lost or gained, at 0.996 to 1.002 times the time in shifted
- * geometric mean; in single precision 6 of 678 CPU runs were lost and 9
- * gained (outcomes there flip both ways with rounding; averaged over the
- * starts, within one problem), at 1.04 and 1.08 times the time from one
- * start (1.01 and 0.97 averaged over the starts of the problems that moved),
- * and with GPU CG 1.44 (1.07 averaged; 4 of 20 SOCPs stuck on refinement
- * from that start, none from the others). In double precision CG refinement
- * fires mostly on certificates and on problems that stall; there it was on
- * for 2 to 5 times as many iterations, and one LP run for a fixed 2,000
- * iterations (QSCFXM2) took 2.5 times the time. A step must solve for the
- * residual in the full space: CG restarted on rhs from u, the same in exact
- * arithmetic, works on CG's reduced residual and recomputes y from x, so it
- * cannot remove the
- * rounding the full residual measures (in single precision, from the same
- * u, it lowered the residual by 10% or more in 38% of 455,177 steps, against
- * 96% for the cold step, and of 25 random SOCPs at 1e-5 it solved 16
- * instead of 25, in 12 times the time).
+ * (one more CG solve per REFINE_CHECK_INTERVAL iterations while on), so
+ * once on, refinement stays on for at least REFINE_CHECK_INTERVAL
+ * iterations. The earlier rule decided at every iteration while on, with
+ * SCS's own residual, and added a cold CG solve of r to CG_BEST_TOL each
+ * time, whether or not the solve had missed. Against it (KKT-verified at 10
+ * times eps; CPU CG with clang on Apple silicon and GCC on ARM; random SOCPs
+ * at 1e-9 and, in single precision, 1e-6, the Netlib and SDPLIB certificate
+ * problems at 1e-4 and 1e-6, badly scaled QPs and LPs at 1e-4; from one
+ * start, and from 8 more for every problem that moved and, with GCC, for
+ * all 100 single-precision SOCPs) the verified solves were the same within
+ * noise. In double precision 2 of 1,138 runs were lost and none gained:
+ * refinery (an infeasible LP) from 2 of its 9 starts, where its
+ * certificate failed the check at one and the 120 s limit stopped the
+ * other. In single precision 48 runs were gained and 48 lost of 2,883
+ * (outcomes there flip both ways with rounding; s30_004 was solved from 5
+ * of its 9 starts instead of 8, s30_009 from 8 instead of 6). The time was
+ * 0.998 times in shifted geometric mean over all 1,792 problems averaged
+ * over their starts (1.013 from one start): 1.004 and 0.999 in double
+ * precision, 0.994 and 0.987 in single (1.021 and 1.046 from one start).
+ * Where CG refinement fires in double precision, on certificates and on
+ * problems that stall, it was on for 2.5 to 6 times as many iterations, 40
+ * to 45% of the steps were rejected (no lower residual), and some runs took
+ * much longer: QSCFXM2 for a fixed 2,000 iterations 2.3 times the time,
+ * refinery at 1e-6 1.9 times (from one start). Deciding at every iteration
+ * while on instead (the plain solve with res, then, while on, a second call
+ * that refines that solution) kept double precision as it was (on for as
+ * many iterations as the earlier rule, no run lost; QSCFXM2 1.6 times,
+ * refinery 1.5), but in single precision, where refinement is on for most
+ * of the solve, it took 2.5 to 4% more CG iterations and 2 to 5% more time
+ * averaged over the starts, with the same solves within noise: 1.026 times
+ * the time over all problems against 0.998, so refinement is decided at
+ * checks. With GPU CG (a GB10) in single precision, on 20 SOCPs from one
+ * start, 20 were solved against 19, at 1.06 times the time; in double
+ * precision, on 10 of them at 1e-9, refinement never turned on. A step must
+ * solve for the residual in the full space: CG restarted on rhs from u, the
+ * same in exact arithmetic, works on CG's reduced residual and recomputes y
+ * from x, so it cannot remove the rounding the full residual measures (in
+ * single precision, from the same u, it lowered the residual by 10% or more
+ * in 38% of 455,177 steps, against 96% for the cold step, and of 25 random
+ * SOCPs at 1e-5 it solved 16 instead of 25, in 12 times the time).
  *
  * REFINE_CHECK_INTERVAL: the cost while off is one multiply by K and three
  * inf-norms per interval, about 1% of linear-system time with QDLDL (0.4% of
@@ -515,8 +528,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* REFINE_INDIRECT_ON_FACTOR: indirect solvers refine when the solve's error
  * is larger than the residuals SCS is driving to zero. While on, each
  * iteration costs one more multiply, and CG solves where it missed its
- * tolerance. A smaller factor refines more (measured with the rule before
- * 3.4.0, a CG solve every iteration while on): 0.1 took slightly fewer
+ * tolerance. A smaller factor refines more (measured with the earlier rule,
+ * a CG solve every iteration while on): 0.1 took slightly fewer
  * iterations at 1e-9 with QDLDL but fired in 15 of the 336 runs at 1e-4 and
  * 1e-6 instead of 9, and where refinement fires it cost more (3% more
  * linear-system time with CG). A larger one leaves solves that limit
@@ -528,17 +541,16 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * off, and until the next check the unrefined solves undid the progress.
  * The price is that refinement stays on longer once it fires: with CG it
  * refined about twice as many solves (this paragraph was measured with the
- * rule before 3.4.0, a CG solve every iteration while on). The off
- * threshold is at least
- * CG_BEST_TOL, the smallest tolerance CG is given (refine_next_on in
- * src/scs.c: tol is at least CG_BEST_TOL / REFINE_INDIRECT_OFF_FACTOR, 1e-5
- * in single precision, 1e-11 in double), which in single precision is near
- * what a refined solve can reach, so this happens more often there: at the
- * default tolerances, on 30 LPs and QPs from 3 starts each, refinement was
- * on for most of the solve in 41 of 90 runs
- * with CG (21 with an off factor of 1), mostly runs that stall, where it cost
- * up to 2.1 times the linear-system time per iteration. It also solved more:
- * 47 instead of 41 (gaining 8, losing 2). */
+ * earlier rule, a CG solve every iteration while on). The off threshold is
+ * at least CG_BEST_TOL, the smallest tolerance CG is given (refine_next_on
+ * in src/scs.c: tol is at least CG_BEST_TOL / REFINE_INDIRECT_OFF_FACTOR,
+ * 1e-5 in single precision, 1e-11 in double), which in single precision is
+ * near what a refined solve can reach, so this happens more often there: at
+ * the default tolerances, on 30 LPs and QPs from 3 starts each, refinement
+ * was on for most of the solve in 41 of 90 runs with CG (21 with an off
+ * factor of 1), mostly runs that stall, where it cost up to 2.1 times the
+ * linear-system time per iteration. It also solved more: 47 instead of 41
+ * (gaining 8, losing 2). */
 #define REFINE_INDIRECT_OFF_FACTOR (0.1)
 /* REFINE_ROUNDING_EPS: in double precision the per-iteration refinement
  * turns on, and stays on, only while the plain solve's residual
@@ -550,8 +562,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * scaling of K, rhs and u (the error bound of a sum of products): below it
  * refinement can lower ||r||_inf by at most a small factor (to about one
  * epsilon of that size, the rounding of the row with the largest terms),
- * and the computed residual cannot show even that. It
- * replaces an absolute floor on tol of 1e-12, which was below rounding level
+ * and the computed residual cannot show even that. It replaces an absolute
+ * floor on tol of 1e-12 (an earlier rule), which was below rounding level
  * where those terms are large: where tol goes to zero (one of SCS's
  * residuals on a certificate) refinement turned on and stayed on to the end,
  * chasing rounding (test_refine_certificate, 1000 iterations: on for 799
@@ -589,20 +601,20 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * size of their terms while refinement moved the solution by 6 to 17
  * epsilons of ||u||, and runs stalled without it). With the test at 4 in
  * single precision, at 1e-6 (KKT-verified at 1e-5): CG solved 94 and 97 of
- * 100 random SOCPs on two machines, against 100 and 98 without it (the rule
- * before 3.4.0: 98 and 99), and the dense solver 489 of 500 against 497
- * (with the test on staying on only: 496 against 497, and Accelerate 493
- * against 494); at 1e-5 nothing changed but the time. The price is that in
- * single precision refinement stays on once the plain solves are at
- * rounding level, as on certificates. The absolute floor's other role
- * stays: with CG tol is at least CG_BEST_TOL / REFINE_INDIRECT_OFF_FACTOR,
- * the old floor in single precision (1e-5: the single-precision solves that
- * need refinement have tol near 1e-3, and 1e-6 refined more without
- * converging faster, test_adaptive_scale with CG and an off factor of 1: 54
- * refinement steps and 225 iterations, against 22 and 175) and 1e-11 in
- * double. The direct solvers need no floor in single precision: without
- * the old one every run of 500 random SOCPs at 1e-6 took the same
- * iterations with QDLDL, dense and Accelerate. */
+ * 100 random SOCPs on two machines, against 100 and 98 without it (the
+ * earlier CG rule, see "Indirect solvers" above: 98 and 99), and the dense
+ * solver 489 of 500 against 497 (with the test on staying on only: 496
+ * against 497, and Accelerate 493 against 494); at 1e-5 nothing changed but
+ * the time. The price is that in single precision refinement stays on once
+ * the plain solves are at rounding level, as on certificates. The absolute
+ * floor's other role stays: with CG tol is at least CG_BEST_TOL /
+ * REFINE_INDIRECT_OFF_FACTOR, the old floor in single precision (1e-5: the
+ * single-precision solves that need refinement have tol near 1e-3, and 1e-6
+ * refined more without converging faster, test_adaptive_scale with CG and
+ * an off factor of 1: 54 refinement steps and 225 iterations, against 22
+ * and 175) and 1e-11 in double. The direct solvers need no floor in single
+ * precision: without the old one every run of 500 random SOCPs at 1e-6 took
+ * the same iterations with QDLDL, dense and Accelerate. */
 #ifdef SFLOAT
 #define REFINE_ROUNDING_EPS (0.)
 #else
@@ -614,17 +626,21 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * full space, and a multiply by K, taken only while that residual is above
  * the tolerance; a step is kept only if it lowers the residual, and the
  * steps stop after one that does not halve it (LIN_SYS_REFINE_CONTRACTION).
- * In single precision at 1e-6, where refinement fires most (100 random
- * SOCPs, GCC on ARM), 99.6% of the calls took a step (CG's tolerance, at
- * its floor CG_BEST_TOL there, is below the rounding of the residual), 1.65
- * steps per call, and 81% of the steps were kept. One step solved 97 of the
- * 100 where two solved 100 (the rule before 3.4.0: 98), at 0.94 times the
- * time of two (clang on Apple silicon); more steps add CG solves that the
- * halving stop mostly ends. In double precision, where CG refinement fires
- * on certificates and on problems that stall, calls took about 1.5 steps
- * and 39 to 45% of the steps were rejected (no lower residual), each
- * costing a CG solve; one step would save the second solves, but solved
- * fewer in single precision (above). */
+ * In single precision at 1e-6, where refinement fires most (random SOCPs),
+ * 99.6% of the calls took a step (CG's tolerance, at its floor CG_BEST_TOL
+ * there, is below the rounding of the residual), 1.5 to 1.6 steps per call,
+ * and 83 to 84% of the steps were kept. One step solved 97 of 100 SOCPs
+ * where two solved 100 (the earlier CG rule: 98), at 0.94 times the time of
+ * two (clang on Apple silicon); more steps add CG solves that the halving
+ * stop mostly ends. In double precision, where CG refinement fires on
+ * certificates and on problems that stall, calls took about 1.5 steps and
+ * 40 to 45% of the steps were rejected (no lower residual), each costing a
+ * CG solve. One step in double precision (two in single) solved the same
+ * within noise (one run fewer of 1,138: refinery from one start, stopped by
+ * the 120 s limit), at 1.006 and 1.015 times the earlier rule's time in
+ * shifted geometric mean averaged over the starts (two steps: 1.004 and
+ * 0.999), though QSCFXM2 for a fixed 2,000 iterations took 1.6 times the
+ * earlier rule's time instead of 2.3. */
 #define REFINE_CG_MAX_STEPS (2)
 
 /* CUDSS_MIN_PRODUCT_NNZ: the smallest K (nonzeros of the stored triangle,
