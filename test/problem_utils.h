@@ -369,7 +369,9 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
  * also with the box cone's t weighted like the other rows of the cone), a
  * working warm start gives at most 1.6e-2: its first iterate moves off the
  * solution by up to 1.6% of a cold start's distance where the solve it starts
- * from stopped mid-swing (see hs21_tiny_qp).
+ * from stopped mid-swing (see hs21_tiny_qp). With BOX_T_RY_FACTOR at 1e4,
+ * its value in double precision (Spark gcc, double and single precision,
+ * QDLDL and CG, the same 2,000 scales), it gives at most 9.6e-3.
  * Deliberately broken warm starts in SCS give at least 1 when it is ignored
  * (a cold start), 0.95 with x left at zero, 1.1 with s dropped from
  * v = (x, y + R^{-1} s, 1), 4.0 when v is not normalized, 750 with s scaled
