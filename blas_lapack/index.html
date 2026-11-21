@@ -700,13 +700,16 @@ Debian and Ubuntu, the SciPy and NumPy wheels, Julia) and Accelerate;</p></li>
 <li><p>an OpenMP build of OpenBLAS from version 0.3.34 on, once the program has
 called <code class="code docutils literal notranslate"><span class="pre">openblas_set_num_threads</span></code>: it then keeps that count (from its
 source; not measured);</p></li>
-<li><p>MKL where SCS cannot see it through the weak reference (macOS, Windows, or
-an MKL loaded privately by another library, as Julia’s libblastrampoline
-does): its own thread count takes precedence over the OpenMP one. MKL’s
-threads are slow on small blocks (see the MKL row of the table in
-<a class="reference internal" href="#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a>). If your problem’s blocks are small and
-projected one after another, <code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS=1</span></code> puts such an MKL on
-one thread, but for the whole process, MKL Pardiso included;</p></li>
+<li><p>MKL where SCS cannot see it through the weak reference: on macOS and
+Windows, in an MKL loaded privately by another library (as Julia’s
+libblastrampoline does), and in a static MKL linked without the MKL Pardiso
+linear solver, which is what links in the function SCS calls, as for the
+guard of the parallel projection below (from how the linker treats a weak
+reference; not measured). There MKL’s own thread count takes precedence
+over the OpenMP one. MKL’s threads are slow on small blocks (see the MKL
+row of the table in <a class="reference internal" href="#blas-lapack-threads"><span class="std std-ref">Number of BLAS threads</span></a>). If your problem’s blocks
+are small and projected one after another, <code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS=1</span></code> puts
+such an MKL on one thread, but for the whole process, MKL Pardiso included;</p></li>
 <li><p>a sequential BLAS, and builds of SCS without OpenMP (the Python wheels).</p></li>
 </ul>
 <p>We did not measure MKL without <code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code>, MKL on Intel’s OpenMP

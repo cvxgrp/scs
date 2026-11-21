@@ -589,13 +589,16 @@ neither the results nor the time:
 * an OpenMP build of OpenBLAS from version 0.3.34 on, once the program has
   called :code:`openblas_set_num_threads`: it then keeps that count (from its
   source; not measured);
-* MKL where SCS cannot see it through the weak reference (macOS, Windows, or
-  an MKL loaded privately by another library, as Julia's libblastrampoline
-  does): its own thread count takes precedence over the OpenMP one. MKL's
-  threads are slow on small blocks (see the MKL row of the table in
-  :ref:`blas_lapack_threads`). If your problem's blocks are small and
-  projected one after another, :code:`MKL_NUM_THREADS=1` puts such an MKL on
-  one thread, but for the whole process, MKL Pardiso included;
+* MKL where SCS cannot see it through the weak reference: on macOS and
+  Windows, in an MKL loaded privately by another library (as Julia's
+  libblastrampoline does), and in a static MKL linked without the MKL Pardiso
+  linear solver, which is what links in the function SCS calls, as for the
+  guard of the parallel projection below (from how the linker treats a weak
+  reference; not measured). There MKL's own thread count takes precedence
+  over the OpenMP one. MKL's threads are slow on small blocks (see the MKL
+  row of the table in :ref:`blas_lapack_threads`). If your problem's blocks
+  are small and projected one after another, :code:`MKL_NUM_THREADS=1` puts
+  such an MKL on one thread, but for the whole process, MKL Pardiso included;
 * a sequential BLAS, and builds of SCS without OpenMP (the Python wheels).
 
 We did not measure MKL without :code:`MKL_NUM_THREADS`, MKL on Intel's OpenMP
