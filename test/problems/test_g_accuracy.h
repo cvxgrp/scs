@@ -385,8 +385,25 @@ static const char *test_g_accuracy(void) {
  * halving stop (0.3-0.6 epsilons) it solved in 400 to 900 iterations at the
  * same 9 starts (initial scale moved by up to 4 ulps; Mac). The test runs in
  * every build: in double precision, and with the direct solvers in single,
- * g was accurate enough either way. Checked: solved within G_ITER_MAX_ITERS,
- * and g's measure at the end at most G_ACC_LIMIT.
+ * g was accurate enough either way. Checked: g's measure at the end at most
+ * G_ACC_LIMIT, in every build; in double precision, also that the solve
+ * finished within G_ITER_MAX_ITERS.
+ *
+ * In single precision whether the solve finished is printed, not checked,
+ * because it does not tell an inaccurate g from the iteration's own
+ * rounding. Built without FMA contraction (-march=x86-64 or -v2, or
+ * -ffp-contract=off), single precision at eps 1e-6 can stay above the
+ * stopping thresholds for thousands of iterations with g accurate (its
+ * measure at most 1.1 epsilons), the dual residual at 2.8e-5 (median)
+ * against 2.5e-6 to 5.7e-6 where solved runs stop: up to 19,225 iterations
+ * over 21 starting scales each with QDLDL and CG on the Mac, and past 20,000
+ * at some starts with every linear solver on x86-64 hosts (54,400 at the
+ * test's own start with the dense solver and OpenBLAS's AVX-512 kernels).
+ * Builds with FMA contraction took at most 1,000. With G_TOL_EPS 4, CG ran
+ * to 20,000 at each of the 21 starts, with FMA contraction or without, so
+ * without it the cap does not separate the two. g's measure does, in every
+ * build: with G_TOL_EPS 4, CG's g measured 2.8 to 4.1 epsilons at those
+ * starts, against at most 1.1 with g refined to the halving stop.
  */
 #define G_ITER_N (100)
 #define G_ITER_SEED (4)
@@ -402,8 +419,18 @@ static const char *test_g_accuracy(void) {
  * takes another path. The cap costs nothing while the test passes; with the
  * floor above the tolerance no number of iterations would do (G_TOL_EPS 4,
  * single-precision CG: still at max_iters after 20,000, g at 3.4 epsilons of
- * its terms, about a minute on the Mac). */
+ * its terms, about a minute on the Mac). In single precision, where the test
+ * does not check that the solve finished (see above), the cap only bounds
+ * the time: a build without FMA contraction can run all of it, about 50
+ * seconds with CG on the Mac. */
 #define G_ITER_MAX_ITERS (20000)
+/* whether the test checks that the solve finished within G_ITER_MAX_ITERS:
+ * not in single precision (see above) */
+#ifdef SFLOAT
+#define G_ITER_CHECK_SOLVED (0)
+#else
+#define G_ITER_CHECK_SOLVED (1)
+#endif
 
 static const char *test_g_accuracy_iteration(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
@@ -443,7 +470,7 @@ static const char *test_g_accuracy_iteration(void) {
                scs_get_lin_sys_method(), G_ITER_EPS, (long)exitflag,
                (long)info.iter, (long)info.scale_updates, info.res_pri,
                info.res_dual, res, (double)G_ACC_LIMIT);
-    if (exitflag != SCS_SOLVED) {
+    if (G_ITER_CHECK_SOLVED && exitflag != SCS_SOLVED) {
       fail = "test_g_accuracy_iteration: not solved within max_iters "
              "(g not as accurate as the iteration needs?)";
     } else if (!(res <= G_ACC_LIMIT)) {

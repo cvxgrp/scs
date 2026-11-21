@@ -22,7 +22,32 @@
  *
  * The varying magnitudes in b (and correspondingly in optimal x) ensure
  * that D scaling factors are non-trivial.
+ *
+ * How far apart the two solves may be, and how far from the optimum. In
+ * double precision SOL_TOL (the solves ask for 1e-9). In single precision the
+ * harness raises that to 1e-4 (problem_utils.h), and a solve stops as soon as
+ * its residuals are within eps_abs + eps_rel ||b||_inf = 1.01e-2 (primal) and
+ * eps_abs + eps_rel |c'x| = 1.12e-2 (gap) here. So x3 = 100 and the objective
+ * 111 can each be off by about 1e-2, on either side: the two solves of a
+ * correct build disagreed by up to 1.26e-2 in x and 1.37e-2 in the objective
+ * (CG, 101 starting scales; with QDLDL 6e-4). SOL_TOL, 1e-2, is that same
+ * size, and failed correct solves: at the test's own start without FMA
+ * contraction (-march=x86-64 or -v2, or -ffp-contract=off), and at a fifth to
+ * a quarter of nearby starts with it. Single-precision arithmetic is not the
+ * cause: in double at eps 1e-4 the two solves disagree by 9.7e-3 in x.
+ *
+ * An un-normalization bug moves x or y by most of its size: x or y left
+ * unscaled, or scaled with sigma left out or applied the wrong way, or with
+ * D and E swapped, gave 0.88 to 1.0 times ||x||_inf or ||y||_inf (both
+ * precisions, QDLDL and CG). So in single precision each check allows 1e-3
+ * of the size of what it compares, 1 + its largest entry: 0.1 on x, 2e-3 on
+ * y and 0.11 on the objective. That is 8 times or more the disagreement of
+ * correct solves, and 400 times or more below what the bugs give.
  */
+#define NORM_RT_SGL_TOL(size) (1e-3 * (1 + (size)))
+/* for x, y or s of the two solves (a and b, of length len) */
+#define NORM_RT_VEC_TOL(a, b, len)                                             \
+  VERIFY_TOL(SOL_TOL, NORM_RT_SGL_TOL(MAX(NORM(a, len), NORM(b, len))))
 static const char *test_normalize_roundtrip_lp(void) {
   ScsCone *k0, *k1;
   ScsData *d0, *d1;
@@ -92,9 +117,11 @@ static const char *test_normalize_roundtrip_lp(void) {
 
   /* Both should match the known optimal */
   mu_assert("normalize_roundtrip: unnormalized obj wrong",
-            ABS(info0.pobj - opt) < SOL_TOL);
+            ABS(info0.pobj - opt) <
+                VERIFY_TOL(SOL_TOL, NORM_RT_SGL_TOL(ABS(opt))));
   mu_assert("normalize_roundtrip: normalized obj wrong",
-            ABS(info1.pobj - opt) < SOL_TOL);
+            ABS(info1.pobj - opt) <
+                VERIFY_TOL(SOL_TOL, NORM_RT_SGL_TOL(ABS(opt))));
 
   /* Solutions should agree (un-normalization must be correct) */
   err_x = 0; err_y = 0; err_s = 0;
@@ -113,11 +140,14 @@ static const char *test_normalize_roundtrip_lp(void) {
   scs_printf("normalize_roundtrip: x_err=%.2e y_err=%.2e s_err=%.2e "
              "obj_err=%.2e\n", err_x, err_y, err_s, err_obj);
 
-  mu_assert("normalize_roundtrip: x vectors differ too much", err_x < SOL_TOL);
-  mu_assert("normalize_roundtrip: y vectors differ too much", err_y < SOL_TOL);
-  mu_assert("normalize_roundtrip: s vectors differ too much", err_s < SOL_TOL);
+  mu_assert("normalize_roundtrip: x vectors differ too much",
+            err_x < NORM_RT_VEC_TOL(sol0->x, sol1->x, n));
+  mu_assert("normalize_roundtrip: y vectors differ too much",
+            err_y < NORM_RT_VEC_TOL(sol0->y, sol1->y, m));
+  mu_assert("normalize_roundtrip: s vectors differ too much",
+            err_s < NORM_RT_VEC_TOL(sol0->s, sol1->s, m));
   mu_assert("normalize_roundtrip: obj values differ too much",
-            err_obj < VERIFY_TOL(1e-5, 1e-2));
+            err_obj < VERIFY_TOL(1e-5, NORM_RT_SGL_TOL(ABS(opt))));
 
   /* Cleanup */
   SCS(free_sol)(sol0);
