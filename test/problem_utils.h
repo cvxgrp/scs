@@ -165,6 +165,49 @@ static scs_float cone_dist_tol(const ScsCone *k) {
   (PRODUCT_ROUND((d)->A, x, n) + 1e-5 * NORM(s, m))
 #define UNBDD_P_ROUND(d, x, n) ((d)->P ? PRODUCT_ROUND((d)->P, x, n) : 0.)
 
+/* Tolerance on |s'y| of a solved problem.
+ *
+ * s and y come from one projection (Moreau), so s'y is zero in exact
+ * arithmetic, and its rounding is that projection's: each part is off by some
+ * unit roundoffs u of the vector projected, which is about as large as the
+ * larger of ||s||_2 and ||y||_2. So |s'y| is a number of u times the square
+ * of that, whatever the problem and its scaling: at most 40 u in single
+ * precision and 60 u in double over the whole suite (Mac: QDLDL, CG, dense
+ * and Accelerate, with and without FMA contraction; x86-64 with OpenBLAS:
+ * -march=native and -march=x86-64 builds on Zen 3, Zen 4, Cascade Lake and
+ * Granite Rapids).
+ *
+ * Single precision checks |s'y| against 1e-4 (the tolerance the harness
+ * raises single-precision solves to) times max(||s||_2, ||y||_2)^2, about
+ * 40 times the largest rounding seen. It was 1e-4 max(||s||_inf,
+ * ||y||_inf), which grows like one of the vectors where s'y grows like both:
+ * on test_complex_psd_multiplet_solve (||s||_2 = 10, ||y||_2 = 0.16) it was
+ * 370 u of ||s||_2 ||y||_2, below the projection's rounding there (up to
+ * 440 u on x86 hosts), and correct solves failed it.
+ *
+ * What it catches: an error of relative size e in s or y moves s'y by up to
+ * e ||s||_2 ||y||_2 (projecting onto the second-order cone with t 0.1% too
+ * large gave 1.6 times the tolerance on test_mixed_cones). Where it does not
+ * work: when one of s and y is k times smaller than the other, an error in
+ * the smaller one shows only above 1e-4 k of its size (complex_PSD, k = 27,
+ * with the PSD projection's eigenvalues 1% too large: 3% of the tolerance;
+ * the cone distance check caught it). Not ||s||_2 ||y||_2 instead: where s or
+ * y is zero at the solution, its computed value is rounding alone and can lie
+ * along the other (lp_update: ||s||_2 = 2e-6 and s'y = ||s||_2 ||y||_2). Not
+ * inf-norms: |s'y| <= ||s||_2 ||y||_2, but only m ||s||_inf ||y||_inf.
+ *
+ * Double precision keeps 5e-8 max(||s||_inf, ||y||_inf), at least 7,000
+ * times its rounding over the suite. */
+static scs_float comp_slack_tol(const scs_float *s, const scs_float *y,
+                                scs_int m) {
+#ifdef SFLOAT
+  scs_float sz = MAX(SCS(norm_2)(s, m), SCS(norm_2)(y, m));
+  return 1e-4 * sz * sz;
+#else
+  return 5e-8 * MAX(NORM(s, m), NORM(y, m));
+#endif
+}
+
 static scs_float get_dual_cone_dist(const scs_float *y, ScsConeWork *c,
                                     scs_int m) {
   scs_float dist;
@@ -307,9 +350,8 @@ const char *verify_solution_correct(ScsData *d, ScsCone *k, ScsSettings *stgs,
                    VERIFY_TOL(1e-9, 1e-4) * (1 + ABS(pobj)));
     mu_assert_less("Dual obj ERROR", ABS(dobj - info->dobj),
                    VERIFY_TOL(1e-9, 1e-4) * (1 + ABS(dobj)));
-    /* slightly looser tol */
     mu_assert_less("Complementary slackness ERROR", ABS(sty),
-                   VERIFY_TOL(5e-8, 1e-4) * MAX(NORM(s, m), NORM(y, m)));
+                   comp_slack_tol(s, y, m));
     mu_assert_less("s cone dist ERROR", ABS(sdist), CONE_DIST_TOL(k, s, m));
     mu_assert_less("y cone dist ERROR", ABS(ydist), CONE_DIST_TOL(k, y, m));
 
