@@ -93,6 +93,12 @@ struct SCS_CONE_WORK {
    * list with all blocks in order, and 0 without PSD blocks. */
   scs_int psd_nthreads, psd_len;
   scs_int *psd_blk, *psd_tptr, *psd_off;
+  /* Number of PSD blocks that a serial projection runs with the OpenMP
+   * thread count and MKL's thread-local count at one (PSD_SERIAL_HOLD_N in
+   * cones.c): with USE_PARALLEL_PSD, the blocks of 2 <= n <=
+   * PSD_SERIAL_HOLD_N, also when psd_nthreads > 1 (the projection is serial
+   * if the OpenMP thread count is lowered to one); 0 otherwise. */
+  scs_int psd_nhold;
   /* With LAPACK, the work-array sizes of PSD block b are psd_lsz[b] (indexed
    * like psd_off), whichever workspace projects it (NULL without LAPACK). */
   ScsPsdLapackSizes *psd_lsz;

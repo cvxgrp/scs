@@ -218,7 +218,10 @@ Set it to 1, or to the number of threads to use.
      - Takes precedence over :code:`OMP_NUM_THREADS`. It also puts MKL Pardiso
        on one thread. A sequential MKL, such as the MKL backend of the x86-64
        Linux Python wheels (their default linear solver), always runs on one
-       thread. Not measured in the projection
+       thread. In the projection, MKL 2026.1 on 4 threads of an AMD Zen 3
+       took 1.8 to 7 times as long as on one thread for real blocks of size 2
+       to 10 and 1.1 to 1.9 times for size 16 to 200; from size 256 on its
+       threads were faster
    * - Accelerate (macOS)
      - Nothing
      - :code:`VECLIB_MAXIMUM_THREADS=1` did not change the time of the
@@ -237,10 +240,14 @@ projection <blas_lapack_openmp>` included. With OpenBLAS's own thread pool or
 with MKL, set the library's variable instead. An OpenMP build of OpenBLAS, or
 NVPL, has no variable of its own, so :code:`OMP_NUM_THREADS` is one budget for
 SCS and the BLAS. Inside a parallel PSD projection the BLAS runs on one thread
-by itself, but where SCS projects the blocks one after another (a build without
-:code:`USE_PARALLEL_PSD`, or one block that holds most of the work) the BLAS
-runs on all the threads. We measured that case in a build of SCS without
-OpenMP, which projects the blocks one after another: on control7 (blocks of
+by itself. Where a build with :code:`USE_PARALLEL_PSD` projects the blocks one
+after another (one block that holds most of the work, say), it sets the OpenMP
+thread count, and MKL's thread-local count, to one for the blocks of size 384
+or less, so such a BLAS and MKL run on one thread there too, and on all the
+threads only for larger blocks (see :ref:`the serial projection
+<blas_lapack_openmp_serial>`). In a build without
+:code:`USE_PARALLEL_PSD` the BLAS runs on all the threads for every block. We
+measured that case in a build of SCS without OpenMP: on control7 (blocks of
 size 70 and 35), NVPL with :code:`OMP_NUM_THREADS=4` made the projection take
 1.82 times as long as with 1, and a whole iteration 1.37 times. For such a
 problem compare :code:`OMP_NUM_THREADS=1` with your thread count.
@@ -504,7 +511,8 @@ larger blocks: the estimate fitted to :code:`heevd` was slower in the same
 measurements.
 
 Even with the option, the blocks are projected one after another, and the BLAS
-is free to use its own threads, when
+is free to use its own threads (for blocks larger than :math:`384 \times 384`,
+see :ref:`below <blas_lapack_openmp_serial>`), when
 
 * the library was compiled without OpenMP (:code:`scsmkl` and :code:`scscudss`
   built with CMake),
@@ -513,11 +521,95 @@ is free to use its own threads, when
   block),
 * a block larger than :math:`512 \times 512` holds more than half of the work
   (the parallel projection would then gain less than a factor of two, and a
-  multithreaded BLAS may do better on that block),
+  multithreaded BLAS may do better on that block). Whether it does depends on
+  the BLAS. MKL's threads beat the parallel projection on such a block larger
+  than 384 (AMD Zen 3, 3 and 4 threads), NVPL's from about 1000 (DGX Spark),
+  and Accelerate's never (Apple M4). So where this rule projects such a block
+  of size 640 to 2000 one after another, it took 1.03 to 1.85 times the time
+  of the parallel projection on Accelerate, and 1.02 to 1.56 times with a BLAS
+  on one thread (a pthreads OpenBLAS with :code:`OPENBLAS_NUM_THREADS=1`).
+  512 lies between the libraries: over all four we measured (with OpenBLAS's
+  OpenMP build) it took 1.6% more time than the best size, 768, with the
+  smaller blocks held to one thread, and 2.4% more than the best, 1024 and
+  1500, with them left to the BLAS's threads,
 * the BLAS is a pthreads build of OpenBLAS set to more than one thread, where
   SCS can see that (see below), or
 * the solver is set up inside an active OpenMP parallel region, where the
   threads of the caller are the parallelism.
+
+.. _blas_lapack_openmp_serial:
+
+When a build with the option projects the blocks one after another, it sets
+the OpenMP thread count to one for each block of size :math:`2 \times 2` to
+:math:`384 \times 384`, and back to what it was after them
+(:code:`PSD_SERIAL_HOLD_N` in :code:`src/cones.c`). Larger blocks run with the
+thread count as it was. This reaches a BLAS on the OpenMP runtime of SCS that
+takes its number of threads from the OpenMP thread count, such as NVPL and an
+OpenMP build of OpenBLAS. For MKL, whose own thread count takes precedence
+over the OpenMP one, it also sets MKL's thread-local count to one for the same
+blocks, as the parallel projection does, and does so also when the OpenMP
+thread count is one (:code:`OMP_NUM_THREADS=1` with :code:`MKL_NUM_THREADS`
+set). That goes through a weak reference to MKL's symbol, which needs Linux
+(ELF) and MKL's symbols visible to SCS. Such a BLAS, and MKL, then run these
+blocks on one thread, as inside a parallel projection, because on them their
+threads cost more than they gain:
+
+* MKL 2026.1 (statically linked, GNU OpenMP layer, AMD Zen 3: the CPU build of
+  the SCS benchmark, which sets :code:`MKL_NUM_THREADS`): blocks of size 128 or
+  less took the time on one thread, where MKL's 4 threads took 1.8 to 7 times
+  as long for size 2 to 10. Whole solves of 148 pairs of problem and
+  tolerance among the benchmark's SDPs whose blocks are projected one after
+  another (144 pairs, and 4 projected in parallel as controls, which the
+  hold does not change), at 4 threads (measured with the MKL part alone;
+  with the OpenMP part too the projections had the same bits): 127 pairs
+  solved against 126, in 0.95 of the wall clock (shifted geometric mean,
+  shift 10 s; 0.85 at 10 ms). MKL's threaded eigensolver rounds differently
+  from one thread, so the iterates change (in 126 of the 148 pairs), and the
+  pairs that changed outcome went both ways (5 solved only with the hold, 4
+  only without it).
+
+* NVPL (DGX Spark): real blocks of size 32 to 300 took 0.78 to 0.95 of the
+  time at 2 and 4 threads, and real blocks of size 32 to 384 0.48 to 0.87 of
+  it at 10 threads. Whole solves of the 70 shorter pairs of problem and
+  tolerance among the benchmark's SDPs whose blocks are projected one after
+  another (66 pairs, and 4 projected in parallel, where nothing is held)
+  reached the same results, with the same iterates, in 0.94 of the wall clock
+  at 4 threads and 0.82 at 10 (shifted geometric mean, shift 10 s; 0.93 and
+  0.78 at 10 ms).
+* An OpenMP build of OpenBLAS: 0.59 to 0.98 of the time for blocks of size 32
+  to 384 at 4 threads on an Apple M4, and 0.15 to 0.82 for real blocks of size
+  3 to 512 at 4 threads on an AMD Zen 3.
+
+Where the OpenMP thread count does not reach the BLAS, it changes nothing,
+neither the results nor the time:
+
+* a BLAS with threads of its own: a pthreads build of OpenBLAS (the default on
+  Debian and Ubuntu, the SciPy and NumPy wheels, Julia) and Accelerate;
+* a BLAS on another OpenMP runtime than that of SCS;
+* an OpenMP build of OpenBLAS from version 0.3.34 on, once the program has
+  called :code:`openblas_set_num_threads`: it then keeps that count (from its
+  source; not measured);
+* MKL where SCS cannot see it through the weak reference (macOS, Windows, or
+  an MKL loaded privately by another library, as Julia's libblastrampoline
+  does): its own thread count takes precedence over the OpenMP one. MKL's
+  threads are slow on small blocks (see the MKL row of the table in
+  :ref:`blas_lapack_threads`). If your problem's blocks are small and
+  projected one after another, :code:`MKL_NUM_THREADS=1` puts such an MKL on
+  one thread, but for the whole process, MKL Pardiso included;
+* a sequential BLAS, and builds of SCS without OpenMP (the Python wheels).
+
+We did not measure MKL without :code:`MKL_NUM_THREADS`, MKL on Intel's OpenMP
+runtime, BLIS, or Windows. The cost is on the larger blocks below the size:
+there the threads of the BLAS can pay, and the block runs on one thread. A
+block of size 512 took 1.10 to 1.20 times as long on one thread as on 4 (NVPL,
+OpenBLAS on the M4), and blocks of size 200 to 384 1.02 to 1.12 times as long
+as on 2 threads (OpenBLAS on the M4). Where the hold works, sizes 384 and 512
+came out the same over all the block sizes and thread counts we measured, and
+384 risks less. With LLVM's OpenMP runtime (libomp, as clang links it),
+setting the thread count to one also shrinks the team of the calling thread,
+which the next parallel region grows again: about 1 microsecond per
+projection at 4 threads on an Apple M4, in a microbenchmark. GNU's runtime
+does not show this.
 
 The number of threads is chosen as if the threads were awake when a projection
 starts. With the GNU OpenMP runtime on Linux they wait actively for a short
@@ -558,16 +650,18 @@ is the reason the option is left to whoever builds SCS and knows its BLAS.
   count the cores the threads run on. On a DGX Spark (two clusters of Arm
   Cortex-X925 cores), a team of the same size took about 1.47 times as long
   with 10 OpenMP threads on the fast cores of both clusters as with 4 on one
-  cluster, over 44 block structures (1.31 times over 10 with NVPL, which has
-  no lock). The two thread counts were timed in separate sessions, not side
-  by side. With 10 threads the projection took 1.20 times the time of the
-  previous formula on the block structures whose split changed, against 0.94
-  times at 2 to 4 threads. An OpenMP build of OpenBLAS does not have this
-  limit. Both checks need the functions :code:`openblas_get_parallel` and
-  :code:`openblas_get_num_threads` visible to SCS: they are off for a static
-  :code:`libopenblas.a` (the weak references can stay unresolved), for an
-  OpenBLAS with suffixed symbol names, and for one loaded privately by
-  another library (libblastrampoline in Julia).
+  cluster (geometric mean of 55 ratios, one per block structure and team
+  size, over 44 structures; 1.31 times over 11 ratios and 10 structures with
+  NVPL, which has no lock). The two thread counts were timed in separate
+  sessions, not side by side. With 10 threads the projection took 1.20 times
+  the time of the previous formula on the block structures whose split
+  changed, against 0.94 times at 2 to 4 threads. An OpenMP build of OpenBLAS
+  does not have this limit. Both checks need the functions
+  :code:`openblas_get_parallel` and :code:`openblas_get_num_threads` visible
+  to SCS: they are off for a static :code:`libopenblas.a` (the weak
+  references can stay unresolved), for an OpenBLAS with suffixed symbol
+  names, and for one loaded privately by another library (libblastrampoline
+  in Julia).
 * In all other cases (other platforms, other libraries, another OpenMP
   runtime) SCS does nothing and assumes that the BLAS runs on one thread.
 
