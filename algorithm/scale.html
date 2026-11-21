@@ -179,17 +179,20 @@ term includes the effect of the parameter <code class="code docutils literal not
 heuristically to improve convergence. Basically</p>
 <div class="math notranslate nohighlight">
 \[\rho_y \approx (1/\mathrm{scale}) I\]</div>
-<p>with two differences. First, an equality row gets a smaller entry,
-<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>: every row of the zero cone, and the
+<p>with two differences. First, an equality row gets a smaller entry:
+<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span> for every row of the zero cone,
+and, in double precision, <span class="math notranslate nohighlight">\(\rho_y = 1 / (10^4\ \mathrm{scale})\)</span> for the
 first entry <span class="math notranslate nohighlight">\(t\)</span> of a box cone with bounds (see <a class="reference internal" href="#box-t-weight"><span class="std std-ref">The box cone’s t entry</span></a>).
 Second, with <code class="code docutils literal notranslate"><span class="pre">adaptive_diag_scale</span></code> each row <span class="math notranslate nohighlight">\(i\)</span> has its own
 multiplier <span class="math notranslate nohighlight">\(f_i\)</span>, which acts like a scale for that row alone:</p>
 <div class="math notranslate nohighlight">
 \[\rho_{y,i} = \frac{1}{\mathrm{scale}\ f_i}\]</div>
-<p>for most rows, and <span class="math notranslate nohighlight">\(\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)\)</span> for a
-row of the zero cone and for the box cone’s <span class="math notranslate nohighlight">\(t\)</span> entry. The factor 1000 is
-<code class="code docutils literal notranslate"><span class="pre">ZERO_CONE_RY_FACTOR</span></code> (and <code class="code docutils literal notranslate"><span class="pre">BOX_T_RY_FACTOR</span></code>, equal to it) in
-<code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>. The multipliers start at one, so at the start of a
+<p>for most rows, <span class="math notranslate nohighlight">\(\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)\)</span> for a
+row of the zero cone and <span class="math notranslate nohighlight">\(\rho_{y,i} = 1 / (10^4\ \mathrm{scale}\ f_i)\)</span>
+for the box cone’s <span class="math notranslate nohighlight">\(t\)</span> entry. The factors 1000 and <span class="math notranslate nohighlight">\(10^4\)</span> are
+<code class="code docutils literal notranslate"><span class="pre">ZERO_CONE_RY_FACTOR</span></code> and <code class="code docutils literal notranslate"><span class="pre">BOX_T_RY_FACTOR</span></code> in
+<code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>; in single precision builds both are 1000 (see
+<a class="reference internal" href="#box-t-weight"><span class="std std-ref">The box cone’s t entry</span></a>). The multipliers start at one, so at the start of a
 solve on a new workspace they change nothing, and they are kept in
 <span class="math notranslate nohighlight">\([10^{-3}, 10^{3}]\)</span>. How they are updated is described in
 <a class="reference internal" href="#per-row-refinement"><span class="std std-ref">Per-row refinement</span></a>. So as scale increases, <span class="math notranslate nohighlight">\(\rho_y\)</span> decreases
@@ -204,26 +207,38 @@ is determined by <code class="code docutils literal notranslate"><span class="pr
 <span class="math notranslate nohighlight">\(l \leq a^\top x \leq u\)</span> are usually posed with <span class="math notranslate nohighlight">\(t\)</span> fixed to one:
 the row of <span class="math notranslate nohighlight">\(A\)</span> for <span class="math notranslate nohighlight">\(t\)</span> is zero and its entry of <span class="math notranslate nohighlight">\(b\)</span> is one,
 so that row is the equality <span class="math notranslate nohighlight">\(s_t = \tau\)</span>, although <span class="math notranslate nohighlight">\(t\)</span> is a cone
-entry. SCS therefore gives the <span class="math notranslate nohighlight">\(t\)</span> entry the weight of an equality row,
-<span class="math notranslate nohighlight">\(\rho_y = 1 / (1000\ \mathrm{scale})\)</span>. A box cone of size one is
-<span class="math notranslate nohighlight">\(t \geq 0\)</span> alone, with no bounds, and keeps <span class="math notranslate nohighlight">\(1 / \mathrm{scale}\)</span>
-like a nonnegative row.</p>
+entry. SCS therefore gives the <span class="math notranslate nohighlight">\(t\)</span> entry a small <span class="math notranslate nohighlight">\(\rho_y\)</span>, as it
+gives an equality row: <span class="math notranslate nohighlight">\(\rho_y = 1 / (10^4\ \mathrm{scale})\)</span>, ten times
+smaller than a zero-cone row’s (in single precision builds
+<span class="math notranslate nohighlight">\(1 / (1000\ \mathrm{scale})\)</span>, a zero-cone row’s; see below). A box cone
+of size one is <span class="math notranslate nohighlight">\(t \geq 0\)</span> alone, with no bounds, and keeps
+<span class="math notranslate nohighlight">\(1 / \mathrm{scale}\)</span> like a nonnegative row.</p>
 <p>Why: weighted like an inequality row, <span class="math notranslate nohighlight">\(t\)</span> can stop off one by up to the
 primal tolerance, about <span class="math notranslate nohighlight">\(\epsilon (1 + \|Ax\|_\infty)\)</span>, because SCS’s
 primal residual measures <span class="math notranslate nohighlight">\(t - 1\)</span> against the largest entry of
 <span class="math notranslate nohighlight">\(Ax\)</span>. Each bound is then met only up to <span class="math notranslate nohighlight">\(|t - 1|\)</span> times the bound,
 so on problems with large bounds SCS could report solved while a bound was
-violated by more than the tolerance. With the equality weight the box
+violated by more than the tolerance. With the small <span class="math notranslate nohighlight">\(\rho_y\)</span> the box
 projection, whose metric weighs <span class="math notranslate nohighlight">\(t\)</span> by <span class="math notranslate nohighlight">\(1 / \rho_y\)</span>, and the
-linear system both hold <span class="math notranslate nohighlight">\(t\)</span> to <span class="math notranslate nohighlight">\(\tau\)</span> about as tightly as an
+linear system both hold <span class="math notranslate nohighlight">\(t\)</span> to <span class="math notranslate nohighlight">\(\tau\)</span> at least as tightly as an
 equality.</p>
+<p>Why <span class="math notranslate nohighlight">\(10^4\)</span>: in a sweep of the factor from 1 to <span class="math notranslate nohighlight">\(10^5\)</span> over 492
+benchmark problems (483 of them with box cones), with every status checked
+independently, the differences in problems solved from 100 to <span class="math notranslate nohighlight">\(10^5\)</span> were
+within noise, and <span class="math notranslate nohighlight">\(10^4\)</span> was chosen holistically: it solved a few more on
+both halves of the set, with fewer stops that fail the check and long runs no
+slower, for about 12% more iterations to certify the infeasible problems.
+Larger factors slow that further (70% at <span class="math notranslate nohighlight">\(10^5\)</span>), because the weight also
+anchors <span class="math notranslate nohighlight">\(\tau\)</span> in its update (<code class="code docutils literal notranslate"><span class="pre">root_plus</span></code>); <code class="code docutils literal notranslate"><span class="pre">BOX_T_RY_FACTOR</span></code>
+in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> has the data.</p>
 <p>This weight needs an exact box projection (see above): with it, a projection
 that stopped short of the true <span class="math notranslate nohighlight">\(t\)</span> made the solve cycle to its iteration
 limit.</p>
 <p>Tradeoff: any positive weight is a valid metric, so this changes the path SCS
-takes, never the solution. Measured on 30 benchmark problems with box cones,
-16 or 8 starting scales each, with every status checked independently against
-the original problem at 10 times the tolerance:</p>
+takes, never the solution. Measured with the factor at 1000 against no
+weight, on 30 benchmark problems with box cones, 16 or 8 starting scales each,
+with every status checked independently against the original problem at 10
+times the tolerance:</p>
 <ul class="simple">
 <li><p>With the direct solver (QDLDL), 397 of 432 runs met the tolerance against
 272 without the weight (eps <span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span>), the
@@ -244,12 +259,38 @@ with or without the weight.</p></li>
 </ul>
 <p>The weight also makes <span class="math notranslate nohighlight">\(\tau\)</span> smaller at the solution, because the
 <span class="math notranslate nohighlight">\(t\)</span> entry of <span class="math notranslate nohighlight">\(v\)</span> is <span class="math notranslate nohighlight">\(y_t + s_t / \rho_y\)</span> with
-<span class="math notranslate nohighlight">\(s_t = \tau b_t\)</span> (on hs21_tiny_qp, 0.019 against 0.34). In double
-precision this is harmless; in single precision fixed absolute floors on the
-iterate, such as the CG solver’s, cost more accuracy. When you warm-start a new
-workspace, also pass the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> the previous solve ended at
-(<code class="code docutils literal notranslate"><span class="pre">info.scale</span></code>): with adaptive scaling a warm start at another scale is a
-warm start in another metric.</p>
+<span class="math notranslate nohighlight">\(s_t = \tau b_t\)</span> (on the first solve of the hs21_tiny_qp test, in
+double precision with acceleration, 0.0019 with the factor at <span class="math notranslate nohighlight">\(10^4\)</span>,
+0.019 at 1000 and 0.34 without the weight). In double precision this is
+harmless; in single precision fixed absolute floors on the iterate, such as
+the CG solver’s (<code class="code docutils literal notranslate"><span class="pre">CG_BEST_TOL</span></code>, <span class="math notranslate nohighlight">\(10^{-6}\)</span> there), cost more
+accuracy. So single precision builds (<code class="code docutils literal notranslate"><span class="pre">SFLOAT</span></code>) keep the factor at
+1000:</p>
+<ul class="simple">
+<li><p>With the factor at <span class="math notranslate nohighlight">\(10^4\)</span>, the last solve of the hs21_tiny_qp test in
+single precision with CG and no acceleration ended with <span class="math notranslate nohighlight">\(\tau\)</span> at
+0.0026 instead of 0.026. On most iterations CG’s warm start already met its
+floor, so CG took no step and the iterate stopped improving: the solve
+reached its iteration limit from 23 to 26 of 41 starting scales near the
+default on x86 and Apple M4 hosts, and none at 1000. A floor ten times lower
+removes that stall at <span class="math notranslate nohighlight">\(10^4\)</span>; at 1000 even a floor ten times higher
+causes none.</p></li>
+<li><p>The direct solver has no such floor, but at eps <span class="math notranslate nohighlight">\(10^{-5}\)</span> with default
+settings and no acceleration hs21_tiny_qp stalled at <span class="math notranslate nohighlight">\(10^4\)</span> on the
+duality gap, from 8 to 17 of 41 starting scales, and from none at 1000.</p></li>
+<li><p>In single precision, <span class="math notranslate nohighlight">\(10^4\)</span> showed no gain over 1000 beyond noise: on
+33 benchmark problems with box cones, each solved with QDLDL at eps
+<span class="math notranslate nohighlight">\(10^{-4}\)</span> and <span class="math notranslate nohighlight">\(10^{-5}\)</span> and with CG at <span class="math notranslate nohighlight">\(10^{-4}\)</span>, 38.4
+expected solves of these 99 problem and setting pairs at <span class="math notranslate nohighlight">\(10^4\)</span>
+against 36.2 at 1000; 5 pairs did better at 1000 and 10 worse.</p></li>
+</ul>
+<p>The cost is that problems with box cones take different paths in single and
+double precision, and the absolute CG floor remains: any other change that
+makes <span class="math notranslate nohighlight">\(\tau\)</span> smaller in single precision can stall CG again.
+<code class="code docutils literal notranslate"><span class="pre">BOX_T_RY_FACTOR</span></code> in <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code> has the details.</p>
+<p>When you warm-start a new workspace, also pass the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> the previous
+solve ended at (<code class="code docutils literal notranslate"><span class="pre">info.scale</span></code>): with adaptive scaling a warm start at
+another scale is a warm start in another metric.</p>
 </section>
 </section>
 <section id="root-plus-function">
