@@ -1113,10 +1113,10 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  *   all four, equal weights          1.155 1.100 1.069 1.052 1.054 1.056 1.065
  *
  * With none of the smaller blocks held (master's serial path, and the
- * serial path with MKL under MKL_NUM_THREADS, where the hold of
- * PSD_SERIAL_HOLD_N does not act), the MKL row is 1.077 1.036 1.039 1.044
- * 1.064 1.072 1.093 and the pooled row 1.179 1.113 1.077 1.055 1.052 1.052
- * 1.059.
+ * serial path with an MKL that SCS cannot see through the weak reference,
+ * under MKL_NUM_THREADS, where the hold of PSD_SERIAL_HOLD_N does not act),
+ * the MKL row is 1.077 1.036 1.039 1.044 1.064 1.072 1.093 and the pooled
+ * row 1.179 1.113 1.077 1.055 1.052 1.052 1.059.
  *
  * The libraries disagree on the direction. On MKL alone the best value is 384
  * at 3 and 4 threads and 512 at 2: its threads beat the loop on a dominant
@@ -1198,18 +1198,19 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  *   benchmark of SCS, with MKL_NUM_THREADS set), through its thread-local
  *   count: the time on one thread for n <= 128 (0.95-1.07x of it), where
  *   MKL's 4 threads took 1.8-7x that for n = 2 to 10. Whole solves (eps
- *   1e-4 and 1e-6, 4 threads, KKT-verified) of the 148 (problem, eps) groups
- *   of the suite SDPs that master projects serially: 127 groups solved
- *   against 126, 403 of 428 runs against 406, in 0.952x / 0.850x of the wall
- *   clock (shift 10 s / 10 ms; single-block SDPs 0.924x / 0.855x,
- *   multi-block 1.008x / 0.829x). These ran with the MKL part alone; with
- *   the OpenMP part too, as shipped, single blocks had the same bits as with
- *   it alone (135 of 135 cases) in 0.95-1.06x its time. MKL's threaded
- *   syevd rounds differently from one thread, so the iterates change (126 of
- *   148 groups) and the solves that change go both ways (solved only with
- *   the hold: control10, gpp124-3, gpp124-4, gpp250-3 and hinf5 at 1e-6;
- *   only without it: hinf7, hinf9 and control6 at 1e-6 and ss30 at 1e-4):
- *   within noise.
+ *   1e-4 and 1e-6, 4 threads, KKT-verified) of 148 (problem, eps) groups
+ *   of the suite SDPs that master projects serially (144) or, as controls,
+ *   in parallel (truss4 and hinf15, 4): 127 groups solved against 126, 403
+ *   of 428 runs against 406, in 0.952x / 0.850x of the wall clock (shift
+ *   10 s / 10 ms; the 96 single-block groups 0.924x / 0.855x, the 48
+ *   multi-block ones that stay serial 1.008x / 0.829x). These ran with the
+ *   MKL part alone; with the OpenMP part too, as shipped, single blocks had
+ *   the same bits as with it alone (135 of 135 cases) in 0.94-1.08x its
+ *   time (median times, as above). MKL's threaded syevd rounds differently
+ *   from one thread, so the iterates change (126 of the 148 groups) and the
+ *   solves that change go both ways (solved only with the hold: control10,
+ *   gpp124-3, gpp124-4, gpp250-3 and hinf5 at 1e-6; only without it:
+ *   hinf7, hinf9 and control6 at 1e-6 and ss30 at 1e-4): within noise.
  * - NVPL (its GNU OpenMP layer, Cortex-X925): the time on one thread at 2, 4
  *   and 10 threads (0.97-1.04x of it for n <= 128, complex blocks too). NVPL
  *   runs blocks of n <= 24 on one thread already. For n = 32 to 300 its
@@ -1399,14 +1400,15 @@ typedef struct {
  *   timed). Its syevd takes 1.10x this estimate for n = 3 to 10 (1.11x
  *   NVPL's time) and 1.4-2.7x from n = 20. The 10 pairs that now take
  *   threads are 2-6x faster, also because a serial projection in that build
- *   runs each syevd on MKL's own threads, which is slower than one thread
+ *   ran each syevd on MKL's own threads, which is slower than one thread
  *   (6.4-11.2 us more per call for n <= 24, 1.25-1.88x for n = 32 to 128,
- *   at 2 to 4 threads; PSD_SERIAL_HOLD_N does not change that when
- *   MKL_NUM_THREADS is set); the 30 whose lists only change took 1.02x, as
- *   the unchanged controls. Whole solves (truss4 at 2 to 4 threads, hinf14
- *   and biggs at 2; the same KKT-verified solved count): 0.81x / 0.59x /
- *   0.62x at 2 / 3 / 4 threads. hinf14's iterates differ at 2 threads,
- *   because master's serial syevd ran on MKL's threads.
+ *   at 2 to 4 threads). That was before PSD_SERIAL_HOLD_N, which removes
+ *   this overhead for n <= 384 where SCS sees MKL through the weak
+ *   reference (one MKL thread for those blocks). The 30 pairs whose lists
+ *   only change took 1.02x, as the unchanged controls. Whole solves (truss4
+ *   at 2 to 4 threads, hinf14 and biggs at 2; the same KKT-verified solved
+ *   count): 0.81x / 0.59x / 0.62x at 2 / 3 / 4 threads. hinf14's iterates
+ *   differ at 2 threads, because master's serial syevd ran on MKL's threads.
  * A fit through NVPL and Accelerate together (0.5-0.8x this estimate for
  * n = 3 to 10) took 1.06x over all pairs (NVPL 1.09x, OpenBLAS 1.09x,
  * Accelerate 0.99x). NVPL's 1.4 us for n = 2 took 1.00x: NVPL 0.81x (16 or

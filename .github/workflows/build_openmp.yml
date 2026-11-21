@@ -71,10 +71,14 @@ jobs:
       # projection's hold reaches it, and test_psd_serial_hold compares the
       # held blocks bit for bit with the projection on one thread: without
       # the hold they run on 4 threads and do not match (checked with
-      # Ubuntu 26.04's OpenBLAS 0.3.32). The greps fail the step if the tests
-      # ran another BLAS or did not compare bit for bit. If the package
-      # cannot be installed, or does not have the library where the step
-      # looks for it (its file list), the step warns and passes.
+      # Ubuntu 26.04's OpenBLAS 0.3.32). Only run_tests_direct is built and
+      # run, for that test: the solver suites ran in the steps above. The
+      # ldd grep fails the step if the tests did not link this OpenBLAS (the
+      # bit-for-bit text alone does not show it: the pthreads OpenBLAS of the
+      # steps above prints it too), the last grep if they did not compare bit
+      # for bit. If the package cannot be installed, or does not have the
+      # library where the step looks for it (its file list), the step warns
+      # and passes.
       run: |
         set -o pipefail
         if ! sudo apt-get install -y libopenblas0-openmp; then
@@ -88,10 +92,8 @@ jobs:
         fi
         OB=$(dirname "$lib")
         make purge
-        make USE_OPENMP=1 USE_PARALLEL_PSD=1 BLASLDFLAGS="-L$OB -l:libopenblas.so.0 -Wl,-rpath,$OB" test
+        make USE_OPENMP=1 USE_PARALLEL_PSD=1 BLASLDFLAGS="-L$OB -l:libopenblas.so.0 -Wl,-rpath,$OB" out/run_tests_direct
         ldd out/run_tests_direct | grep "$OB/libopenblas.so.0"
         out/run_tests_direct | tee out/direct.log
-        out/run_tests_indirect
-        out/run_tests_dense
         grep "psd blocks projected by" out/direct.log
         grep -E "psd serial hold: [1-9][0-9]* blocks .*compared bit for bit" out/direct.log

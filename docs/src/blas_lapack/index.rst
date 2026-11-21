@@ -557,14 +557,16 @@ threads cost more than they gain:
 * MKL 2026.1 (statically linked, GNU OpenMP layer, AMD Zen 3: the CPU build of
   the SCS benchmark, which sets :code:`MKL_NUM_THREADS`): blocks of size 128 or
   less took the time on one thread, where MKL's 4 threads took 1.8 to 7 times
-  as long for size 2 to 10. Whole solves of the 148 pairs of problem and
+  as long for size 2 to 10. Whole solves of 148 pairs of problem and
   tolerance among the benchmark's SDPs whose blocks are projected one after
-  another, at 4 threads (measured with the MKL part alone; with the OpenMP
-  part too the projections had the same bits): 127 pairs solved against 126,
-  in 0.95 of the wall clock (shifted geometric mean, shift 10 s; 0.85 at
-  10 ms). MKL's threaded eigensolver rounds differently from one thread, so
-  the iterates change (in 126 of the 148 pairs), and the pairs that changed
-  outcome went both ways (5 solved only with the hold, 4 only without it).
+  another (144 pairs, and 4 projected in parallel as controls, which the
+  hold does not change), at 4 threads (measured with the MKL part alone;
+  with the OpenMP part too the projections had the same bits): 127 pairs
+  solved against 126, in 0.95 of the wall clock (shifted geometric mean,
+  shift 10 s; 0.85 at 10 ms). MKL's threaded eigensolver rounds differently
+  from one thread, so the iterates change (in 126 of the 148 pairs), and the
+  pairs that changed outcome went both ways (5 solved only with the hold, 4
+  only without it).
 
 * NVPL (DGX Spark): real blocks of size 32 to 300 took 0.78 to 0.95 of the
   time at 2 and 4 threads, and real blocks of size 32 to 384 0.48 to 0.87 of
