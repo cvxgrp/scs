@@ -547,21 +547,24 @@ thread count as it was. This reaches a BLAS on the OpenMP runtime of SCS that
 takes its number of threads from the OpenMP thread count, such as NVPL and an
 OpenMP build of OpenBLAS. For MKL, whose own thread count takes precedence
 over the OpenMP one, it also sets MKL's thread-local count to one for the same
-blocks, as the parallel projection does. That goes through a weak reference to
-MKL's symbol, which needs Linux (ELF) and MKL's symbols visible to SCS. Such a
-BLAS, and MKL, then run these blocks on one thread, as inside a parallel
-projection, because on them their threads cost more than they gain:
+blocks, as the parallel projection does, and does so also when the OpenMP
+thread count is one (:code:`OMP_NUM_THREADS=1` with :code:`MKL_NUM_THREADS`
+set). That goes through a weak reference to MKL's symbol, which needs Linux
+(ELF) and MKL's symbols visible to SCS. Such a BLAS, and MKL, then run these
+blocks on one thread, as inside a parallel projection, because on them their
+threads cost more than they gain:
 
 * MKL 2026.1 (statically linked, GNU OpenMP layer, AMD Zen 3: the CPU build of
   the SCS benchmark, which sets :code:`MKL_NUM_THREADS`): blocks of size 128 or
   less took the time on one thread, where MKL's 4 threads took 1.8 to 7 times
   as long for size 2 to 10. Whole solves of the 148 pairs of problem and
   tolerance among the benchmark's SDPs whose blocks are projected one after
-  another, at 4 threads: 127 pairs solved against 126, in 0.95 of the wall
-  clock (shifted geometric mean, shift 10 s; 0.85 at 10 ms). MKL's threaded
-  eigensolver rounds differently from one thread, so the iterates change, and
-  the pairs that changed outcome went both ways (5 solved only with the hold,
-  4 only without it).
+  another, at 4 threads (measured with the MKL part alone; with the OpenMP
+  part too the projections had the same bits): 127 pairs solved against 126,
+  in 0.95 of the wall clock (shifted geometric mean, shift 10 s; 0.85 at
+  10 ms). MKL's threaded eigensolver rounds differently from one thread, so
+  the iterates change (in 126 of the 148 pairs), and the pairs that changed
+  outcome went both ways (5 solved only with the hold, 4 only without it).
 
 * NVPL (DGX Spark): real blocks of size 32 to 300 took 0.78 to 0.95 of the
   time at 2 and 4 threads, and real blocks of size 32 to 384 0.48 to 0.87 of

@@ -417,24 +417,26 @@ static const char *test_psd_parallel_solve(void) {
 }
 
 /* A build with USE_PARALLEL_PSD that projects the blocks one after another
- * sets the OpenMP thread count to one for the blocks of 2 <= n <=
- * PSD_SERIAL_HOLD_N and back after them (cones.c), so that a BLAS on the
- * OpenMP runtime of SCS projects them on one thread. The tests cannot see
- * the threads of the BLAS. They check what the hold must do on every
- * platform: which blocks it holds (psd_nhold), on both sides of the size,
- * that the projection matches the one on one thread, and that the OpenMP
- * thread count is what it was after a projection and after a solve. The
- * held blocks are compared bit for bit with the reference on one thread
+ * sets the OpenMP thread count, and MKL's thread-local count, to one for the
+ * blocks of 2 <= n <= PSD_SERIAL_HOLD_N and back after them (cones.c), so
+ * that a BLAS on the OpenMP runtime of SCS, and MKL, project them on one
+ * thread. The tests cannot see the threads of the BLAS. They check what the
+ * hold must do on every platform: which blocks it holds (psd_nhold), on both
+ * sides of the size, that the projection matches the one on one thread, and
+ * that both counts are what they were after a projection and after a solve.
+ * The held blocks are compared bit for bit with the reference on one thread
  * where the tests can tell the BLAS's rounding from the thread count (an
  * OpenBLAS on ELF). With an OpenMP OpenBLAS, which follows the OpenMP thread
  * count, that comparison is the one check here that sees the hold reach the
  * BLAS: without the hold, the blocks of 384 and less run on 4 threads and
  * round differently (the CI step with an OpenMP OpenBLAS in build_openmp.yml
- * runs it, and it fails there with the hold taken out). No test here sees
- * the thread count go back before a larger block within a projection, only
- * at its end: that block shows it only in the threads of its BLAS. Every
- * other build holds nothing, and its projections must leave the thread
- * count alone too. */
+ * runs it, and it fails there with the hold taken out). For MKL no check
+ * here sees the hold act; the CI step with test/mkl_psd_guard.c in
+ * build_openmp_mkl.yml does, from MKL's own report of its threads. No test
+ * here sees the OpenMP thread count go back before a larger block within a
+ * projection, only at its end: that block shows it only in the threads of
+ * its BLAS (for MKL, that CI step sees it). Every other build holds nothing,
+ * and its projections must leave the thread count alone too. */
 #ifdef _OPENMP
 /* PSD_SERIAL_HOLD_N of cones.c, which the tests cannot see */
 #ifndef PSD_SERIAL_HOLD_N
@@ -483,10 +485,37 @@ static scs_int psd_hold_cone(ScsCone *k, scs_int *s, scs_int ns, scs_int *cs,
   return psd_par_rows(k);
 }
 
-/* MKL's thread-local thread count of the calling thread, which the tests
- * leave at 0 (MKL's global setting); 0 without MKL. Sets it back to 0. A
- * serial projection that sets it to one for the blocks it holds
- * (PSD_SERIAL_HOLD_N) must leave it as it was. */
+/* MKL's thread-local thread count of the calling thread (0: MKL's global
+ * setting, where the tests leave it). A serial projection that sets it to
+ * one for the blocks it holds (PSD_SERIAL_HOLD_N) must leave it as it was:
+ * psd_mkl_local_set gives it a value before a projection and
+ * psd_mkl_local_reset reads it after. Without MKL both do nothing. */
+
+#ifdef PSD_PAR_BUILD
+/* whether the tests can reach MKL's thread-local count */
+static int psd_mkl_local_seen(void) {
+#if PSD_PAR_WEAK_BLAS
+  return MKL_Set_Num_Threads_Local ? 1 : 0;
+#else
+  return 0;
+#endif
+}
+#endif
+
+/* Set the count to nt, and return what psd_mkl_local_reset must then give:
+ * nt with MKL, 0 without */
+static int psd_mkl_local_set(int nt) {
+#if defined(PSD_PAR_WEAK_BLAS) && PSD_PAR_WEAK_BLAS
+  if (MKL_Set_Num_Threads_Local) {
+    MKL_Set_Num_Threads_Local(nt);
+    return nt;
+  }
+#endif
+  (void)nt;
+  return 0;
+}
+
+/* The count, which is then set back to 0; 0 without MKL */
 static int psd_mkl_local_reset(void) {
 #if defined(PSD_PAR_WEAK_BLAS) && PSD_PAR_WEAK_BLAS
   if (MKL_Set_Num_Threads_Local)
@@ -496,14 +525,19 @@ static int psd_mkl_local_reset(void) {
 }
 
 /* Project a random vector onto the dual cone of k on one OpenMP thread (the
- * reference) and with a cone set up on 4, on 4 and on 2 threads: the results
- * must agree (bit for bit if exact) and the thread count must be the same
- * after each projection. With serial, the projection must be serial; nhold
- * is set to the blocks it holds. */
+ * reference) and with a cone set up on 4, on 4, 2 and 1 threads: the results
+ * must agree (bit for bit if exact), and the OpenMP thread count and MKL's
+ * thread-local count must be the same after each projection. MKL's starts
+ * at 0 (its global setting) on 4 and 1 threads and at 3 on 2, so that a
+ * restore to 0 or to the OpenMP thread count shows. On one thread the
+ * projection is serial even if the cone was set up for the parallel loop,
+ * and holds MKL for the same blocks. With serial, the cone must be set up
+ * for a serial projection; nhold is set to the blocks it holds. */
 static const char *psd_hold_check(ScsCone *k, scs_int serial, scs_int exact,
                                   scs_int *nhold) {
-  scs_int m = psd_par_rows(k), i;
-  int nt;
+  static const int nts[] = {4, 2, 1}, mkl_start[] = {0, 3, 0};
+  scs_int m = psd_par_rows(k), i, st;
+  int nt, mkl_want, mkl_got;
   ScsConeWork *c1 = SCS_NULL, *c4 = SCS_NULL;
   const char *fail = SCS_NULL;
   scs_float *v = (scs_float *)scs_calloc(m, sizeof(scs_float));
@@ -526,19 +560,22 @@ static const char *psd_hold_check(ScsCone *k, scs_int serial, scs_int exact,
     fail = "test_psd_serial_hold: cone setup failed";
   } else if (serial && c4->psd_nthreads != 1) {
     fail = "test_psd_serial_hold: the blocks are not projected serially";
-  } else if (c4->psd_nthreads == 1 ? c4->psd_nhold != psd_hold_expected(k)
-                                   : c4->psd_nhold != 0) {
+  } else if (c4->psd_nhold != psd_hold_expected(k)) {
     fail = "test_psd_serial_hold: the wrong blocks are held";
   } else if (psd_par_proj(c1, v, v1, r_y, m, 1)) {
     fail = "test_psd_serial_hold: projection on one thread failed";
   } else {
-    *nhold = c4->psd_nhold;
-    for (nt = 4; nt >= 2 && !fail; nt -= 2) {
-      if (psd_par_proj(c4, v, vh, r_y, m, nt))
+    *nhold = c4->psd_nthreads == 1 ? c4->psd_nhold : 0;
+    for (i = 0; i < 3 && !fail; ++i) {
+      nt = nts[i];
+      mkl_want = psd_mkl_local_set(mkl_start[i]);
+      st = psd_par_proj(c4, v, vh, r_y, m, nt);
+      mkl_got = psd_mkl_local_reset();
+      if (st)
         fail = "test_psd_serial_hold: projection failed";
       else if (omp_get_max_threads() != nt)
         fail = "test_psd_serial_hold: OpenMP thread count not restored";
-      else if (psd_mkl_local_reset() != 0)
+      else if (mkl_got != mkl_want)
         fail = "test_psd_serial_hold: MKL thread-local count not restored";
       else if (!psd_par_same(v1, vh, m, exact))
         fail = "test_psd_serial_hold: projection differs from one thread";
@@ -596,8 +633,8 @@ static const char *test_psd_serial_hold(void) {
     nhold += nh;
   }
   if (!fail) {
-    /* the cone of test_psd_parallel: projected in parallel where the build
-     * has it, and then nothing is held */
+    /* the cone of test_psd_parallel: set up for the parallel loop where the
+     * build has it, and then its blocks are held only on one thread */
     psd_par_cone(&k);
     fail = psd_hold_check(&k, 0, exact, &nh);
   }
@@ -614,7 +651,7 @@ static const char *test_psd_serial_hold(void) {
   scs_printf("psd serial hold: %li blocks of 2 <= n <= %li held, OpenMP "
              "thread count%s restored, compared %s\n",
              (long)nhold, (long)PSD_SERIAL_HOLD_N,
-             st.mkl_nt > 0 ? " and MKL thread-local count" : "",
+             psd_mkl_local_seen() ? " and MKL thread-local count" : "",
              exact ? "bit for bit" : "to rounding error");
 #else
   mu_assert("test_psd_serial_hold: blocks held without USE_PARALLEL_PSD",
@@ -639,6 +676,7 @@ static const char *test_psd_serial_hold_solve(void) {
   ScsSolution *sol1, *sol4, *opt_sol;
   ScsInfo info1 = {0}, info4 = {0};
   scs_int n = 100, col_nnz = 8, nt1 = 0, nt4 = 0;
+  int mkl_want, mkl_got;
   const char *fail;
   PsdParState st;
 
@@ -669,13 +707,23 @@ static const char *test_psd_serial_hold_solve(void) {
   stgs->eps_abs = 1e-5;
   stgs->eps_rel = 1e-5;
 
+  /* MKL's thread-local count starts at 3 for the solve on 4 threads and at 0
+   * (MKL's global setting) for the one on 1 thread */
+  mkl_want = psd_mkl_local_set(3);
   fail = psd_par_solve(d, &k, stgs, opt_sol, sol4, &info4, 4, &nt4);
+  mkl_got = psd_mkl_local_reset();
   if (!fail && omp_get_max_threads() != 4)
     fail = "test_psd_serial_hold_solve: OpenMP thread count not restored";
-  if (!fail && psd_mkl_local_reset() != 0)
+  if (!fail && mkl_got != mkl_want)
     fail = "test_psd_serial_hold_solve: MKL thread-local count not restored";
-  if (!fail)
+  if (!fail) {
     fail = psd_par_solve(d, &k, stgs, opt_sol, sol1, &info1, 1, &nt1);
+    mkl_got = psd_mkl_local_reset();
+  }
+  if (!fail && omp_get_max_threads() != 1)
+    fail = "test_psd_serial_hold_solve: OpenMP thread count not restored";
+  if (!fail && mkl_got != 0)
+    fail = "test_psd_serial_hold_solve: MKL thread-local count not restored";
   if (!fail) {
     if (nt1 != 1 || nt4 != 1)
       fail = "test_psd_serial_hold_solve: the blocks are not projected "

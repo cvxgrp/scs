@@ -1138,17 +1138,20 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
 
 /* Largest block that a serial projection runs with the OpenMP thread count
  * at one. When a USE_PARALLEL_PSD build projects the blocks one after
- * another (psd_num_threads chose one thread), the calling thread sets its
- * OpenMP thread count to one (omp_set_num_threads) for the blocks of
+ * another (psd_num_threads chose one thread, or the OpenMP thread count has
+ * been lowered to one since setup), the calling thread sets its OpenMP
+ * thread count to one (omp_set_num_threads) for the blocks of
  * 2 <= n <= PSD_SERIAL_HOLD_N, and back to what it was for a larger block and
  * at the end of the projection (proj_psd_lists; n = 1 is a clamp, without
- * LAPACK). It sets MKL's thread-local count to one with it, as the parallel
- * projection does (mkl_set_local_threads), because MKL's own count wins over
- * the OpenMP one. A BLAS on the OpenMP runtime of SCS that takes its number
- * of threads from the OpenMP thread count, and MKL, then project these
- * blocks on one thread, as they do inside the parallel projection: for such
- * blocks their threads cost more than they gain. Which blocks are held
- * depends on their sizes only (psd_nhold counts them at setup): no timing.
+ * LAPACK). It sets MKL's thread-local count to one for the same blocks, as
+ * the parallel projection does (mkl_set_local_threads), and back to what it
+ * was after them, because MKL's own count wins over the OpenMP one; it does
+ * so also when the OpenMP thread count is one already. A BLAS on the OpenMP
+ * runtime of SCS that takes its number of threads from the OpenMP thread
+ * count, and MKL, then project these blocks on one thread, as they do inside
+ * the parallel projection: for such blocks their threads cost more than they
+ * gain. Which blocks are held depends on their sizes only (psd_nhold counts
+ * them at setup): no timing.
  * The OpenMP part identifies no BLAS; the MKL part goes through the weak
  * reference of the parallel projection's MKL guard. The parallel projection
  * is unchanged.
@@ -1199,11 +1202,14 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  *   of the suite SDPs that master projects serially: 127 groups solved
  *   against 126, 403 of 428 runs against 406, in 0.952x / 0.850x of the wall
  *   clock (shift 10 s / 10 ms; single-block SDPs 0.924x / 0.855x,
- *   multi-block 1.008x / 0.829x). MKL's threaded syevd rounds differently
- *   from one thread, so the iterates change (142 of 148 groups) and the
- *   solves that change go both ways (solved only with the hold: control10,
- *   gpp124-3, gpp124-4, gpp250-3 and hinf5 at 1e-6; only without it: hinf7,
- *   hinf9 and control6 at 1e-6 and ss30 at 1e-4): within noise.
+ *   multi-block 1.008x / 0.829x). These ran with the MKL part alone; with
+ *   the OpenMP part too, as shipped, single blocks had the same bits as with
+ *   it alone (135 of 135 cases) in 0.95-1.06x its time. MKL's threaded
+ *   syevd rounds differently from one thread, so the iterates change (126 of
+ *   148 groups) and the solves that change go both ways (solved only with
+ *   the hold: control10, gpp124-3, gpp124-4, gpp250-3 and hinf5 at 1e-6;
+ *   only without it: hinf7, hinf9 and control6 at 1e-6 and ss30 at 1e-4):
+ *   within noise.
  * - NVPL (its GNU OpenMP layer, Cortex-X925): the time on one thread at 2, 4
  *   and 10 threads (0.97-1.04x of it for n <= 128, complex blocks too). NVPL
  *   runs blocks of n <= 24 on one thread already. For n = 32 to 300 its
@@ -1320,10 +1326,11 @@ static scs_int blas_calls_share_lock(void) {
 
 /* Set the number of MKL threads for the calling thread and return the previous
  * setting, to restore it with. Does nothing, and returns 0, without MKL.
- * SCS_NO_MKL_PSD_GUARD (a test-only build flag) turns this off, so CI can
- * check that the parallel PSD projection oversubscribes without it; the MKL
- * symbol itself cannot be renamed for that, since the MKL linear solver
- * references it too. */
+ * SCS_NO_MKL_PSD_GUARD (a test-only build flag) turns this off, and with it
+ * both MKL guards: that of the parallel PSD projection and the MKL part of
+ * the serial projection's hold (PSD_SERIAL_HOLD_N). CI uses it to check that
+ * MKL then runs on its own threads in both; the MKL symbol itself cannot be
+ * renamed for that, since the MKL linear solver references it too. */
 static int mkl_set_local_threads(int nt) {
 #if defined(__GNUC__) && defined(__ELF__) && !defined(SCS_NO_MKL_PSD_GUARD)
   if (MKL_Set_Num_Threads_Local) {
@@ -1566,10 +1573,12 @@ static scs_int set_up_psd_schedule(ScsConeWork *c, const ScsCone *k) {
   }
   c->psd_tptr[1] = nblk;
 #ifdef PSD_PARALLEL
-  if (nt > 1)
-    return assign_psd_blocks(c, k);
+  /* also for a parallel split: its projection is serial if the OpenMP thread
+   * count is lowered to one */
   for (b = 0; b < nblk; ++b)
     c->psd_nhold += psd_serial_held(psd_block_n(k, b));
+  if (nt > 1)
+    return assign_psd_blocks(c, k);
 #endif
   return 0;
 }
@@ -3139,18 +3148,19 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* Project the blocks of lists t, t + dt, t + 2 dt, ..., each list with its own
  * workspace: all of them in order for t = 0 and dt = 1, the share of thread t
- * in a team of dt otherwise. x and rho as in proj_psd_cones. omp_nt > 1 (the
- * serial projection only): the OpenMP thread count, set to one for the
- * blocks of 2 <= n <= PSD_SERIAL_HOLD_N and back to omp_nt after them, and
- * MKL's thread-local count with it (mkl_set_local_threads, a no-op without
- * MKL); both are as before on return. Otherwise both are left alone. */
+ * in a team of dt otherwise. x and rho as in proj_psd_cones. omp_nt > 0 (the
+ * serial projection only): the OpenMP thread count. For the blocks of
+ * 2 <= n <= PSD_SERIAL_HOLD_N, MKL's thread-local count is set to one
+ * (mkl_set_local_threads, a no-op without MKL) and the OpenMP thread count
+ * too unless it is one already; both go back to what they were after these
+ * blocks, and are as before on return. omp_nt = 0: both are left alone. */
 static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
                               const scs_float *rho, scs_int t, scs_int dt,
                               int omp_nt) {
   const ScsCone *k = c->k;
   scs_int j, b, st, status = 0;
 #ifdef PSD_PARALLEL
-  scs_int held = 0; /* whether the OpenMP thread count is one now */
+  scs_int held = 0; /* whether the hold is on now */
   int mkl_nt = 0;   /* MKL's thread-local count before the hold */
 #endif
   (void)omp_nt;
@@ -3166,9 +3176,10 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
       sz = &(c->psd_lsz[b]);
 #endif
 #ifdef PSD_PARALLEL
-      if (omp_nt > 1 && psd_serial_held(psd_block_n(k, b)) != held) {
+      if (omp_nt > 0 && psd_serial_held(psd_block_n(k, b)) != held) {
         held = !held;
-        omp_set_num_threads(held ? 1 : omp_nt);
+        if (omp_nt > 1) /* at one already: nothing to set */
+          omp_set_num_threads(held ? 1 : omp_nt);
         if (held)
           mkl_nt = mkl_set_local_threads(1);
         else
@@ -3188,7 +3199,8 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
   }
 #ifdef PSD_PARALLEL
   if (held) {
-    omp_set_num_threads(omp_nt);
+    if (omp_nt > 1)
+      omp_set_num_threads(omp_nt);
     mkl_set_local_threads(mkl_nt);
   }
 #endif
@@ -3227,9 +3239,10 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
   }
   /* No parallel region: the BLAS is free to use its own threads, as in a
    * build without USE_PARALLEL_PSD, except for the psd_nhold blocks of
-   * 2 <= n <= PSD_SERIAL_HOLD_N, which run with the OpenMP thread count at
-   * one, and MKL's thread-local count with it (nothing to do when the OpenMP
-   * thread count is one already). */
+   * 2 <= n <= PSD_SERIAL_HOLD_N, which run with MKL's thread-local count at
+   * one, and the OpenMP thread count with it. That is so also when the OpenMP
+   * thread count is one (MKL's own count wins over it), and when it has been
+   * lowered to one since a setup that chose the parallel loop. */
   return proj_psd_lists(x, c, rho, 0, 1, c->psd_nhold > 0 ? omp_nt : 0);
 #else
   return proj_psd_lists(x, c, rho, 0, 1, 0);

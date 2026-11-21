@@ -73,14 +73,20 @@ jobs:
       # the hold they run on 4 threads and do not match (checked with
       # Ubuntu 26.04's OpenBLAS 0.3.32). The greps fail the step if the tests
       # ran another BLAS or did not compare bit for bit. If the package
-      # cannot be installed, the step warns and passes.
+      # cannot be installed, or does not have the library where the step
+      # looks for it (its file list), the step warns and passes.
       run: |
         set -o pipefail
         if ! sudo apt-get install -y libopenblas0-openmp; then
           echo "::warning::libopenblas0-openmp did not install: the OpenMP OpenBLAS check did not run"
           exit 0
         fi
-        OB=/usr/lib/x86_64-linux-gnu/openblas-openmp
+        lib=$(dpkg -L libopenblas0-openmp | grep '/openblas-openmp/libopenblas\.so\.0$' | head -n 1 || true)
+        if [[ -z "$lib" || ! -e "$lib" ]]; then
+          echo "::warning::libopenblas0-openmp has no openblas-openmp/libopenblas.so.0: the OpenMP OpenBLAS check did not run"
+          exit 0
+        fi
+        OB=$(dirname "$lib")
         make purge
         make USE_OPENMP=1 USE_PARALLEL_PSD=1 BLASLDFLAGS="-L$OB -l:libopenblas.so.0 -Wl,-rpath,$OB" test
         ldd out/run_tests_direct | grep "$OB/libopenblas.so.0"

@@ -10,19 +10,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Checks, with a real MKL, the guard of the parallel PSD projection: each of
- * its threads sets MKL's thread-local thread count to one
- * (MKL_Set_Num_Threads_Local, in src/cones.c), so that MKL starts no threads
- * of its own in the threads of SCS. Built and run only by
- * .github/workflows/build_openmp_mkl.yml, which has the checks.
+/* Checks, with a real MKL, the two places where SCS sets MKL's thread-local
+ * thread count to one (MKL_Set_Num_Threads_Local, in src/cones.c):
+ *   - the guard of the parallel PSD projection: each of its threads does, so
+ *     that MKL starts no threads of its own in the threads of SCS;
+ *   - the hold of the serial PSD projection (PSD_SERIAL_HOLD_N): the calling
+ *     thread does for the blocks of size 2 to 384, and sets it back for the
+ *     larger ones and at the end.
+ * Built and run only by .github/workflows/build_openmp_mkl.yml, which has the
+ * checks.
  *
  * This program loads an SCS library the way wrappers do: it links neither
  * SCS, MKL nor an OpenMP runtime, and opens the library given as its argument
- * with a local scope. It solves an SDP with four PSD blocks and prints what
- * the workflow needs: the result, the number of threads of the process, and
- * the OpenMP runtimes and MKL threading layers that are loaded. With
- * MKL_VERBOSE=1 in the environment, MKL itself prints each of its calls with
- * the number of threads that the call was allowed.
+ * with a local scope. It solves an SDP with PSD blocks of the given sizes
+ * (four of size 200 by default, which SCS projects in parallel; a block of
+ * more than 512 that holds most of the work, or a single block, is projected
+ * serially) and prints what the workflow needs: the result, the number of
+ * threads of the process, and the OpenMP runtimes and MKL threading layers
+ * that are loaded. With MKL_VERBOSE=1 in the environment, MKL itself prints
+ * each of its calls with the number of threads that the call was allowed.
  *
  * The OpenMP runtime of MKL depends on what is loaded when MKL starts:
  *   - By default SCS is loaded first, and libgomp with it. MKL then takes its
@@ -34,19 +40,20 @@
  *     binding, as Julia loads libraries, which keeps its regions on libgomp.
  *     MKL cannot see them: this is the case that the guard is for.
  *
- * usage: mkl_psd_guard <SCS shared library> [iterations]
+ * usage: mkl_psd_guard <SCS shared library> [iterations [sizes]]
  * With a number of iterations the run stops there, for the checks that need
- * only a few projections; without, the solve must succeed.
+ * only a few projections; without, the solve must succeed. sizes are the
+ * sizes of the PSD blocks, in order, separated by commas (200,200,200,200 by
+ * default).
  *
  * The problem is: minimize x subject to I - x * M_k >= 0 (PSD) for each block
  * k, with M_k = I - (1 + a_k) v_k v_k' for a unit vector v_k. M_k has the
  * eigenvalues 1 and -a_k, so the constraints are -1 / a_k <= x <= 1. The
- * largest a_k is 1, so the solution is x = -1.
+ * largest a_k is 1 (the first block), so the solution is x = -1.
  */
 
-#define PSD_N 200
-#define PSD_BLOCKS 4
-#define PSD_LEN (PSD_N * (PSD_N + 1) / 2)
+#define PSD_MAX_BLOCKS 8
+#define PSD_MAX_N 2000
 
 typedef ScsWork *(*init_fn)(const ScsData *, const ScsCone *,
                             const ScsSettings *);
@@ -116,17 +123,19 @@ static void print_runtimes(void) {
 }
 
 int main(int argc, char **argv) {
-  scs_int m = PSD_BLOCKS * PSD_LEN, blocks[PSD_BLOCKS];
+  scs_int m = 0, nblocks = 0, blocks[PSD_MAX_BLOCKS], n;
   scs_int i, j, k, idx = 0, status = -1;
   scs_float c[1] = {1.};
   scs_int A_p[2] = {0, 0};
   scs_float *A_x, *b;
   scs_int *A_i;
-  double v[PSD_N], nrm, a, x = 0.;
+  double v[PSD_MAX_N], nrm, a, x = 0.;
   unsigned long seed = 1234;
   int mkl_nt = 0, mkl_now = 0, threads, fail = 0;
   int short_run = argc > 2, flags = RTLD_NOW | RTLD_LOCAL;
   const char *mkl_first = getenv("MKL_PSD_GUARD_MKL_FIRST");
+  const char *sizes = argc > 3 ? argv[3] : "200,200,200,200";
+  char *end;
   ScsMatrix A = {0};
   ScsData d = {0};
   ScsCone cone = {0};
@@ -143,7 +152,24 @@ int main(int argc, char **argv) {
   mkl_get_max_fn mkl_get_max = 0;
 
   if (argc < 2) {
-    fprintf(stderr, "usage: %s <SCS shared library> [iterations]\n", argv[0]);
+    fprintf(stderr, "usage: %s <SCS shared library> [iterations [sizes]]\n",
+            argv[0]);
+    return 1;
+  }
+  while (*sizes) {
+    n = (scs_int)strtol(sizes, &end, 10);
+    if (end == sizes || n < 1 || n > PSD_MAX_N ||
+        nblocks == PSD_MAX_BLOCKS || (*end && *end != ',')) {
+      fprintf(stderr, "sizes: at most %d sizes of 1 to %d, separated by "
+              "commas\n", PSD_MAX_BLOCKS, PSD_MAX_N);
+      return 1;
+    }
+    blocks[nblocks++] = n;
+    m += n * (n + 1) / 2;
+    sizes = *end ? end + 1 : end;
+  }
+  if (nblocks == 0) {
+    fprintf(stderr, "sizes: no block\n");
     return 1;
   }
   setvbuf(stdout, NULL, _IOLBF, 0); /* keep the output if the solve crashes */
@@ -189,20 +215,20 @@ int main(int argc, char **argv) {
   }
   /* column 0 of A is M_k and b is the identity, block after block: the lower
    * triangle by columns, off-diagonal entries scaled by sqrt(2) */
-  for (k = 0; k < PSD_BLOCKS; ++k) {
-    blocks[k] = PSD_N;
+  for (k = 0; k < nblocks; ++k) {
+    n = blocks[k];
     a = 1. - 0.1 * (double)k;
     nrm = 0.;
-    for (i = 0; i < PSD_N; ++i) {
+    for (i = 0; i < n; ++i) {
       v[i] = next_rand(&seed);
       nrm += v[i] * v[i];
     }
     nrm = sqrt(nrm);
-    for (i = 0; i < PSD_N; ++i) {
+    for (i = 0; i < n; ++i) {
       v[i] /= nrm;
     }
-    for (j = 0; j < PSD_N; ++j) {
-      for (i = j; i < PSD_N; ++i) {
+    for (j = 0; j < n; ++j) {
+      for (i = j; i < n; ++i) {
         A_i[idx] = idx;
         if (i == j) {
           A_x[idx] = 1. - (1. + a) * v[i] * v[i];
@@ -226,7 +252,7 @@ int main(int argc, char **argv) {
   d.b = b;
   d.c = c;
   cone.s = blocks;
-  cone.ssize = PSD_BLOCKS;
+  cone.ssize = nblocks;
   defaults(&stgs);
   stgs.verbose = 1; /* the header says whether the projection is parallel */
   if (short_run) {
