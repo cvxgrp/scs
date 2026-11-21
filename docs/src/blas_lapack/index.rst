@@ -242,9 +242,10 @@ NVPL, has no variable of its own, so :code:`OMP_NUM_THREADS` is one budget for
 SCS and the BLAS. Inside a parallel PSD projection the BLAS runs on one thread
 by itself. Where a build with :code:`USE_PARALLEL_PSD` projects the blocks one
 after another (one block that holds most of the work, say), it sets the OpenMP
-thread count to one for the blocks of size 384 or less, so such a BLAS runs on
-one thread there too, and on all the threads only for larger blocks (see
-:ref:`the serial projection <blas_lapack_openmp_serial>`). In a build without
+thread count, and MKL's thread-local count, to one for the blocks of size 384
+or less, so such a BLAS and MKL run on one thread there too, and on all the
+threads only for larger blocks (see :ref:`the serial projection
+<blas_lapack_openmp_serial>`). In a build without
 :code:`USE_PARALLEL_PSD` the BLAS runs on all the threads for every block. We
 measured that case in a build of SCS without OpenMP: on control7 (blocks of
 size 70 and 35), NVPL with :code:`OMP_NUM_THREADS=4` made the projection take
@@ -544,9 +545,23 @@ the OpenMP thread count to one for each block of size :math:`2 \times 2` to
 (:code:`PSD_SERIAL_HOLD_N` in :code:`src/cones.c`). Larger blocks run with the
 thread count as it was. This reaches a BLAS on the OpenMP runtime of SCS that
 takes its number of threads from the OpenMP thread count, such as NVPL and an
-OpenMP build of OpenBLAS. Such a BLAS then runs these blocks on one thread, as
-it does inside a parallel projection, because on them its threads cost more
-than they gain:
+OpenMP build of OpenBLAS. For MKL, whose own thread count takes precedence
+over the OpenMP one, it also sets MKL's thread-local count to one for the same
+blocks, as the parallel projection does. That goes through a weak reference to
+MKL's symbol, which needs Linux (ELF) and MKL's symbols visible to SCS. Such a
+BLAS, and MKL, then run these blocks on one thread, as inside a parallel
+projection, because on them their threads cost more than they gain:
+
+* MKL 2026.1 (statically linked, GNU OpenMP layer, AMD Zen 3: the CPU build of
+  the SCS benchmark, which sets :code:`MKL_NUM_THREADS`): blocks of size 128 or
+  less took the time on one thread, where MKL's 4 threads took 1.8 to 7 times
+  as long for size 2 to 10. Whole solves of the 148 pairs of problem and
+  tolerance among the benchmark's SDPs whose blocks are projected one after
+  another, at 4 threads: 127 pairs solved against 126, in 0.95 of the wall
+  clock (shifted geometric mean, shift 10 s; 0.85 at 10 ms). MKL's threaded
+  eigensolver rounds differently from one thread, so the iterates change, and
+  the pairs that changed outcome went both ways (5 solved only with the hold,
+  4 only without it).
 
 * NVPL (DGX Spark): real blocks of size 32 to 300 took 0.78 to 0.95 of the
   time at 2 and 4 threads, and real blocks of size 32 to 384 0.48 to 0.87 of
@@ -569,11 +584,13 @@ neither the results nor the time:
 * an OpenMP build of OpenBLAS from version 0.3.34 on, once the program has
   called :code:`openblas_set_num_threads`: it then keeps that count (from its
   source; not measured);
-* MKL with :code:`MKL_NUM_THREADS` set, which takes precedence over the OpenMP
-  thread count. MKL's threads are slow on small blocks (see the MKL row of
-  the table in :ref:`blas_lapack_threads`). If your problem's blocks are small
-  and projected one after another, :code:`MKL_NUM_THREADS=1` puts MKL on one
-  thread, but for the whole process, MKL Pardiso included;
+* MKL where SCS cannot see it through the weak reference (macOS, Windows, or
+  an MKL loaded privately by another library, as Julia's libblastrampoline
+  does): its own thread count takes precedence over the OpenMP one. MKL's
+  threads are slow on small blocks (see the MKL row of the table in
+  :ref:`blas_lapack_threads`). If your problem's blocks are small and
+  projected one after another, :code:`MKL_NUM_THREADS=1` puts such an MKL on
+  one thread, but for the whole process, MKL Pardiso included;
 * a sequential BLAS, and builds of SCS without OpenMP (the Python wheels).
 
 We did not measure MKL without :code:`MKL_NUM_THREADS`, MKL on Intel's OpenMP

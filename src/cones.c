@@ -942,9 +942,9 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  *   the option does, and what a build with it does when it keeps a
  *   projection serial (psd_num_threads): there is no parallel region then,
  *   and the BLAS is as free to use its threads as it is without OpenMP,
- *   except that a build with the option sets the OpenMP thread count to one
- *   for the blocks of n <= PSD_SERIAL_HOLD_N, whose BLAS threads cost more
- *   than they gain;
+ *   except that a build with the option sets the OpenMP thread count, and
+ *   MKL's thread-local count, to one for the blocks of
+ *   n <= PSD_SERIAL_HOLD_N, whose BLAS threads cost more than they gain;
  * - by SCS, across the blocks, with the BLAS on one thread inside each.
  * Across the blocks is the faster way when there are several of them: on 4
  * threads, 4 to 16 blocks of n = 256 to 1024 were projected 3 times faster,
@@ -1142,16 +1142,22 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * OpenMP thread count to one (omp_set_num_threads) for the blocks of
  * 2 <= n <= PSD_SERIAL_HOLD_N, and back to what it was for a larger block and
  * at the end of the projection (proj_psd_lists; n = 1 is a clamp, without
- * LAPACK). A BLAS on the OpenMP runtime of SCS that takes its number of
- * threads from the OpenMP thread count then projects these blocks on one
- * thread, as it does inside the parallel projection: for such blocks its
- * threads cost more than they gain. Which blocks are held depends on their
- * sizes only (psd_nhold counts them at setup): no timing, and no
- * identification of the BLAS. The parallel projection is unchanged.
+ * LAPACK). It sets MKL's thread-local count to one with it, as the parallel
+ * projection does (mkl_set_local_threads), because MKL's own count wins over
+ * the OpenMP one. A BLAS on the OpenMP runtime of SCS that takes its number
+ * of threads from the OpenMP thread count, and MKL, then project these
+ * blocks on one thread, as they do inside the parallel projection: for such
+ * blocks their threads cost more than they gain. Which blocks are held
+ * depends on their sizes only (psd_nhold counts them at setup): no timing.
+ * The OpenMP part identifies no BLAS; the MKL part goes through the weak
+ * reference of the parallel projection's MKL guard. The parallel projection
+ * is unchanged.
  *
  * Where it does not work. The OpenMP thread count reaches only a BLAS that
- * runs on the OpenMP runtime of SCS and takes its number of threads from it.
- * Everywhere else the hold fails open: the BLAS keeps its threads, and the
+ * runs on the OpenMP runtime of SCS and takes its number of threads from it,
+ * and MKL's thread-local count only an MKL that SCS sees through the weak
+ * reference (ELF, with MKL's symbols visible to SCS). Everywhere else the
+ * hold fails open: the BLAS keeps its threads, and the
  * projection is the one without the hold, in bits and in time (within 2% on
  * the multi-block structures measured):
  * - a pthreads OpenBLAS, with a thread pool of its own (the default on
@@ -1159,11 +1165,13 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  *   libblastrampoline): measured on Linux (Cortex-X925, SciPy's 0.3.31);
  * - Accelerate, and an OpenMP BLAS on another runtime than that of SCS (gcc
  *   with Homebrew's OpenBLAS on libomp): measured on macOS;
- * - MKL with a thread count of its own, which wins over the OpenMP one:
- *   MKL_NUM_THREADS, as the benchmark of SCS sets it (MKL 2026.1 on its GNU
- *   OpenMP layer, Zen 3: the bits without the hold for single blocks of
- *   every size and thread count measured, 135 of 135). There the hold
- *   changes nothing; MKL_NUM_THREADS=1 holds MKL, for the whole process;
+ * - an MKL that SCS cannot see through the weak reference: on macOS and
+ *   Windows, and an MKL loaded privately by another library (Julia's
+ *   libblastrampoline). Its own count (MKL_NUM_THREADS) wins over the OpenMP
+ *   one: with the OpenMP part alone the bits were those without the hold
+ *   (MKL 2026.1 on its GNU OpenMP layer, Zen 3: single blocks of every size
+ *   and thread count measured, 135 of 135). MKL_NUM_THREADS=1 holds such an
+ *   MKL, for the whole process;
  * - MKL's sequential layer, and builds of SCS without OpenMP (scs-python's
  *   wheels, Julia's SCS_jll): nothing to hold.
  * Not measured: MKL without MKL_NUM_THREADS, MKL on Intel's OpenMP runtime,
@@ -1183,6 +1191,19 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * warning on every call.
  *
  * Where it works (time of a real block with the hold over without it):
+ * - MKL 2026.1 (static, GNU OpenMP layer, Zen 3: the CPU build of the
+ *   benchmark of SCS, with MKL_NUM_THREADS set), through its thread-local
+ *   count: the time on one thread for n <= 128 (0.95-1.07x of it), where
+ *   MKL's 4 threads took 1.8-7x that for n = 2 to 10. Whole solves (eps
+ *   1e-4 and 1e-6, 4 threads, KKT-verified) of the 148 (problem, eps) groups
+ *   of the suite SDPs that master projects serially: 127 groups solved
+ *   against 126, 403 of 428 runs against 406, in 0.952x / 0.850x of the wall
+ *   clock (shift 10 s / 10 ms; single-block SDPs 0.924x / 0.855x,
+ *   multi-block 1.008x / 0.829x). MKL's threaded syevd rounds differently
+ *   from one thread, so the iterates change (142 of 148 groups) and the
+ *   solves that change go both ways (solved only with the hold: control10,
+ *   gpp124-3, gpp124-4, gpp250-3 and hinf5 at 1e-6; only without it: hinf7,
+ *   hinf9 and control6 at 1e-6 and ss30 at 1e-4): within noise.
  * - NVPL (its GNU OpenMP layer, Cortex-X925): the time on one thread at 2, 4
  *   and 10 threads (0.97-1.04x of it for n <= 128, complex blocks too). NVPL
  *   runs blocks of n <= 24 on one thread already. For n = 32 to 300 its
@@ -1210,14 +1231,14 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * cost of a value, as for PSD_PAR_BLAS_N, over single blocks of n = 2 to 2000
  * and the thread counts above, pooled over NVPL and the two OpenMP builds of
  * OpenBLAS, is 1.023 at 256, 1.009 at 384 and 1.009 at 512 (NVPL alone is best
- * at 384, OpenBLAS on the M4 at 300, on x86-64 at 768). With MKL held by
- * mkl_set_local_threads counted as a fourth library (SCS does not do that on
- * this path), 384 is the best value: 1.010, against 1.015 at 512 and 1.018 at
- * 256. A second cost is not in these times, where every block was held: with
- * LLVM's OpenMP runtime (libomp, as clang links it), setting the count to one
- * also shrinks the calling thread's team, which the next parallel region (SCS's
- * own, or the BLAS's on a larger block) grows again, about 1 us per projection
- * at 4 threads on the M4 (a microbenchmark; GNU's libgomp shows none). */
+ * at 384, OpenBLAS on the M4 at 300, on x86-64 at 768). With MKL, held through
+ * its thread-local count, as a fourth library, 384 is the best value: 1.010,
+ * against 1.015 at 512 and 1.018 at 256. A second cost is not in these
+ * times, where every block was held: with LLVM's OpenMP runtime (libomp, as
+ * clang links it), setting the count to one also shrinks the calling thread's
+ * team, which the next parallel region (SCS's own, or the BLAS's on a larger
+ * block) grows again, about 1 us per projection at 4 threads on the M4 (a
+ * microbenchmark; GNU's libgomp shows none). */
 #ifndef PSD_SERIAL_HOLD_N
 #define PSD_SERIAL_HOLD_N (384)
 #endif
@@ -3120,8 +3141,9 @@ static void proj_power_cone(scs_float *v, scs_float a) {
  * workspace: all of them in order for t = 0 and dt = 1, the share of thread t
  * in a team of dt otherwise. x and rho as in proj_psd_cones. omp_nt > 1 (the
  * serial projection only): the OpenMP thread count, set to one for the
- * blocks of 2 <= n <= PSD_SERIAL_HOLD_N and back to omp_nt after them; it is
- * omp_nt again on return. Otherwise the OpenMP thread count is left alone. */
+ * blocks of 2 <= n <= PSD_SERIAL_HOLD_N and back to omp_nt after them, and
+ * MKL's thread-local count with it (mkl_set_local_threads, a no-op without
+ * MKL); both are as before on return. Otherwise both are left alone. */
 static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
                               const scs_float *rho, scs_int t, scs_int dt,
                               int omp_nt) {
@@ -3129,6 +3151,7 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
   scs_int j, b, st, status = 0;
 #ifdef PSD_PARALLEL
   scs_int held = 0; /* whether the OpenMP thread count is one now */
+  int mkl_nt = 0;   /* MKL's thread-local count before the hold */
 #endif
   (void)omp_nt;
   for (; t < c->psd_nthreads; t += dt) {
@@ -3146,6 +3169,10 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
       if (omp_nt > 1 && psd_serial_held(psd_block_n(k, b)) != held) {
         held = !held;
         omp_set_num_threads(held ? 1 : omp_nt);
+        if (held)
+          mkl_nt = mkl_set_local_threads(1);
+        else
+          mkl_set_local_threads(mkl_nt);
       }
 #endif
       if (b < k->ssize) {
@@ -3160,8 +3187,10 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
     }
   }
 #ifdef PSD_PARALLEL
-  if (held)
+  if (held) {
     omp_set_num_threads(omp_nt);
+    mkl_set_local_threads(mkl_nt);
+  }
 #endif
   return status;
 }
@@ -3199,7 +3228,8 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
   /* No parallel region: the BLAS is free to use its own threads, as in a
    * build without USE_PARALLEL_PSD, except for the psd_nhold blocks of
    * 2 <= n <= PSD_SERIAL_HOLD_N, which run with the OpenMP thread count at
-   * one (nothing to do when it is one already). */
+   * one, and MKL's thread-local count with it (nothing to do when the OpenMP
+   * thread count is one already). */
   return proj_psd_lists(x, c, rho, 0, 1, c->psd_nhold > 0 ? omp_nt : 0);
 #else
   return proj_psd_lists(x, c, rho, 0, 1, 0);
