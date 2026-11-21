@@ -65,19 +65,23 @@ typedef struct {
 /* Save the thread settings in st. Then BLAS on one thread where the library
  * can be told: a threaded BLAS rounds differently in the serial projection,
  * and a pthreads OpenBLAS with more than one thread keeps the projection
- * serial. */
+ * serial. An OpenMP OpenBLAS follows the OpenMP thread count instead. */
 static void psd_par_enter(PsdParState *st) {
   memset(st, 0, sizeof(PsdParState));
   st->omp_nt = omp_get_max_threads();
 #if PSD_PAR_WEAK_BLAS
   if (openblas_set_num_threads && openblas_get_num_threads) {
-    st->ob_nt = openblas_get_num_threads();
-    openblas_set_num_threads(1);
+    /* an OpenMP OpenBLAS (2) follows the OpenMP thread count, which the tests
+     * set, in the BLAS calls outside of the PSD threads. It is not given a
+     * count of its own: from 0.3.34 on it would keep that count and ignore
+     * the OpenMP one, and test_psd_serial_hold could not see the hold. */
+    scs_int omp_ob = openblas_get_parallel && openblas_get_parallel() == 2;
+    if (!omp_ob) {
+      st->ob_nt = openblas_get_num_threads();
+      openblas_set_num_threads(1);
+    }
     st->exact = !MKL_Set_Num_Threads;
-    /* an OpenMP OpenBLAS (2) follows the OpenMP thread count in the BLAS calls
-     * outside of the PSD threads */
-    st->exact_solve =
-        st->exact && openblas_get_parallel && openblas_get_parallel() != 2;
+    st->exact_solve = st->exact && openblas_get_parallel && !omp_ob;
   }
   if (MKL_Set_Num_Threads && MKL_Get_Max_Threads) {
     st->mkl_nt = MKL_Get_Max_Threads();
@@ -421,10 +425,15 @@ static const char *test_psd_parallel_solve(void) {
  * thread count is what it was after a projection and after a solve. The
  * held blocks are compared bit for bit with the reference on one thread
  * where the tests can tell the BLAS's rounding from the thread count (an
- * OpenBLAS on ELF): that includes an OpenMP OpenBLAS, which follows the
- * OpenMP thread count and could round a block of 384 on 4 threads
- * differently without the hold. Every other build holds nothing, and its
- * projections must leave the thread count alone too. */
+ * OpenBLAS on ELF). With an OpenMP OpenBLAS, which follows the OpenMP thread
+ * count, that comparison is the one check here that sees the hold reach the
+ * BLAS: without the hold, the blocks of 384 and less run on 4 threads and
+ * round differently (the CI step with an OpenMP OpenBLAS in build_openmp.yml
+ * runs it, and it fails there with the hold taken out). No test here sees
+ * the thread count go back before a larger block within a projection, only
+ * at its end: that block shows it only in the threads of its BLAS. Every
+ * other build holds nothing, and its projections must leave the thread
+ * count alone too. */
 #ifdef _OPENMP
 /* PSD_SERIAL_HOLD_N of cones.c, which the tests cannot see */
 #ifndef PSD_SERIAL_HOLD_N
