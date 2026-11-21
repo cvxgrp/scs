@@ -446,11 +446,15 @@ static const char *test_psd_parallel_solve(void) {
 /* The cones of test_psd_serial_hold, all projected serially: a free block
  * (above the size) first, then held blocks and a 1 x 1 block last, so that
  * the thread count goes back in the loop; a held block at the size itself
- * last, so that it goes back at the end; a held complex block. */
+ * last, so that it goes back at the end; a held complex block; a free block
+ * alone, so that nothing is held and MKL's count must be left alone: a
+ * restore would write its value from before a hold that never happened (0)
+ * over the 3 that psd_hold_check gives it on 2 threads. */
 static scs_int psd_hold_s1[] = {PSD_SERIAL_HOLD_N + 1, 10, 3, 2, 1};
 static scs_int psd_hold_s2[] = {1, PSD_SERIAL_HOLD_N};
 static scs_int psd_hold_s3[] = {3};
 static scs_int psd_hold_cs3[] = {200};
+static scs_int psd_hold_s4[] = {PSD_SERIAL_HOLD_N + 1};
 
 /* Blocks a serial projection of k holds: those of 2 <= n <= PSD_SERIAL_HOLD_N
  * in a build with the parallel projection, none in any other */
@@ -630,6 +634,11 @@ static const char *test_psd_serial_hold(void) {
   if (!fail) {
     psd_hold_cone(&k, psd_hold_s3, 1, psd_hold_cs3, 1);
     fail = psd_hold_check(&k, 1, exact, &nh);
+    nhold += nh;
+  }
+  if (!fail) {
+    psd_hold_cone(&k, psd_hold_s4, 1, SCS_NULL, 0);
+    fail = psd_hold_check(&k, 1, exact_free, &nh);
     nhold += nh;
   }
   if (!fail) {
