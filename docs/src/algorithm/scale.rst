@@ -143,14 +143,14 @@ linear system both hold :math:`t` to :math:`\tau` at least as tightly as an
 equality.
 
 Why :math:`10^4`: in a sweep of the factor from 1 to :math:`10^5` over 492
-benchmark problems with box cones, with every status checked independently,
-the differences in problems solved from 100 to :math:`10^5` were within noise,
-and :math:`10^4` was chosen holistically: it solved a few more on both halves
-of the set, with fewer stops that fail the check and long runs no slower, for
-about 12% more iterations to certify the infeasible problems. Larger factors
-slow that further (70% at :math:`10^5`), because the weight also anchors
-:math:`\tau` in its update (:code:`root_plus`); :code:`BOX_T_RY_FACTOR` in
-:code:`include/glbopts.h` has the data.
+benchmark problems (483 of them with box cones), with every status checked
+independently, the differences in problems solved from 100 to :math:`10^5` were
+within noise, and :math:`10^4` was chosen holistically: it solved a few more on
+both halves of the set, with fewer stops that fail the check and long runs no
+slower, for about 12% more iterations to certify the infeasible problems.
+Larger factors slow that further (70% at :math:`10^5`), because the weight also
+anchors :math:`\tau` in its update (:code:`root_plus`); :code:`BOX_T_RY_FACTOR`
+in :code:`include/glbopts.h` has the data.
 
 This weight needs an exact box projection (see above): with it, a projection
 that stopped short of the true :math:`t` made the solve cycle to its iteration

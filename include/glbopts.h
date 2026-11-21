@@ -281,12 +281,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * SCS 3.3): t drifts from tau and fewer problems solve. Any positive value is
  * a valid metric: it changes the path SCS takes, never the solution.
  *
- * Data. 492 benchmark problems with box cones (Netlib, Kennington,
- * Maros-Meszaros, Netlib infeasible and MIPLIB LP relaxations), each at eps
- * 1e-4 and 1e-6: 984 runs per factor, QDLDL, one thread, every status checked
- * independently against the problem's KKT conditions at 10 x eps. The
- * problems were split into two halves, one to choose and one to confirm,
- * before any run. One run each at the default start:
+ * Data. 492 benchmark problems, 483 of them with box cones (Netlib,
+ * Kennington, Maros-Meszaros, Netlib infeasible and MIPLIB LP relaxations),
+ * each at eps 1e-4 and 1e-6: 984 runs per factor, QDLDL, one thread, every
+ * status checked independently against the problem's KKT conditions at
+ * 10 x eps. The problems were split into two halves, one to choose and one
+ * to confirm, before any run. One run each at the default start:
  *
  *   factor  solved  pen. SGM [95%]        rejected  infeas. it  |t-1| p90
  *        1     922  1.093 [0.968, 1.225]        30         465     1.2e-3
