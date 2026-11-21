@@ -188,6 +188,31 @@ static scs_int psd_par_solve_s[] = {24, 24, 22, 24};
 static scs_int psd_par_solve_cs[] = {12};
 static scs_int psd_par_solve_q[] = {5};
 
+/* How close each solve's objectives, c'x and -b'y, must be to those of the
+ * known solution: SOL_TOL, 1e-4 in double precision and 1e-2 in single.
+ *
+ * Single precision had the double-precision 1e-4, which a correct solve does
+ * not meet. The harness raises the solves' eps 1e-5 to 1e-4
+ * (problem_utils.h), and a solve stops once its gap is within eps_abs +
+ * eps_rel |c'x| = 1.8e-3 here (the optimum is 17.0), so either objective can
+ * be about that far off. Over 101 starting scales (moved by up to 50 ulps)
+ * on the Mac, correct builds were off by up to 1.8e-3 with CG and 9e-4 with
+ * QDLDL and the dense solver, and 23 to 67 of the starts failed 1e-4 in
+ * every build (GCC 16 and clang, FMA contraction fast, on or off), among
+ * them the test's own with CG in GCC 16's default build. The 4-thread and
+ * 1-thread solves were the same bit for bit at every start, and so were
+ * builds without the parallel projection or without OpenMP: the solve is
+ * no less accurate in parallel. Double precision (eps 1e-5) was off by at
+ * most 1.5e-5.
+ *
+ * What it catches: with the blocks of the last thread left unprojected, the
+ * solve still reports solved, with an objective 4.2e-2 to 4.5e-2 off in
+ * either precision (QDLDL, CG and dense), and verify_solution_correct passes,
+ * since its cone distances go through the same projection (with the first
+ * thread's blocks left unprojected it reports unbounded instead). 1e-2 is 4
+ * times below that and 5.7 times above correct single-precision solves. */
+#define PSD_PAR_OBJ_TOL SOL_TOL
+
 /* Solve with nt OpenMP threads; psd_nt is set to the number of PSD threads of
  * the workspace. Returns NULL if the problem is solved and the solution is
  * correct. */
@@ -208,7 +233,9 @@ static const char *psd_par_solve(ScsData *d, ScsCone *k, ScsSettings *stgs,
   scs_printf("psd threads %li, primal error %4e, dual error %4e\n",
              (long)*psd_nt, perr, derr);
   mu_assert("test_psd_parallel_solve: SCS failed to produce SCS_SOLVED",
-            status == SCS_SOLVED && ABS(perr) < 1e-4 && ABS(derr) < 1e-4);
+            status == SCS_SOLVED);
+  mu_assert("test_psd_parallel_solve: objective off the known optimum",
+            ABS(perr) < PSD_PAR_OBJ_TOL && ABS(derr) < PSD_PAR_OBJ_TOL);
   return verify_solution_correct(d, k, stgs, info, sol, status);
 }
 #endif /* PSD_PAR_BUILD */

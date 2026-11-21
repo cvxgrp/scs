@@ -19,6 +19,34 @@
  * Both must produce the same quadratic formula result.
  */
 
+/* How far apart old and new may be in cases 1, 2, 3 and 5, relative to
+ * max(|old|, 1). In exact arithmetic they are the same, so they differ by
+ * rounding only, and where it falls depends on the compiler: GCC 16 at -O3
+ * (arm64) evaluates root_plus_old of case 3 at compile time, each operation
+ * rounded, and root_plus_stable_coeffs at run time, where -ffp-contract=fast
+ * (GCC's default) fuses b * b - 4 * a * c into one FMA. The two differ by one
+ * unit in the last place: 6.0e-8 in single precision.
+ *
+ * Over 20,000 inputs around each case (every entry moved by up to 1e-3), old
+ * and new, with FMA contraction and without, differed by up to 5.6e-16 in
+ * double precision and 3.0e-7 (5 units) in single. Double precision keeps
+ * 1e-12 and 1e-10, at least 4,500 times that. In single precision those are
+ * below one unit (13% to 53% of the inputs failed them), so it allows 1e-4.
+ *
+ * What it catches: a wrong coefficient or root in the fused code moves the
+ * root by 1e-2 or more in at least one case. The smallest of the mutations
+ * tried, c = pp + pmu, gives 1.0e-2 in case 3; the others give 0.3 or more
+ * (pg without its factor 2; pg or eta * tau_scale with the wrong sign; a or
+ * b with a term dropped; a weight r dropped or a wrong vector in a sum; the
+ * loop one entry short; the other root for b <= 0). 1e-4 is 100 times below
+ * that and 330 times above the rounding. Mutations of the b > 0 branch only
+ * show in case 6. */
+#ifdef SFLOAT
+#define ROOT_PLUS_TOL(dbl) (1e-4)
+#else
+#define ROOT_PLUS_TOL(dbl) (dbl)
+#endif
+
 /* Old implementation: separate weighted dot products */
 static scs_float dot_r_ref(const scs_float *x, const scs_float *y,
                            const scs_float *r, scs_int nm) {
@@ -105,7 +133,8 @@ static const char *test_root_plus_equivalence(void) {
     err = ABS(old_val - new_val);
     scs_printf("root_plus case 1: old=%.12e new=%.12e err=%.2e\n",
                old_val, new_val, err);
-    mu_assert("root_plus case 1 mismatch", err < 1e-12 * MAX(ABS(old_val), 1.));
+    mu_assert("root_plus case 1 mismatch",
+              err < ROOT_PLUS_TOL(1e-12) * MAX(ABS(old_val), 1.));
   }
 
   /* Test case 2: larger vector with mixed signs */
@@ -122,7 +151,8 @@ static const char *test_root_plus_equivalence(void) {
     err = ABS(old_val - new_val);
     scs_printf("root_plus case 2: old=%.12e new=%.12e err=%.2e\n",
                old_val, new_val, err);
-    mu_assert("root_plus case 2 mismatch", err < 1e-12 * MAX(ABS(old_val), 1.));
+    mu_assert("root_plus case 2 mismatch",
+              err < ROOT_PLUS_TOL(1e-12) * MAX(ABS(old_val), 1.));
   }
 
   /* Test case 3: large tau_scale dominates */
@@ -139,7 +169,8 @@ static const char *test_root_plus_equivalence(void) {
     err = ABS(old_val - new_val);
     scs_printf("root_plus case 3: old=%.12e new=%.12e err=%.2e\n",
                old_val, new_val, err);
-    mu_assert("root_plus case 3 mismatch", err < 1e-10 * MAX(ABS(old_val), 1.));
+    mu_assert("root_plus case 3 mismatch",
+              err < ROOT_PLUS_TOL(1e-10) * MAX(ABS(old_val), 1.));
   }
 
   /* Test case 4: near-zero discriminant */
@@ -173,7 +204,8 @@ static const char *test_root_plus_equivalence(void) {
     err = ABS(old_val - new_val);
     scs_printf("root_plus case 5: old=%.12e new=%.12e err=%.2e\n",
                old_val, new_val, err);
-    mu_assert("root_plus case 5 mismatch", err < 1e-10 * MAX(ABS(old_val), 1.));
+    mu_assert("root_plus case 5 mismatch",
+              err < ROOT_PLUS_TOL(1e-10) * MAX(ABS(old_val), 1.));
   }
 
   /* Test case 6: cancellation-prone direct formula */
