@@ -90,19 +90,21 @@ heuristically to improve convergence. Basically
 
     \rho_y \approx (1/\mathrm{scale}) I
 
-with two differences. First, an equality row gets a smaller entry,
-:math:`\rho_y = 1 / (1000\ \mathrm{scale})`: every row of the zero cone, and the
-first entry :math:`t` of a box cone with bounds (see :ref:`box_t_weight`).
-Second, with :code:`adaptive_diag_scale` each row :math:`i` has its own
-multiplier :math:`f_i`, which acts like a scale for that row alone:
+with two differences. First, an equality row gets a smaller entry:
+:math:`\rho_y = 1 / (1000\ \mathrm{scale})` for every row of the zero cone,
+and :math:`\rho_y = 1 / (10^4\ \mathrm{scale})` for the first entry :math:`t`
+of a box cone with bounds (see :ref:`box_t_weight`). Second, with
+:code:`adaptive_diag_scale` each row :math:`i` has its own multiplier
+:math:`f_i`, which acts like a scale for that row alone:
 
 .. math::
 
     \rho_{y,i} = \frac{1}{\mathrm{scale}\ f_i}
 
-for most rows, and :math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a
-row of the zero cone and for the box cone's :math:`t` entry. The factor 1000 is
-:code:`ZERO_CONE_RY_FACTOR` (and :code:`BOX_T_RY_FACTOR`, equal to it) in
+for most rows, :math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a
+row of the zero cone and :math:`\rho_{y,i} = 1 / (10^4\ \mathrm{scale}\ f_i)`
+for the box cone's :math:`t` entry. The factors 1000 and :math:`10^4` are
+:code:`ZERO_CONE_RY_FACTOR` and :code:`BOX_T_RY_FACTOR` in
 :code:`include/glbopts.h`. The multipliers start at one, so at the start of a
 solve on a new workspace they change nothing, and they are kept in
 :math:`[10^{-3}, 10^{3}]`. How they are updated is described in
@@ -124,8 +126,9 @@ The box cone is :math:`\{(t, s) \mid t l \leq s \leq t u\}`. Bounds
 :math:`l \leq a^\top x \leq u` are usually posed with :math:`t` fixed to one:
 the row of :math:`A` for :math:`t` is zero and its entry of :math:`b` is one,
 so that row is the equality :math:`s_t = \tau`, although :math:`t` is a cone
-entry. SCS therefore gives the :math:`t` entry the weight of an equality row,
-:math:`\rho_y = 1 / (1000\ \mathrm{scale})`. A box cone of size one is
+entry. SCS therefore gives the :math:`t` entry a small :math:`\rho_y`, as it
+gives an equality row: :math:`\rho_y = 1 / (10^4\ \mathrm{scale})`, ten times
+smaller than a zero-cone row's. A box cone of size one is
 :math:`t \geq 0` alone, with no bounds, and keeps :math:`1 / \mathrm{scale}`
 like a nonnegative row.
 
@@ -134,19 +137,30 @@ primal tolerance, about :math:`\epsilon (1 + \|Ax\|_\infty)`, because SCS's
 primal residual measures :math:`t - 1` against the largest entry of
 :math:`Ax`. Each bound is then met only up to :math:`|t - 1|` times the bound,
 so on problems with large bounds SCS could report solved while a bound was
-violated by more than the tolerance. With the equality weight the box
+violated by more than the tolerance. With the small :math:`\rho_y` the box
 projection, whose metric weighs :math:`t` by :math:`1 / \rho_y`, and the
-linear system both hold :math:`t` to :math:`\tau` about as tightly as an
+linear system both hold :math:`t` to :math:`\tau` at least as tightly as an
 equality.
+
+Why :math:`10^4`: in a sweep of the factor from 1 to :math:`10^5` over 492
+benchmark problems with box cones, with every status checked independently,
+the differences in problems solved from 100 to :math:`10^5` were within noise,
+and :math:`10^4` was chosen holistically: it solved a few more on both halves
+of the set, with fewer stops that fail the check and long runs no slower, for
+about 12% more iterations to certify the infeasible problems. Larger factors
+slow that further (70% at :math:`10^5`), because the weight also anchors
+:math:`\tau` in its update (:code:`root_plus`); :code:`BOX_T_RY_FACTOR` in
+:code:`include/glbopts.h` has the data.
 
 This weight needs an exact box projection (see above): with it, a projection
 that stopped short of the true :math:`t` made the solve cycle to its iteration
 limit.
 
 Tradeoff: any positive weight is a valid metric, so this changes the path SCS
-takes, never the solution. Measured on 30 benchmark problems with box cones,
-16 or 8 starting scales each, with every status checked independently against
-the original problem at 10 times the tolerance:
+takes, never the solution. Measured with the factor at 1000 against no
+weight, on 30 benchmark problems with box cones, 16 or 8 starting scales each,
+with every status checked independently against the original problem at 10
+times the tolerance:
 
 - With the direct solver (QDLDL), 397 of 432 runs met the tolerance against
   272 without the weight (eps :math:`10^{-4}` and :math:`10^{-6}`), the
@@ -167,7 +181,8 @@ the original problem at 10 times the tolerance:
 
 The weight also makes :math:`\tau` smaller at the solution, because the
 :math:`t` entry of :math:`v` is :math:`y_t + s_t / \rho_y` with
-:math:`s_t = \tau b_t` (on hs21_tiny_qp, 0.019 against 0.34). In double
+:math:`s_t = \tau b_t` (on hs21_tiny_qp, 0.0019 with the factor at
+:math:`10^4`, 0.019 at 1000 and 0.34 without the weight). In double
 precision this is harmless; in single precision fixed absolute floors on the
 iterate, such as the CG solver's, cost more accuracy. When you warm-start a new
 workspace, also pass the :code:`scale` the previous solve ended at

@@ -398,13 +398,20 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
   for (i = c->k->z; i < c->m; ++i) {
     r_y[i] = 1.0 / scale;
   }
-  /* Box cone t entry: weighted like an equality row (BOX_T_RY_FACTOR in
-   * glbopts.h says why). A smaller rho_y on this entry acts in the two places
+  /* Box cone t entry: rho_y is BOX_T_RY_FACTOR times smaller than a
+   * nonnegative row's (BOX_T_RY_FACTOR in glbopts.h says why, with the data
+   * behind its value). A smaller rho_y on this entry acts in the two places
    * rho_y enters:
    * - The linear system. In the usual form the t row of A is zero, so the
    *   row is decoupled from x: it gives y_t = v_t - tau b_t / rho_y, and adds
    *   b_t^2 / rho_y to the leading coefficient of the quadratic for tau
-   *   (root_plus), as a zero-cone row with b != 0 does.
+   *   (root_plus: g'Rg, since g_t = b_t / rho_y), as a zero-cone row with
+   *   b != 0 does. Against TAU_FACTOR, tau's own weight in that coefficient,
+   *   a large b_t^2 / rho_y puts the root near rho_y v_t / b_t: tau b_t is
+   *   anchored to rho_y v_t, which an iteration moves by O(rho_y). The larger
+   *   the factor, the more slowly tau moves, so certificates of infeasibility
+   *   or unboundedness (tau -> 0) take more iterations; in the limit tau is
+   *   frozen.
    * - The box projection, whose metric weighs t by rho_t = 1 / rho_y
    *   (proj_cone hands proj_box_cone the slice of r_y that starts at this
    *   entry). project_cones hands proj_dual_cone 2 y_t - v_t, which it
@@ -419,8 +426,8 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
    *   S does not dominate, so the box rows are clipped to a t nearer tau b_t.
    * Everything else reads the entry from diag_r: the linear system,
    * root_plus, the remap of v at a scale update and warm starts. With
-   * adaptive_diag_scale the row's own multiplier divides it, as it divides a
-   * zero-cone row's. So this is the one place it is set.
+   * adaptive_diag_scale the row's own multiplier divides it, as it divides
+   * every row's. So this is the one place it is set.
    * A box cone of size 1 is t >= 0 alone, with no bounds for t to scale: a
    * nonnegative entry, which keeps 1 / scale. */
   if (c->k->bsize > 1) {
@@ -2183,10 +2190,10 @@ static void normalize_box_cone(ScsCone *k, scs_float *D, scs_int bsize) {
  * about 1e-20 from a warm start near 0 where t* was 0.002 to 0.3: on 12 of
  * 2,931 calls with the 3.3 weights, from which ADMM recovered, and on 75,000
  * of 100,154 with the box t entry weighted like an equality row
- * (BOX_T_RY_FACTOR), where each such t was the next call's warm start and
- * ADMM cycled to its iteration limit. An inexact projection can stall ADMM
- * like that, so the methods below have no tolerance to meet: they stop only
- * on a sign change of g across an interval with no kink in it.
+ * (BOX_T_RY_FACTOR = 1000 then), where each such t was the next call's
+ * warm start and ADMM cycled to its iteration limit. An inexact projection
+ * can stall ADMM like that, so the methods below have no tolerance to meet:
+ * they stop only on a sign change of g across an interval with no kink in it.
  *
  *   box_t_sort (A1): collect and sort the kinks, walk the pieces. O(m log m)
  *     per call (m = bsize - 1), no state carried between calls.
