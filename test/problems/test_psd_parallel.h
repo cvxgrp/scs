@@ -53,13 +53,6 @@ int MKL_Get_Max_Threads(void) __attribute__((weak));
 #define PSD_PAR_WEAK_BLAS (0) /* e.g. Accelerate: VECLIB_MAXIMUM_THREADS=1 */
 #endif
 
-/* largest difference between two projections that is rounding error */
-#ifdef SFLOAT
-#define PSD_PAR_TOL (1e-3)
-#else
-#define PSD_PAR_TOL (1e-9)
-#endif
-
 /* the thread settings before a test, and what the test can rely on */
 typedef struct {
   int omp_nt;          /* OpenMP threads */
@@ -120,6 +113,16 @@ static scs_int psd_par_unavailable(void) {
 #endif
 }
 
+#endif /* PSD_PAR_BUILD */
+
+#ifdef _OPENMP
+/* largest difference between two projections that is rounding error */
+#ifdef SFLOAT
+#define PSD_PAR_TOL (1e-3)
+#else
+#define PSD_PAR_TOL (1e-9)
+#endif
+
 /* whether a and b agree: bit for bit if exact, else to rounding error */
 static scs_int psd_par_same(const scs_float *a, const scs_float *b, scs_int m,
                             scs_int exact) {
@@ -136,9 +139,7 @@ static scs_int psd_par_proj(ScsConeWork *c, const scs_float *v, scs_float *out,
   omp_set_num_threads(nt);
   return SCS(proj_dual_cone)(out, c, SCS_NULL, r_y);
 }
-#endif /* PSD_PAR_BUILD */
 
-#ifdef _OPENMP
 /* 40 real blocks (four above LAPACK's blocking crossover, ~32, of different
  * sizes) and 4 complex ones: the workspaces are sized per thread, and if the
  * LAPACK calls were passed the lengths of their thread's work arrays instead
@@ -224,7 +225,7 @@ static const char *psd_par_solve(ScsData *d, ScsCone *k, ScsSettings *stgs,
   scs_float perr, derr;
   omp_set_num_threads(nt);
   w = scs_init(d, k, stgs);
-  mu_assert("test_psd_parallel_solve: scs_init failed", w);
+  mu_assert("psd_par_solve: scs_init failed", w);
   *psd_nt = w->cone_work->psd_nthreads;
   status = scs_solve(w, sol, info, 0);
   scs_finish(w);
@@ -232,9 +233,9 @@ static const char *psd_par_solve(ScsData *d, ScsCone *k, ScsSettings *stgs,
   derr = -SCS(dot)(d->b, sol->y, d->m) + SCS(dot)(d->b, opt_sol->y, d->m);
   scs_printf("psd threads %li, primal error %4e, dual error %4e\n",
              (long)*psd_nt, perr, derr);
-  mu_assert("test_psd_parallel_solve: SCS failed to produce SCS_SOLVED",
+  mu_assert("psd_par_solve: SCS failed to produce SCS_SOLVED",
             status == SCS_SOLVED);
-  mu_assert("test_psd_parallel_solve: objective off the known optimum",
+  mu_assert("psd_par_solve: objective off the known optimum",
             ABS(perr) < PSD_PAR_OBJ_TOL && ABS(derr) < PSD_PAR_OBJ_TOL);
   return verify_solution_correct(d, k, stgs, info, sol, status);
 }
@@ -398,6 +399,267 @@ static const char *test_psd_parallel_solve(void) {
               !psd_par_same(sol1->y, sol4->y, d->m, 1) ||
               !psd_par_same(sol1->s, sol4->s, d->m, 1)))
       fail = "test_psd_parallel_solve: iterates depend on the thread count";
+  }
+
+  SCS(free_data)(d);
+  SCS(free_sol)(sol1);
+  SCS(free_sol)(sol4);
+  SCS(free_sol)(opt_sol);
+  scs_free(stgs);
+  psd_par_leave(&st);
+  return fail;
+#endif
+}
+
+/* A build with USE_PARALLEL_PSD that projects the blocks one after another
+ * sets the OpenMP thread count to one for the blocks of 2 <= n <=
+ * PSD_SERIAL_HOLD_N and back after them (cones.c), so that a BLAS on the
+ * OpenMP runtime of SCS projects them on one thread. The tests cannot see
+ * the threads of the BLAS. They check what the hold must do on every
+ * platform: which blocks it holds (psd_nhold), on both sides of the size,
+ * that the projection matches the one on one thread, and that the OpenMP
+ * thread count is what it was after a projection and after a solve. The
+ * held blocks are compared bit for bit with the reference on one thread
+ * where the tests can tell the BLAS's rounding from the thread count (an
+ * OpenBLAS on ELF): that includes an OpenMP OpenBLAS, which follows the
+ * OpenMP thread count and could round a block of 384 on 4 threads
+ * differently without the hold. Every other build holds nothing, and its
+ * projections must leave the thread count alone too. */
+#ifdef _OPENMP
+/* PSD_SERIAL_HOLD_N of cones.c, which the tests cannot see */
+#ifndef PSD_SERIAL_HOLD_N
+#define PSD_SERIAL_HOLD_N (384)
+#endif
+
+/* The cones of test_psd_serial_hold, all projected serially: a free block
+ * (above the size) first, then held blocks and a 1 x 1 block last, so that
+ * the thread count goes back in the loop; a held block at the size itself
+ * last, so that it goes back at the end; a held complex block. */
+static scs_int psd_hold_s1[] = {PSD_SERIAL_HOLD_N + 1, 10, 3, 2, 1};
+static scs_int psd_hold_s2[] = {1, PSD_SERIAL_HOLD_N};
+static scs_int psd_hold_s3[] = {3};
+static scs_int psd_hold_cs3[] = {200};
+
+/* Blocks a serial projection of k holds: those of 2 <= n <= PSD_SERIAL_HOLD_N
+ * in a build with the parallel projection, none in any other */
+static scs_int psd_hold_expected(const ScsCone *k) {
+  scs_int nh = 0;
+#ifdef PSD_PAR_BUILD
+  scs_int i;
+  for (i = 0; i < k->ssize; ++i)
+    nh += k->s[i] >= 2 && k->s[i] <= PSD_SERIAL_HOLD_N;
+  for (i = 0; i < k->cssize; ++i)
+    nh += k->cs[i] >= 2 && k->cs[i] <= PSD_SERIAL_HOLD_N;
+#else
+  (void)k;
+#endif
+  return nh;
+}
+
+/* the PSD blocks s and cs, with the other cones of psd_par_cone around them:
+ * its rows are returned */
+static scs_int psd_hold_cone(ScsCone *k, scs_int *s, scs_int ns, scs_int *cs,
+                             scs_int ncs) {
+  memset(k, 0, sizeof(ScsCone));
+  k->z = 5;
+  k->l = 10;
+  k->qsize = sizeof(psd_par_q) / sizeof(scs_int);
+  k->q = psd_par_q;
+  k->ssize = ns;
+  k->s = s;
+  k->cssize = ncs;
+  k->cs = cs;
+  k->ep = 2;
+  return psd_par_rows(k);
+}
+
+/* Project a random vector onto the dual cone of k on one OpenMP thread (the
+ * reference) and with a cone set up on 4, on 4 and on 2 threads: the results
+ * must agree (bit for bit if exact) and the thread count must be the same
+ * after each projection. With serial, the projection must be serial; nhold
+ * is set to the blocks it holds. */
+static const char *psd_hold_check(ScsCone *k, scs_int serial, scs_int exact,
+                                  scs_int *nhold) {
+  scs_int m = psd_par_rows(k), i;
+  int nt;
+  ScsConeWork *c1 = SCS_NULL, *c4 = SCS_NULL;
+  const char *fail = SCS_NULL;
+  scs_float *v = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *v1 = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *vh = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  scs_float *r_y = (scs_float *)scs_calloc(m, sizeof(scs_float));
+  *nhold = 0;
+  if (v && v1 && vh && r_y) {
+    ran_start(7);
+    for (i = 0; i < m; ++i) {
+      v[i] = rand_scs_float();
+      r_y[i] = 1.5 + rand_scs_float(); /* non-uniform metric */
+    }
+    omp_set_num_threads(1);
+    c1 = SCS(init_cone)(k, m);
+    omp_set_num_threads(4);
+    c4 = SCS(init_cone)(k, m);
+  }
+  if (!c1 || !c4) {
+    fail = "test_psd_serial_hold: cone setup failed";
+  } else if (serial && c4->psd_nthreads != 1) {
+    fail = "test_psd_serial_hold: the blocks are not projected serially";
+  } else if (c4->psd_nthreads == 1 ? c4->psd_nhold != psd_hold_expected(k)
+                                   : c4->psd_nhold != 0) {
+    fail = "test_psd_serial_hold: the wrong blocks are held";
+  } else if (psd_par_proj(c1, v, v1, r_y, m, 1)) {
+    fail = "test_psd_serial_hold: projection on one thread failed";
+  } else {
+    *nhold = c4->psd_nhold;
+    for (nt = 4; nt >= 2 && !fail; nt -= 2) {
+      if (psd_par_proj(c4, v, vh, r_y, m, nt))
+        fail = "test_psd_serial_hold: projection failed";
+      else if (omp_get_max_threads() != nt)
+        fail = "test_psd_serial_hold: OpenMP thread count not restored";
+      else if (!psd_par_same(v1, vh, m, exact))
+        fail = "test_psd_serial_hold: projection differs from one thread";
+    }
+  }
+  SCS(finish_cone)(c1);
+  SCS(finish_cone)(c4);
+  scs_free(v);
+  scs_free(v1);
+  scs_free(vh);
+  scs_free(r_y);
+  return fail;
+}
+#endif /* _OPENMP */
+
+static const char *test_psd_serial_hold(void) {
+#ifndef _OPENMP
+  return mu_skipped; /* no OpenMP thread count to hold */
+#else
+  ScsCone k;
+  scs_int nh, nhold = 0, exact = 0, exact_free = 0;
+  const char *fail;
+#ifdef PSD_PAR_BUILD
+  PsdParState st;
+  psd_par_enter(&st);
+  if (psd_par_unavailable()) {
+    psd_par_leave(&st);
+    return mu_skipped;
+  }
+  /* the held blocks run on one thread, as the reference does; the free one
+   * follows the OpenMP thread count in an OpenMP OpenBLAS */
+  exact = st.exact;
+  exact_free = st.exact_solve;
+#else
+  int omp_nt = omp_get_max_threads();
+  omp_set_num_threads(4);
+  if (omp_get_max_threads() < 2) {
+    omp_set_num_threads(omp_nt);
+    scs_printf("skipping: OpenMP is limited to one thread\n");
+    return mu_skipped;
+  }
+#endif
+
+  psd_hold_cone(&k, psd_hold_s1, 5, SCS_NULL, 0);
+  fail = psd_hold_check(&k, 1, exact_free, &nh);
+  nhold += nh;
+  if (!fail) {
+    psd_hold_cone(&k, psd_hold_s2, 2, SCS_NULL, 0);
+    fail = psd_hold_check(&k, 1, exact, &nh);
+    nhold += nh;
+  }
+  if (!fail) {
+    psd_hold_cone(&k, psd_hold_s3, 1, psd_hold_cs3, 1);
+    fail = psd_hold_check(&k, 1, exact, &nh);
+    nhold += nh;
+  }
+  if (!fail) {
+    /* the cone of test_psd_parallel: projected in parallel where the build
+     * has it, and then nothing is held */
+    psd_par_cone(&k);
+    fail = psd_hold_check(&k, 0, exact, &nh);
+  }
+
+#ifdef PSD_PAR_BUILD
+  psd_par_leave(&st);
+#else
+  omp_set_num_threads(omp_nt);
+#endif
+  if (fail)
+    return fail;
+#ifdef PSD_PAR_BUILD
+  mu_assert("test_psd_serial_hold: no block held", nhold > 0);
+  scs_printf("psd serial hold: %li blocks of 2 <= n <= %li held, OpenMP "
+             "thread count restored, compared %s\n",
+             (long)nhold, (long)PSD_SERIAL_HOLD_N,
+             exact ? "bit for bit" : "to rounding error");
+#else
+  mu_assert("test_psd_serial_hold: blocks held without USE_PARALLEL_PSD",
+            nhold == 0);
+  scs_printf("psd serial hold: none, no USE_PARALLEL_PSD\n");
+#endif
+  return 0;
+#endif
+}
+
+/* A solve whose blocks are projected serially, some of them held, on 4 and
+ * on 1 OpenMP threads: both must solve it, to the same iterates where the
+ * BLAS allows the comparison, and leave the OpenMP thread count as it was. */
+static const char *test_psd_serial_hold_solve(void) {
+#ifndef PSD_PAR_BUILD
+  return mu_skipped; /* nothing is held in this build */
+#else
+  static scs_int s[] = {30, 3, 2};
+  ScsCone k = {0};
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol1, *sol4, *opt_sol;
+  ScsInfo info1 = {0}, info4 = {0};
+  scs_int n = 100, col_nnz = 8, nt1 = 0, nt4 = 0;
+  const char *fail;
+  PsdParState st;
+
+  psd_par_enter(&st);
+  if (psd_par_unavailable()) {
+    psd_par_leave(&st);
+    return mu_skipped;
+  }
+
+  k.z = 4;
+  k.l = 6;
+  k.qsize = sizeof(psd_par_solve_q) / sizeof(scs_int);
+  k.q = psd_par_solve_q;
+  k.ssize = sizeof(s) / sizeof(scs_int);
+  k.s = s;
+  k.ep = 2;
+
+  d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  sol1 = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  sol4 = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  d->m = psd_par_rows(&k);
+  d->n = n;
+  omp_set_num_threads(1);
+  gen_random_prob_data(n * col_nnz, col_nnz, d, &k, opt_sol, 4321);
+  scs_set_default_settings(stgs);
+  stgs->eps_abs = 1e-5;
+  stgs->eps_rel = 1e-5;
+
+  fail = psd_par_solve(d, &k, stgs, opt_sol, sol4, &info4, 4, &nt4);
+  if (!fail && omp_get_max_threads() != 4)
+    fail = "test_psd_serial_hold_solve: OpenMP thread count not restored";
+  if (!fail)
+    fail = psd_par_solve(d, &k, stgs, opt_sol, sol1, &info1, 1, &nt1);
+  if (!fail) {
+    if (nt1 != 1 || nt4 != 1)
+      fail = "test_psd_serial_hold_solve: the blocks are not projected "
+             "serially";
+    else if (st.exact_solve &&
+             (info1.iter != info4.iter ||
+              !psd_par_same(sol1->x, sol4->x, d->n, 1) ||
+              !psd_par_same(sol1->y, sol4->y, d->m, 1) ||
+              !psd_par_same(sol1->s, sol4->s, d->m, 1)))
+      fail = "test_psd_serial_hold_solve: iterates depend on the thread "
+             "count";
   }
 
   SCS(free_data)(d);

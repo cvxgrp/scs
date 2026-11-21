@@ -46,11 +46,13 @@ jobs:
         make USE_OPENMP=1 mkl
         out/run_tests_mkl | tee out/mkl_serial.log
         grep "psd blocks projected serially" out/mkl_serial.log
+        grep "psd serial hold: none" out/mkl_serial.log
         cp out/libscsmkl.a out/libscsmkl_serial.a
         make clean
         make USE_OPENMP=1 USE_PARALLEL_PSD=1 mkl
         out/run_tests_mkl | tee out/mkl_parallel.log
         grep "psd blocks projected by" out/mkl_parallel.log
+        grep -E "psd serial hold: [1-9][0-9]* blocks" out/mkl_parallel.log
 
     - name: Build SCS as wrappers load it, with and without the MKL guard
       # Shared libraries with libgomp and without libiomp5, as the Julia package

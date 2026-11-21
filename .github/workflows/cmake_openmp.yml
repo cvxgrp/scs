@@ -28,8 +28,9 @@ jobs:
           gcc -I$INSTALL_DIR/include/scs -L$INSTALL_DIR/lib/ qp.c -o qp.out -lscsdir
           ./qp.out
       - name: The same with the parallel PSD projection
-        # The grep fails the step if the PSD thread tests did not run the
-        # parallel projection.
+        # The greps fail the step if the PSD thread tests did not run the
+        # parallel projection, or the serial projection without holding its
+        # small blocks to one thread.
         run: |
           mkdir build_psd
           cd build_psd
@@ -37,6 +38,7 @@ jobs:
           make
           ctest -V > ctest.log 2>&1 || { cat ctest.log; exit 1; }
           grep "psd blocks projected by" ctest.log
+          grep -E "psd serial hold: [1-9][0-9]* blocks" ctest.log
       - name: OpenMP that CMake does not find
         # CMAKE_DISABLE_FIND_PACKAGE_OpenMP makes CMake behave as on a machine
         # without OpenMP. USE_OPENMP alone must then configure a build without

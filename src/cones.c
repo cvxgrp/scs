@@ -941,7 +941,10 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * - by the BLAS, inside one block at a time. This is what a build without
  *   the option does, and what a build with it does when it keeps a
  *   projection serial (psd_num_threads): there is no parallel region then,
- *   and the BLAS is as free to use its threads as it is without OpenMP;
+ *   and the BLAS is as free to use its threads as it is without OpenMP,
+ *   except that a build with the option sets the OpenMP thread count to one
+ *   for the blocks of n <= PSD_SERIAL_HOLD_N, whose BLAS threads cost more
+ *   than they gain;
  * - by SCS, across the blocks, with the BLAS on one thread inside each.
  * Across the blocks is the faster way when there are several of them: on 4
  * threads, 4 to 16 blocks of n = 256 to 1024 were projected 3 times faster,
@@ -1024,8 +1027,8 @@ scs_int SCS(validate_cones)(const ScsData *d, const ScsCone *k) {
  * and to join (PSD_PAR_THREAD_COST), so the region is fastest with fewer
  * threads than there are when the blocks are little work: about
  * sqrt(S / PSD_PAR_THREAD_COST) of them for an estimated serial time S over
- * many blocks. The threads are not used, and the BLAS is left to its own,
- * when
+ * many blocks. The threads are not used, and the BLAS is left to its own
+ * (but for the blocks of n <= PSD_SERIAL_HOLD_N, see there), when
  * - the estimated gain is below PSD_PAR_MIN_GAIN: little work, or one block
  *   with most of it (the parallel loop is no faster than its largest block),
  * - a block larger than PSD_PAR_BLAS_N holds more than half of the work (the
@@ -1073,20 +1076,138 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
 #define PSD_PAR_MIN_GAIN (1.25)
 #endif
 
-/* Largest block for which the threads of the BLAS are not worth more than
- * the loop. With a block of n = 300 or 500 that holds more than half of the
- * work, the loop was 1.6x faster than the serial projection, and the serial
- * projection with a multithreaded BLAS 0.7x to 1.25x (NVPL, OpenBLAS;
- * Accelerate 1.0x at 300). At n = 1000 the two were about equal, and at 2000
- * the BLAS threads were ahead (1.7x to 1.9x against 1.2x to 1.4x). Blocks of
- * n = 1000 to 2000 were 1.3x to 2.1x faster with BLAS threads in #505
- * (OpenBLAS, MKL). All of this was measured with syevr. syevd starts the
- * threads of a multithreaded BLAS at smaller blocks (see EIGENDECOMPOSITION
- * OF THE PSD BLOCKS), which can move the crossover; it has not been measured
- * again. */
+/* Largest block for which the loop over the blocks beats the threads of the
+ * BLAS. When one block larger than this holds more than half of the
+ * estimated work (psd_block_cost), the blocks are projected one after
+ * another and that block gets the BLAS's own threads (the smaller blocks are
+ * held to one thread, PSD_SERIAL_HOLD_N). Otherwise the other rules of
+ * psd_num_threads decide.
+ *
+ * Where it does not work. It is one value for every BLAS, and SCS cannot see
+ * whether the BLAS has threads to give that block. Where it has none, the
+ * serial choice is a loss. With a pthreads OpenBLAS on one thread
+ * (OPENBLAS_NUM_THREADS=1, the setting under which such an OpenBLAS gets the
+ * loop at all), the serial projection took 1.02-1.96x the time of the loop
+ * on the structures below with a block of n = 640 to 2000 (Cortex-X925, 4
+ * threads). With Accelerate, whose syevd gains nothing from its threads at
+ * any size (Apple M4), the serial projection that this rule chooses for a
+ * block of n = 640 to 2000 took 1.03-1.85x the time of the loop (2 and 4
+ * threads; more where the big block holds less of the work).
+ *
+ * The tradeoff, measured with syevd (2026-11-20). The structures have one
+ * block of n = 200 to 2000 (complex: 200 to 1024) that holds more than half
+ * of the work, beside blocks of n = 10 or 50 or 2 or 6 blocks of half its
+ * size. Each was projected by the loop and serially (the BLAS's threads on
+ * the big block, the smaller blocks held to one thread). The cost of a value
+ * is the geometric mean of the time of the path it takes over the time of
+ * the faster path (1: the faster path every time):
+ *
+ *   value                              256   384   512   768  1024  1500  none
+ *   MKL 2026.1 (gnu_thread), Zen 3   1.050 1.017 1.032 1.050 1.080 1.096 1.124
+ *     2, 3 and 4 threads
+ *   NVPL, Cortex-X925, 2, 4, 10 t    1.263 1.185 1.103 1.061 1.047 1.047 1.058
+ *   OpenBLAS 0.3.34 (OpenMP), M4,    1.078 1.031 1.015 1.017 1.035 1.046 1.066
+ *     2 and 4 threads
+ *   Accelerate, M4, 2 and 4 threads  1.244 1.179 1.132 1.082 1.053 1.034 1.016
+ *   all four, equal weights          1.155 1.100 1.069 1.052 1.054 1.056 1.065
+ *
+ * The libraries disagree on the direction. MKL's threads beat the loop from
+ * a dominant block of n = 384 (at 3 and 4 threads; 512 at 2), NVPL's only
+ * from about 1000, and Accelerate's never; this OpenBLAS is best at 512. So
+ * 512, 1.6% above the best pooled value (768) and between the libraries,
+ * stays. Among the SDPs of the benchmark suite only buck3 (blocks of 320 and
+ * 321, which the loop projects) is near it: a value below 321 would make it
+ * serial, which took 1.74-2.0x the cone time per iteration with MKL and NVPL
+ * at 4 threads. A higher value changes no SDP of the suite. (The value dates
+ * from syevr, #505 and #506: the loop was 1.6x faster than the serial
+ * projection with a dominant block of n = 300 or 500, the two were about
+ * equal at 1000, and the BLAS's threads were ahead at 2000.) */
 #ifndef PSD_PAR_BLAS_N
 #define PSD_PAR_BLAS_N (512)
 #endif
+
+/* Largest block that a serial projection runs with the OpenMP thread count
+ * at one. When a USE_PARALLEL_PSD build projects the blocks one after
+ * another (psd_num_threads chose one thread), the calling thread sets its
+ * OpenMP thread count to one (omp_set_num_threads) for the blocks of
+ * 2 <= n <= PSD_SERIAL_HOLD_N, and back to what it was for a larger block and
+ * at the end of the projection (proj_psd_lists; n = 1 is a clamp, without
+ * LAPACK). A BLAS on the OpenMP runtime of SCS that takes its number of
+ * threads from the OpenMP thread count then projects these blocks on one
+ * thread, as it does inside the parallel projection: for such blocks its
+ * threads cost more than they gain. Which blocks are held depends on their
+ * sizes only (psd_nhold counts them at setup): no timing, and no
+ * identification of the BLAS. The parallel projection is unchanged.
+ *
+ * Where it does not work. The OpenMP thread count reaches only a BLAS that
+ * runs on the OpenMP runtime of SCS and takes its number of threads from it.
+ * Everywhere else the hold fails open: the BLAS keeps its threads, and the
+ * projection is the one without the hold, in bits and in time (within 2% on
+ * the multi-block structures measured):
+ * - a pthreads OpenBLAS, with a thread pool of its own (the default on
+ *   Debian and Ubuntu, the SciPy and NumPy wheels, Julia's behind
+ *   libblastrampoline): measured on Linux (Cortex-X925, SciPy's 0.3.31);
+ * - Accelerate, and an OpenMP BLAS on another runtime than that of SCS (gcc
+ *   with Homebrew's OpenBLAS on libomp): measured on macOS;
+ * - MKL with a thread count of its own, which wins over the OpenMP one:
+ *   MKL_NUM_THREADS, as the benchmark of SCS sets it (MKL 2026.1 on its GNU
+ *   OpenMP layer, Zen 3: the bits without the hold for single blocks of
+ *   every size and thread count measured, 135 of 135). There the hold
+ *   changes nothing; MKL_NUM_THREADS=1 holds MKL, for the whole process;
+ * - MKL's sequential layer, and builds of SCS without OpenMP (scs-python's
+ *   wheels, Julia's SCS_jll): nothing to hold.
+ * Not measured: MKL without MKL_NUM_THREADS, MKL on Intel's OpenMP runtime,
+ * BLIS, NVPL with a thread count of its own, and Windows. The OpenMP 2.x
+ * specification (MSVC's /openmp implements 2.0) keeps one thread count for
+ * the whole program, not one per thread, so a parallel region that another
+ * thread of the application starts during a held block could get one
+ * thread. It fails closed nowhere measured: no hang, and every projection
+ * matched the one-thread reference. Two other mechanisms were measured and
+ * not taken: limiting the active levels (omp_set_max_active_levels) hung an
+ * OpenMP OpenBLAS, which then waits for threads it does not get; projecting
+ * the held blocks inside a parallel region of two threads costs that region
+ * on every projection (0.5-0.8 us on Linux with NVPL, 3.3 us on macOS,
+ * 5.5 us with MKL on Zen 3), and a pthreads OpenBLAS was then 1.1-4.9x slower
+ * and printed a warning on every call.
+ *
+ * Where it works (time of a block with the hold over without it):
+ * - NVPL (its GNU OpenMP layer, Cortex-X925): the time on one thread at 2, 4
+ *   and 10 threads (0.97-1.04x of it for n <= 128). NVPL runs blocks of
+ *   n <= 24 on one thread already. For n = 32 to 300 its threads cost: the
+ *   hold took 0.78-0.95x at 2 and 4 threads, and 0.48-0.87x for n = 32 to 384
+ *   at 10 threads.
+ * - An OpenMP OpenBLAS on the runtime of SCS: 0.59-0.92x for n = 32 to 200
+ *   and 0.87-0.98x for n = 256 to 384 at 4 threads, 0.74-0.94x for n = 32 to
+ *   160 at 2 threads (0.3.34, Apple clang and libomp, M4); 0.17-0.82x for
+ *   n = 3 to 512 at 4 threads (0.3.21 from Debian, gcc, Zen 3).
+ * On the SDPs of the benchmark suite whose blocks stay serial (control1-11,
+ * hinf1-12, truss1), the projection took 0.97x / 0.95x / 0.85x with NVPL at
+ * 2 / 4 / 10 threads, and 0.93x / 0.88x with that OpenBLAS on the M4 at
+ * 2 / 4. Whole solves with NVPL (the 70 shorter (problem, eps) groups of the
+ * suite SDPs that are projected serially, eps 1e-4 and 1e-6, 5 repeats,
+ * KKT-verified): the same 345 of 350 runs solved, with bit-identical
+ * iterates, in 0.943x / 0.926x of the wall clock at 4 threads (shifted
+ * geometric mean, shift 10 s / 10 ms) and 0.819x / 0.780x at 10 threads.
+ *
+ * The tradeoff is the size. A held block whose BLAS threads would pay is
+ * slower: n = 512 took 1.20x (NVPL) and 1.10x (OpenBLAS, M4) with the hold at
+ * 4 threads, and n = 200 to 384 1.02-1.12x with that OpenBLAS at 2 threads.
+ * The cost of a value, as for PSD_PAR_BLAS_N, over single blocks of n = 2 to
+ * 2000 and the thread counts above, pooled over NVPL and the two OpenMP
+ * builds of OpenBLAS, is 1.023 at 256, 1.009 at 384 and 1.009 at 512 (NVPL
+ * alone is best at 384, OpenBLAS on the M4 at 300, on x86-64 at 768). With
+ * MKL held by mkl_set_local_threads counted as a fourth library (SCS does not
+ * do that on this path), 384 is the best value: 1.010, against 1.015 at 512
+ * and 1.018 at 256. */
+#ifndef PSD_SERIAL_HOLD_N
+#define PSD_SERIAL_HOLD_N (384)
+#endif
+
+/* Whether a serial projection runs a block of size n with the OpenMP thread
+ * count at one (PSD_SERIAL_HOLD_N) */
+static inline scs_int psd_serial_held(scs_int n) {
+  return n >= 2 && n <= PSD_SERIAL_HOLD_N;
+}
 
 /* An OpenBLAS that was not built with OpenMP takes one mutex in every BLAS
  * call that needs a work buffer (dsymv: one call per column in the reduction
@@ -1103,11 +1224,12 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * these constants do not see: on a DGX Spark (two clusters of Cortex-X925
  * cores), a team of the same size took about 1.47x as long with 10 OpenMP
  * threads on the fast cores of both clusters as with 4 on one cluster
- * (geometric mean over 44 block structures, one ratio per structure and
- * team size); NVPL, without the lock, 1.31x (10 structures). The 4- and
- * 10-thread times come from separate sessions, not from paired runs, and
- * the cause (placement across the clusters, or the pool's idle threads) was
- * not isolated. With the estimate of psd_block_cost, the projection took
+ * (geometric mean of 55 ratios, one per structure and team size, over 44
+ * block structures); NVPL, without the lock, 1.31x (11 ratios over 10
+ * structures). The 4- and 10-thread times come from separate sessions, not
+ * from paired runs, and the cause (placement across the clusters, or the
+ * pool's idle threads) was not isolated. With the estimate of
+ * psd_block_cost, the projection took
  * 0.94x the time of the previous estimate with this OpenBLAS at 2 to 4
  * threads and 1.20x at 10. */
 #ifndef PSD_PAR_LOCK_COST
@@ -1231,12 +1353,13 @@ typedef struct {
  *   NVPL's time) and 1.4-2.7x from n = 20. The 10 pairs that now take
  *   threads are 2-6x faster, also because a serial projection in that build
  *   runs each syevd on MKL's own threads, which is slower than one thread
- *   (6.5-10 us more per call for n <= 24, 1.3-1.8x for n = 32 to 128); the
- *   30 whose lists only change took 1.02x, as the unchanged controls. Whole
- *   solves (truss4 at 2 to 4 threads, hinf14 and biggs at 2; the same
- *   KKT-verified solved count): 0.81x / 0.59x / 0.62x at 2 / 3 / 4
- *   threads. hinf14's iterates differ at 2 threads, because master's serial
- *   syevd ran on MKL's threads.
+ *   (6.4-11.2 us more per call for n <= 24, 1.25-1.88x for n = 32 to 128,
+ *   at 2 to 4 threads; PSD_SERIAL_HOLD_N does not change that when
+ *   MKL_NUM_THREADS is set); the 30 whose lists only change took 1.02x, as
+ *   the unchanged controls. Whole solves (truss4 at 2 to 4 threads, hinf14
+ *   and biggs at 2; the same KKT-verified solved count): 0.81x / 0.59x /
+ *   0.62x at 2 / 3 / 4 threads. hinf14's iterates differ at 2 threads,
+ *   because master's serial syevd ran on MKL's threads.
  * A fit through NVPL and Accelerate together (0.5-0.8x this estimate for
  * n = 3 to 10) took 1.06x over all pairs (NVPL 1.09x, OpenBLAS 1.09x,
  * Accelerate 0.99x). NVPL's 1.4 us for n = 2 took 1.00x: NVPL 0.81x (16 or
@@ -1405,6 +1528,8 @@ static scs_int set_up_psd_schedule(ScsConeWork *c, const ScsCone *k) {
 #ifdef PSD_PARALLEL
   if (nt > 1)
     return assign_psd_blocks(c, k);
+  for (b = 0; b < nblk; ++b)
+    c->psd_nhold += psd_serial_held(psd_block_n(k, b));
 #endif
   return 0;
 }
@@ -2974,11 +3099,19 @@ static void proj_power_cone(scs_float *v, scs_float a) {
 
 /* Project the blocks of lists t, t + dt, t + 2 dt, ..., each list with its own
  * workspace: all of them in order for t = 0 and dt = 1, the share of thread t
- * in a team of dt otherwise. x and rho as in proj_psd_cones. */
+ * in a team of dt otherwise. x and rho as in proj_psd_cones. omp_nt > 1 (the
+ * serial projection only): the OpenMP thread count, set to one for the
+ * blocks of 2 <= n <= PSD_SERIAL_HOLD_N and back to omp_nt after them; it is
+ * omp_nt again on return. Otherwise the OpenMP thread count is left alone. */
 static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
-                              const scs_float *rho, scs_int t, scs_int dt) {
+                              const scs_float *rho, scs_int t, scs_int dt,
+                              int omp_nt) {
   const ScsCone *k = c->k;
   scs_int j, b, st, status = 0;
+#ifdef PSD_PARALLEL
+  scs_int held = 0; /* whether the OpenMP thread count is one now */
+#endif
+  (void)omp_nt;
   for (; t < c->psd_nthreads; t += dt) {
     ScsPsdWork *w = SCS_NULL; /* no workspace without LAPACK */
 #ifdef USE_LAPACK
@@ -2989,6 +3122,12 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
       b = c->psd_blk[j];
 #ifdef USE_LAPACK
       sz = &(c->psd_lsz[b]);
+#endif
+#ifdef PSD_PARALLEL
+      if (omp_nt > 1 && psd_serial_held(psd_block_n(k, b)) != held) {
+        held = !held;
+        omp_set_num_threads(held ? 1 : omp_nt);
+      }
 #endif
       if (b < k->ssize) {
         st = proj_semi_definite_cone(&(x[c->psd_off[b]]), k->s[b], w, sz,
@@ -3001,6 +3140,10 @@ static scs_int proj_psd_lists(scs_float *x, ScsConeWork *c,
         status = st;
     }
   }
+#ifdef PSD_PARALLEL
+  if (held)
+    omp_set_num_threads(omp_nt);
+#endif
   return status;
 }
 
@@ -3011,7 +3154,7 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
 #ifdef PSD_PARALLEL
   /* the threads of the split, or fewer if the OpenMP thread count has been
    * lowered since setup */
-  int nt = omp_get_max_threads();
+  int omp_nt = omp_get_max_threads(), nt = omp_nt;
   if ((scs_int)nt > c->psd_nthreads)
     nt = (int)c->psd_nthreads;
   if (nt > 1) {
@@ -3025,7 +3168,7 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
        * then back to the setting before. */
       int mkl_nt = mkl_set_local_threads(1);
       scs_int st = proj_psd_lists(x, c, rho, omp_get_thread_num(),
-                                  omp_get_num_threads());
+                                  omp_get_num_threads(), 0);
       mkl_set_local_threads(mkl_nt);
       if (st < 0) {
 #pragma omp critical(scs_psd_status)
@@ -3034,10 +3177,14 @@ static scs_int proj_psd_cones(scs_float *x, ScsConeWork *c,
     }
     return status;
   }
+  /* No parallel region: the BLAS is free to use its own threads, as in a
+   * build without USE_PARALLEL_PSD, except for the psd_nhold blocks of
+   * 2 <= n <= PSD_SERIAL_HOLD_N, which run with the OpenMP thread count at
+   * one (nothing to do when it is one already). */
+  return proj_psd_lists(x, c, rho, 0, 1, c->psd_nhold > 0 ? omp_nt : 0);
+#else
+  return proj_psd_lists(x, c, rho, 0, 1, 0);
 #endif
-  /* no parallel region: the BLAS is free to use its own threads, as in a
-   * build without USE_PARALLEL_PSD */
-  return proj_psd_lists(x, c, rho, 0, 1);
 }
 
 /* ================ Main Cone Projection Dispatch ====================== */

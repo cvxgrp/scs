@@ -24,7 +24,8 @@ jobs:
 
     - name: Build SCS with OpenMP and test
       # Without USE_PARALLEL_PSD the PSD blocks are projected one after
-      # another: the PSD thread test checks that and says so.
+      # another, and no block is held to one OpenMP thread: the PSD thread
+      # tests check that and say so.
       run: |
         set -o pipefail
         make USE_OPENMP=1 test
@@ -32,10 +33,12 @@ jobs:
         out/run_tests_indirect
         out/run_tests_dense
         grep "psd blocks projected serially" out/direct.log
+        grep "psd serial hold: none" out/direct.log
 
     - name: Build SCS with the parallel PSD projection and test
-      # The grep fails the step if the PSD thread tests did not run the
-      # parallel projection (a flag that did not reach the compiler, say).
+      # The greps fail the step if the PSD thread tests did not run the
+      # parallel projection (a flag that did not reach the compiler, say), or
+      # the serial projection without holding its small blocks to one thread.
       run: |
         set -o pipefail
         make purge
@@ -44,6 +47,7 @@ jobs:
         out/run_tests_indirect
         out/run_tests_dense
         grep "psd blocks projected by" out/direct.log
+        grep -E "psd serial hold: [1-9][0-9]* blocks" out/direct.log
 
     - name: Parallel PSD projection through the syev / heev fallback, with spectral cones
       # The test-only flag SCS_FORCE_PSD_FALLBACK (see build.yml) with the
@@ -59,4 +63,5 @@ jobs:
         out/run_tests_indirect
         out/run_tests_dense
         grep "psd blocks projected by" out/direct.log
+        grep -E "psd serial hold: [1-9][0-9]* blocks" out/direct.log
         grep -E "^SCS_FORCE_PSD_FALLBACK: [1-9][0-9]* PSD blocks" out/direct.log
