@@ -291,16 +291,17 @@ static inline void *scs_calloc(size_t count, size_t size) {
  *   factor  solved  pen. SGM [95%]        rejected  infeas. it  |t-1| p90
  *        1     922  1.093 [0.968, 1.225]        30         465     1.2e-3
  *       10     930  1.000 [0.895, 1.111]        23         381     2.1e-4
- *      100     938  0.936 [0.848, 1.032]        19         429     6.6e-5
- *     1000     933  1                           17         412     1.1e-5
- *      1e4     940  0.910 [0.827, 0.991]        12         462     4.1e-6
- *      1e5     943  0.874 [0.769, 0.974]        12         698     1.1e-6
+ *      100     938  0.936 [0.848, 1.032]        19         429     7.4e-5
+ *     1000     933  1                           17         412     1.2e-5
+ *      1e4     940  0.910 [0.827, 0.991]        12         462     5.0e-6
+ *      1e5     943  0.874 [0.769, 0.974]        12         698     1.3e-6
  *
  * Then factors 100 to 1e5 ran 8 more starts (the initial scale moved by +-1
- * to +-4 ulps) on the 163 problem / eps pairs where some factor's outcome or
- * time had differed, each pair counted once, as its mean over its 9 starts.
- * These shrink the differences above, as expected for pairs picked because
- * they differed:
+ * to +-4 ulps) on the 163 problem / eps pairs where, at the default start,
+ * 100, 1e4 or 1e5 had differed from 1000 in verified outcome or in total
+ * wall time by more than 2x either way; each pair counts once, as its mean
+ * over its 9 starts. These shrink the differences above, as expected for
+ * pairs picked because they differed:
  *
  *   factor  expected  pen. SGM [95%]        runs >= 1 s  rejected
  *             solved
@@ -319,7 +320,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * - infeas. it: shifted geometric mean (shift 10) of the iterations on the
  *   58 runs of the 29 Netlib infeasible problems; 51 certificates verify at
  *   1000, 1e4 and 1e5 alike.
- * - |t-1| p90: 90th percentile of |t - 1| where SCS stops, at eps 1e-4.
+ * - |t-1| p90: 90th percentile of |t - 1| where SCS stops, at eps 1e-4, by
+ *   nearest rank (the ceil(0.9 n)-th smallest), over the n = 453 to 455 runs
+ *   with a box cone of size 2 or more that return a t (a stop that claims
+ *   infeasibility returns none).
  * - runs >= 1 s: time over factor 1000's on the runs both solve whose
  *   geometric-mean time is 1 s or more.
  *
@@ -359,8 +363,14 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * objective are 40.2 against 38.0 of 99 expected (CG alone: 9.8 against
  * 10.0), within noise.
  *
- * Not measured: the GPU and cuDSS solvers, MKL, and problems outside the
- * benchmark set above. */
+ * Not measured: the GPU and cuDSS solvers, MKL, timings on x86 (every run
+ * above was on 64-bit ARM: Linux for the sweep, macOS and Linux for single
+ * precision), and problems outside the benchmark set above. The sweep and
+ * the ensembles ran on SCS f8d2778d (#548) with only this value changed.
+ * Between it and the change to 1e4 came #549, which refines the solve for g
+ * further (G_TOL_EPS) and so moves g in double precision only at rounding
+ * level, and #550, the parallel PSD cost model; neither touches the box
+ * cone. */
 #define BOX_T_RY_FACTOR (1e4)
 
 /* --- Anderson Acceleration (AA) parameters --- */
