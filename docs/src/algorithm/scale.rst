@@ -92,10 +92,10 @@ heuristically to improve convergence. Basically
 
 with two differences. First, an equality row gets a smaller entry:
 :math:`\rho_y = 1 / (1000\ \mathrm{scale})` for every row of the zero cone,
-and :math:`\rho_y = 1 / (10^4\ \mathrm{scale})` for the first entry :math:`t`
-of a box cone with bounds (see :ref:`box_t_weight`). Second, with
-:code:`adaptive_diag_scale` each row :math:`i` has its own multiplier
-:math:`f_i`, which acts like a scale for that row alone:
+and, in double precision, :math:`\rho_y = 1 / (10^4\ \mathrm{scale})` for the
+first entry :math:`t` of a box cone with bounds (see :ref:`box_t_weight`).
+Second, with :code:`adaptive_diag_scale` each row :math:`i` has its own
+multiplier :math:`f_i`, which acts like a scale for that row alone:
 
 .. math::
 
@@ -105,7 +105,8 @@ for most rows, :math:`\rho_{y,i} = 1 / (1000\ \mathrm{scale}\ f_i)` for a
 row of the zero cone and :math:`\rho_{y,i} = 1 / (10^4\ \mathrm{scale}\ f_i)`
 for the box cone's :math:`t` entry. The factors 1000 and :math:`10^4` are
 :code:`ZERO_CONE_RY_FACTOR` and :code:`BOX_T_RY_FACTOR` in
-:code:`include/glbopts.h`. The multipliers start at one, so at the start of a
+:code:`include/glbopts.h`; in single precision builds both are 1000 (see
+:ref:`box_t_weight`). The multipliers start at one, so at the start of a
 solve on a new workspace they change nothing, and they are kept in
 :math:`[10^{-3}, 10^{3}]`. How they are updated is described in
 :ref:`per_row_refinement`. So as scale increases, :math:`\rho_y` decreases
@@ -182,12 +183,13 @@ times the tolerance:
 
 The weight also makes :math:`\tau` smaller at the solution, because the
 :math:`t` entry of :math:`v` is :math:`y_t + s_t / \rho_y` with
-:math:`s_t = \tau b_t` (on hs21_tiny_qp, 0.0019 with the factor at
-:math:`10^4`, 0.019 at 1000 and 0.34 without the weight). In double
-precision this is harmless; in single precision fixed absolute floors on the
-iterate, such as the CG solver's (:code:`CG_BEST_TOL`, :math:`10^{-6}` there),
-cost more accuracy. So single precision builds (:code:`SFLOAT`) keep the
-factor at 1000:
+:math:`s_t = \tau b_t` (on the first solve of the hs21_tiny_qp test, in
+double precision with acceleration, 0.0019 with the factor at :math:`10^4`,
+0.019 at 1000 and 0.34 without the weight). In double precision this is
+harmless; in single precision fixed absolute floors on the iterate, such as
+the CG solver's (:code:`CG_BEST_TOL`, :math:`10^{-6}` there), cost more
+accuracy. So single precision builds (:code:`SFLOAT`) keep the factor at
+1000:
 
 - With the factor at :math:`10^4`, the last solve of the hs21_tiny_qp test in
   single precision with CG and no acceleration ended with :math:`\tau` at
@@ -201,8 +203,10 @@ factor at 1000:
   settings and no acceleration hs21_tiny_qp stalled at :math:`10^4` on the
   duality gap, from 8 to 17 of 41 starting scales, and from none at 1000.
 - In single precision, :math:`10^4` showed no gain over 1000 beyond noise: on
-  33 benchmark problems with box cones, 38.4 expected solves of 99 at
-  :math:`10^4` against 36.2 at 1000 (5 problems better at 1000, 10 worse).
+  33 benchmark problems with box cones, each solved with QDLDL at eps
+  :math:`10^{-4}` and :math:`10^{-5}` and with CG at :math:`10^{-4}`, 38.4
+  expected solves of these 99 problem and setting pairs at :math:`10^4`
+  against 36.2 at 1000; 5 pairs did better at 1000 and 10 worse.
 
 The cost is that problems with box cones take different paths in single and
 double precision, and the absolute CG floor remains: any other change that

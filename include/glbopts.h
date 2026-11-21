@@ -353,7 +353,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * What it needs. The box projection must be exact (proj_box_cone): with the
  * weight, a projection that stopped short of t* made ADMM cycle. The weight
  * also makes tau smaller at the solution, since the t entry of v is
- * y_t + s_t / rho_y with s_t = tau b_t (hs21_tiny_qp: tau 0.0019 at 1e4,
+ * y_t + s_t / rho_y with s_t = tau b_t (hs21_tiny_qp's first solve, in double
+ * precision with the test's settings and acceleration: tau 0.0019 at 1e4,
  * 0.019 at 1000, 0.34 at factor 1). That is harmless in double precision, but
  * fixed absolute floors on the iterate, such as the CG floor in single
  * precision, count for more (docs/src/algorithm/scale.rst), so single
@@ -391,9 +392,10 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * beyond noise: on 33 benchmark problems with box cones (QDLDL at eps 1e-4
  * and 1e-5, CG at 1e-4, 5 starts each, x86-64-v3 builds) the stops SCS
  * called solved that land within 10 x eps of the optimal objective were 38.4
- * of 99 expected at 1e4 and 36.2 at 1000 (5 problems better at 1000, 10
- * worse; sign test p >= 0.29 for each solver and eps), and 40.2 and 38.0 in
- * an earlier run on ARM. Tradeoff: problems with box cones take different
+ * of 99 expected at 1e4 and 36.2 at 1000 (40.2 and 38.0 in an earlier run on
+ * ARM). Of the 99 problem and setting pairs, 5 did better at 1000 and 10
+ * worse (QDLDL at 1e-4: 2 and 6, at 1e-5: 2 and 3; CG: 1 and 1; sign test
+ * p >= 0.29 for each). Tradeoff: problems with box cones take different
  * paths in single and double precision, and the absolute CG floor remains a
  * weakness: any other change that makes tau smaller in single precision can
  * stall CG again. */
