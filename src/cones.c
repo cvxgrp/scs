@@ -1169,7 +1169,10 @@ static inline scs_int psd_block_n(const ScsCone *k, scs_int b) {
  * - Accelerate, and an OpenMP BLAS on another runtime than that of SCS (gcc
  *   with Homebrew's OpenBLAS on libomp): measured on macOS;
  * - an MKL that SCS cannot see through the weak reference: on macOS and
- *   Windows, and an MKL loaded privately by another library (Julia's
+ *   Windows, a static MKL in which nothing else references
+ *   MKL_Set_Num_Threads_Local (a weak reference does not pull a member out of
+ *   an archive), e.g. without the MKL linear solver (by the linker's rule;
+ *   not measured), and an MKL loaded privately by another library (Julia's
  *   libblastrampoline). Its own count (MKL_NUM_THREADS) wins over the OpenMP
  *   one: with the OpenMP part alone the bits were those without the hold
  *   (MKL 2026.1 on its GNU OpenMP layer, Zen 3: single blocks of every size
