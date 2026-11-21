@@ -128,9 +128,10 @@ the row of :math:`A` for :math:`t` is zero and its entry of :math:`b` is one,
 so that row is the equality :math:`s_t = \tau`, although :math:`t` is a cone
 entry. SCS therefore gives the :math:`t` entry a small :math:`\rho_y`, as it
 gives an equality row: :math:`\rho_y = 1 / (10^4\ \mathrm{scale})`, ten times
-smaller than a zero-cone row's. A box cone of size one is
-:math:`t \geq 0` alone, with no bounds, and keeps :math:`1 / \mathrm{scale}`
-like a nonnegative row.
+smaller than a zero-cone row's (in single precision builds
+:math:`1 / (1000\ \mathrm{scale})`, a zero-cone row's; see below). A box cone
+of size one is :math:`t \geq 0` alone, with no bounds, and keeps
+:math:`1 / \mathrm{scale}` like a nonnegative row.
 
 Why: weighted like an inequality row, :math:`t` can stop off one by up to the
 primal tolerance, about :math:`\epsilon (1 + \|Ax\|_\infty)`, because SCS's
@@ -184,10 +185,33 @@ The weight also makes :math:`\tau` smaller at the solution, because the
 :math:`s_t = \tau b_t` (on hs21_tiny_qp, 0.0019 with the factor at
 :math:`10^4`, 0.019 at 1000 and 0.34 without the weight). In double
 precision this is harmless; in single precision fixed absolute floors on the
-iterate, such as the CG solver's, cost more accuracy. When you warm-start a new
-workspace, also pass the :code:`scale` the previous solve ended at
-(:code:`info.scale`): with adaptive scaling a warm start at another scale is a
-warm start in another metric.
+iterate, such as the CG solver's (:code:`CG_BEST_TOL`, :math:`10^{-6}` there),
+cost more accuracy. So single precision builds (:code:`SFLOAT`) keep the
+factor at 1000:
+
+- With the factor at :math:`10^4`, the last solve of the hs21_tiny_qp test in
+  single precision with CG and no acceleration ended with :math:`\tau` at
+  0.0026 instead of 0.026. On most iterations CG's warm start already met its
+  floor, so CG took no step and the iterate stopped improving: the solve
+  reached its iteration limit from 23 to 26 of 41 starting scales near the
+  default on x86 and Apple M4 hosts, and none at 1000. A floor ten times lower
+  removes that stall at :math:`10^4`; at 1000 even a floor ten times higher
+  causes none.
+- The direct solver has no such floor, but at eps :math:`10^{-5}` with default
+  settings and no acceleration hs21_tiny_qp stalled at :math:`10^4` on the
+  duality gap, from 8 to 17 of 41 starting scales, and from none at 1000.
+- In single precision, :math:`10^4` showed no gain over 1000 beyond noise: on
+  33 benchmark problems with box cones, 38.4 expected solves of 99 at
+  :math:`10^4` against 36.2 at 1000 (5 problems better at 1000, 10 worse).
+
+The cost is that problems with box cones take different paths in single and
+double precision, and the absolute CG floor remains: any other change that
+makes :math:`\tau` smaller in single precision can stall CG again.
+:code:`BOX_T_RY_FACTOR` in :code:`include/glbopts.h` has the details.
+
+When you warm-start a new workspace, also pass the :code:`scale` the previous
+solve ended at (:code:`info.scale`): with adaptive scaling a warm start at
+another scale is a warm start in another metric.
 
 Root-plus function
 ------------------

@@ -138,7 +138,9 @@ static void hs76_set(ScsData *d, ScsCone *k, enum hs76_form form) {
  * or more, and 1 for every other row. A wrong weight is off by a factor of 10
  * or more (a t entry given the zero cone's weight is off by
  * BOX_T_RY_FACTOR / ZERO_CONE_RY_FACTOR = 10), so the relative tolerance is
- * loose. */
+ * loose. In single precision that ratio is 1 (BOX_T_RY_FACTOR is 1000
+ * there, as ZERO_CONE_RY_FACTOR is) and the two weights are the same; the
+ * check compares against the macros, so it applies to either build. */
 static const char *check_r_y_weights(const ScsWork *w, const ScsCone *k,
                                      const char *when) {
   scs_int i, n = w->d->n, m = w->d->m;
@@ -232,14 +234,14 @@ static const char *test_box_t_weight_no_box(void) {
  * tolerance of about 1e-4 (1 + 5), and the first constraint was violated by
  * 2.2e-3. With BOX_T_RY_FACTOR at 1e4, t stops within 7e-10 of 1 and the
  * violation is below 4e-6 (macOS clang and Linux gcc, every linear solver,
- * with and without LAPACK; at 1000: 1.0e-9 and 1.4e-6); in single precision
- * |t - 1| is at most 1.2e-7 and the violation at most 1.5e-4, with CG (at
- * 1000: 3.6e-7 and 1.4e-4). The test asks for |t - 1| below 1e-5, 40 times
- * below the first and 80 times above the largest of the second, so it fails
- * if t is weighted like an inequality row again but not on the roundoff of
- * another platform or of single precision. It also fails if the factor is
- * made far too large: at 1e12 this problem does not solve within the
- * iteration limit (1,000,000 iterations, Linux gcc), where 1e4 takes 50. */
+ * with and without LAPACK; at 1000: 1.0e-9 and 1.4e-6); in single precision,
+ * where the factor is 1000, |t - 1| is at most 3.6e-7 and the violation at
+ * most 1.4e-4, with CG. The test asks for |t - 1| below 1e-5, 40 times below
+ * the first and 28 times above the largest of the second, so it fails if t is
+ * weighted like an inequality row again but not on the roundoff of another
+ * platform or of single precision. It also fails if the factor is made far
+ * too large: at 1e12 this problem does not solve within the iteration limit
+ * (1,000,000 iterations, Linux gcc), where 1e4 takes 50. */
 static const char *test_box_t_weight_stop(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));

@@ -242,7 +242,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * per-row multipliers (DIAG_SCALE_MULT_MIN/MAX) act around this base. */
 #define ZERO_CONE_RY_FACTOR (1000.)
 
-/* BOX_T_RY_FACTOR: the weight of the box cone's first entry t.
+/* BOX_T_RY_FACTOR: the weight of the box cone's first entry t; 1e4, and
+ * 1000 in single precision (SFLOAT; the last paragraph says why).
  *
  * What it is. The R_y entry (rho_y) of t is 1 / (BOX_T_RY_FACTOR * scale),
  * where a row of any cone other than the zero cone gets 1 / scale; with
@@ -355,23 +356,52 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * y_t + s_t / rho_y with s_t = tau b_t (hs21_tiny_qp: tau 0.0019 at 1e4,
  * 0.019 at 1000, 0.34 at factor 1). That is harmless in double precision, but
  * fixed absolute floors on the iterate, such as the CG floor in single
- * precision, count for more (docs/src/algorithm/scale.rst). Measured in
- * single precision against 1000: the test suite passes with every linear
- * solver (macOS clang, Linux gcc), and on 33 benchmark problems with box
- * cones (QDLDL at eps 1e-4 and 1e-5, CG at 1e-4, 5 starts each) the stops
- * that SCS calls solved and that land within 10 x eps of the optimal
- * objective are 40.2 against 38.0 of 99 expected (CG alone: 9.8 against
- * 10.0), within noise.
+ * precision, count for more (docs/src/algorithm/scale.rst), so single
+ * precision keeps 1000 (the last paragraph).
  *
- * Not measured: the GPU and cuDSS solvers, MKL, timings on x86 (every run
- * above was on 64-bit ARM: Linux for the sweep, macOS and Linux for single
- * precision), and problems outside the benchmark set above. The sweep and
- * the ensembles ran on SCS f8d2778d (#548) with only this value changed.
- * Between it and the change to 1e4 came #549, which refines the solve for g
- * further (G_TOL_EPS) and so moves g in double precision only at rounding
- * level, and #550, the parallel PSD cost model; neither touches the box
- * cone. */
+ * Not measured: the GPU and cuDSS solvers, MKL, timings on x86 (the sweep
+ * and the ensembles ran on 64-bit ARM Linux), and problems outside the
+ * benchmark set above. The sweep and the ensembles ran on SCS f8d2778d
+ * (#548) with only this value changed. Between it and the change to 1e4 came
+ * #549, which refines the solve for g further (G_TOL_EPS) and so moves g in
+ * double precision only at rounding level, and #550, the parallel PSD cost
+ * model; neither touches the box cone.
+ *
+ * Single precision (SFLOAT) keeps 1000, as RHO_X and CG_BEST_TOL have
+ * single-precision values of their own. At 1e4, tau and with it x are 10
+ * times smaller at the solution, while CG's floor CG_BEST_TOL is an absolute
+ * 1e-6 in single precision. On hs21_tiny_qp's last solve (CG, eps 1e-4,
+ * normalize and adaptive_scale off, no acceleration, as the test runs it
+ * with USE_LAPACK=0) tau ended at 0.0026 against 0.026 at 1000. On about 80%
+ * of the iterations CG's warm start already met the floor and CG took no
+ * step (at 1000: 11% or fewer), x's error against an exact solve of each
+ * iteration's linear system stayed near 1e-4 of tau (at 1000: 5e-6 to 7e-6)
+ * and the dual residual stalled at about 3 times its tolerance (Apple M4
+ * traces). The solve reached max_iters from about half of the starting
+ * scales near the default on every host tried: 26 of 41 (the default scale
+ * moved by -20 to +20 ulps) on an Apple M4 and 23 of 41 on x86 (AMD Zen 3
+ * and Zen 4); at 1000, none. Which starts stall depends on the generated
+ * code; the test's own start stalls with gcc's -march=native code on AMD, so
+ * CI's single-precision tests failed on AMD runners. The floor is the cause:
+ * at 1e4 a floor of 1e-7 stalls on none of the 41 and one of 1e-5 on all 41,
+ * while at 1000 even 1e-5 stalls on none. QDLDL, which has no such floor,
+ * stalls at 1e4 too: at eps 1e-5 with default settings and USE_LAPACK=0, on
+ * 17 of 41 starts on the M4 and 8 of 41 on Zen 3 and Zen 4, held by the
+ * duality gap; at 1000, none. And 1e4 showed no gain in single precision
+ * beyond noise: on 33 benchmark problems with box cones (QDLDL at eps 1e-4
+ * and 1e-5, CG at 1e-4, 5 starts each, x86-64-v3 builds) the stops SCS
+ * called solved that land within 10 x eps of the optimal objective were 38.4
+ * of 99 expected at 1e4 and 36.2 at 1000 (5 problems better at 1000, 10
+ * worse; sign test p >= 0.29 for each solver and eps), and 40.2 and 38.0 in
+ * an earlier run on ARM. Tradeoff: problems with box cones take different
+ * paths in single and double precision, and the absolute CG floor remains a
+ * weakness: any other change that makes tau smaller in single precision can
+ * stall CG again. */
+#ifdef SFLOAT
+#define BOX_T_RY_FACTOR (1000.)
+#else
 #define BOX_T_RY_FACTOR (1e4)
+#endif
 
 /* --- Anderson Acceleration (AA) parameters --- */
 /* Default AA type: 1 = type-I (better empirical performance, default),
