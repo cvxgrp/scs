@@ -398,10 +398,10 @@ void SCS(set_r_y)(const ScsConeWork *c, scs_float scale, scs_float *r_y) {
   for (i = c->k->z; i < c->m; ++i) {
     r_y[i] = 1.0 / scale;
   }
-  /* Box cone t entry: rho_y is BOX_T_RY_FACTOR times smaller than a
-   * nonnegative row's (BOX_T_RY_FACTOR in glbopts.h says why, with the data
-   * behind its value). A smaller rho_y on this entry acts in the two places
-   * rho_y enters:
+  /* Box cone t entry: weighted like an equality row, rho_y BOX_T_RY_FACTOR
+   * (= ZERO_CONE_RY_FACTOR) times smaller than a nonnegative row's
+   * (BOX_T_RY_FACTOR in glbopts.h says why, with the data behind its value).
+   * A smaller rho_y on this entry acts in the two places rho_y enters:
    * - The linear system. In the usual form the t row of A is zero, so the
    *   row is decoupled from x: it gives y_t = v_t - tau b_t / rho_y, and adds
    *   b_t^2 / rho_y to the leading coefficient of the quadratic for tau
@@ -2369,10 +2369,10 @@ static void normalize_box_cone(ScsCone *k, scs_float *D, scs_int bsize) {
  * about 1e-20 from a warm start near 0 where t* was 0.002 to 0.3: on 12 of
  * 2,931 calls with the 3.3 weights, from which ADMM recovered, and on 75,000
  * of 100,154 with the box t entry weighted like an equality row
- * (BOX_T_RY_FACTOR = 1000 then), where each such t was the next call's
- * warm start and ADMM cycled to its iteration limit. An inexact projection
- * can stall ADMM like that, so the methods below have no tolerance to meet:
- * they stop only on a sign change of g across an interval with no kink in it.
+ * (BOX_T_RY_FACTOR), where each such t was the next call's warm start and
+ * ADMM cycled to its iteration limit. An inexact projection can stall ADMM
+ * like that, so the methods below have no tolerance to meet: they stop only
+ * on a sign change of g across an interval with no kink in it.
  *
  *   box_t_sort (A1): collect and sort the kinks, walk the pieces. O(m log m)
  *     per call (m = bsize - 1), no state carried between calls.

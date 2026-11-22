@@ -5,11 +5,11 @@
 #include "util.h"
 
 /*
- * The box cone's first entry t gets a small R_y entry, as an equality row
- * does: 1 / (BOX_T_RY_FACTOR * scale), where a zero-cone row gets
- * 1 / (ZERO_CONE_RY_FACTOR * scale) and every other row 1 / scale
- * (SCS(set_r_y), glbopts.h). With adaptive_diag_scale each row's entry is
- * further divided by its own multiplier.
+ * The box cone's first entry t is weighted like an equality row: its R_y entry
+ * is 1 / (BOX_T_RY_FACTOR * scale), the zero cone's weight, where every other
+ * row outside the zero cone gets 1 / scale (SCS(set_r_y), glbopts.h). With
+ * adaptive_diag_scale each row's entry is further divided by its own
+ * multiplier.
  *
  * In the box cone's usual form, l <= a'x <= u written as (1, b - A x) in
  * {(t, s) : t l <= s <= t u}, the row of A for t is zero and its entry of b
@@ -135,12 +135,8 @@ static void hs76_set(ScsData *d, ScsCone *k, enum hs76_form form) {
 /* Check every R_y entry of the workspace against its weight: rho_y_i times
  * scale times row i's multiplier must be 1 / ZERO_CONE_RY_FACTOR for a
  * zero-cone row, 1 / BOX_T_RY_FACTOR for the t entry of a box cone of size 2
- * or more, and 1 for every other row. A wrong weight is off by a factor of 10
- * or more (a t entry given the zero cone's weight is off by
- * BOX_T_RY_FACTOR / ZERO_CONE_RY_FACTOR = 10), so the relative tolerance is
- * loose. In single precision that ratio is 1 (BOX_T_RY_FACTOR is 1000
- * there, as ZERO_CONE_RY_FACTOR is) and the two weights are the same; the
- * check compares against the macros, so it applies to either build. */
+ * or more, and 1 for every other row. A wrong weight is off by a factor of
+ * about 1000, so the relative tolerance is loose. */
 static const char *check_r_y_weights(const ScsWork *w, const ScsCone *k,
                                      const char *when) {
   scs_int i, n = w->d->n, m = w->d->m;
@@ -215,8 +211,8 @@ static const char *r_y_weights_one(enum hs76_form form, const char *name) {
   return fail;
 }
 
-/* The box cone's t entry gets its own weight (BOX_T_RY_FACTOR), at setup and
- * after scale updates, and every other row keeps its own. */
+/* The box cone's t entry gets the zero cone's weight, at setup and after
+ * scale updates, and every other row keeps its own. */
 static const char *test_box_t_weight_r_y(void) {
   return r_y_weights_one(HS76_ZERO_BOX, "test_box_t_weight_r_y");
 }
@@ -232,16 +228,16 @@ static const char *test_box_t_weight_no_box(void) {
  * (macOS with Accelerate and QDLDL, any starting scale near the default, and
  * Linux gcc with QDLDL and CG: 4.05e-4 to 4.06e-4), close to SCS's primal
  * tolerance of about 1e-4 (1 + 5), and the first constraint was violated by
- * 2.2e-3. With BOX_T_RY_FACTOR at 1e4, t stops within 7e-10 of 1 and the
- * violation is below 4e-6 (macOS clang and Linux gcc, every linear solver,
- * with and without LAPACK; at 1000: 1.0e-9 and 1.4e-6); in single precision,
- * where the factor is 1000, |t - 1| is at most 3.6e-7 and the violation at
- * most 1.4e-4, with CG. The test asks for |t - 1| below 1e-5, 40 times below
- * the first and 28 times above the largest of the second, so it fails if t is
- * weighted like an inequality row again but not on the roundoff of another
- * platform or of single precision. It also fails if the factor is made far
- * too large: at 1e12 this problem does not solve within the iteration limit
- * (1,000,000 iterations, Linux gcc), where 1e4 takes 50. */
+ * 2.2e-3; weighted like an equality row, t stops within 2e-9 of 1 and the
+ * violation is below 3e-6 (macOS clang and gcc-16, every linear solver, with
+ * and without LAPACK; the largest of both with CG), and in single precision
+ * within 3.6e-7 and below 1.4e-4 (CG without LAPACK). The test asks for
+ * |t - 1| below 1e-5, 40 times below the first and 28 times above the
+ * largest of the second, so it fails if t is weighted like an inequality row
+ * again but not on the roundoff of another platform or of single precision.
+ * It also fails if the factor is made far too large: at 1e12 this problem
+ * does not solve within the iteration limit (1,000,000 iterations, Linux
+ * gcc), where 1000 takes 50. */
 static const char *test_box_t_weight_stop(void) {
   ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));

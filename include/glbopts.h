@@ -242,8 +242,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * per-row multipliers (DIAG_SCALE_MULT_MIN/MAX) act around this base. */
 #define ZERO_CONE_RY_FACTOR (1000.)
 
-/* BOX_T_RY_FACTOR: the weight of the box cone's first entry t; 1e4, and
- * 1000 in single precision (SFLOAT; the last paragraph says why).
+/* BOX_T_RY_FACTOR: the weight of the box cone's first entry t. It is an
+ * equality row's, ZERO_CONE_RY_FACTOR (1000), in single and double precision.
  *
  * What it is. The R_y entry (rho_y) of t is 1 / (BOX_T_RY_FACTOR * scale),
  * where a row of any cone other than the zero cone gets 1 / scale; with
@@ -252,14 +252,15 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * size 2 or more. A box cone of size 1 is t >= 0 alone, a nonnegative entry
  * with no bounds, and keeps 1 / scale.
  *
- * Why t gets a weight of its own. In the box cone's usual form, l <= a'x <= u
+ * Why an equality row's weight. In the box cone's usual form, l <= a'x <= u
  * is written as (1, b - A x) in {(t, s) : t l <= s <= t u}: the row of A for
  * t is zero and its b entry is 1, so the row says s_t = tau, an equality,
- * although t is a cone entry. Weighted like an inequality row (1 / scale), t
- * could stop several percent away from 1 while SCS's residual still passed:
- * that residual weighs t - 1 against the largest entry of A x, but every
- * bound is met only up to |t - 1| times the bound, so problems with large
- * bounds stopped with their bounds violated.
+ * although t is a cone entry. Weighted like an inequality row (1 / scale, as
+ * in SCS 3.3), t could stop several percent away from 1 while SCS's residual
+ * still passed: that residual weighs t - 1 against the largest entry of A x,
+ * but every bound is met only up to |t - 1| times the bound, so problems
+ * with large bounds stopped with their bounds violated. Weighted like an
+ * equality row, t is held to tau as an equality is.
  *
  * Where it acts (SCS(set_r_y) has the algebra):
  * - The linear system. A_t = 0, so the t row is decoupled from x and gives
@@ -267,20 +268,36 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * - tau's update. The t entry adds b_t^2 / rho_y = b_t^2 * factor * scale
  *   (times the row's multiplier) to the leading coefficient of the quadratic
  *   that root_plus solves for tau, against tau's own weight TAU_FACTOR = 10.
- *   This anchors tau b_t to rho_y v_t, the scaled t entry of v, which moves
- *   by O(rho_y) per iteration.
+ *   Where that term dominates, tau b_t is anchored to rho_y v_t, the scaled
+ *   t entry of v, which moves by O(rho_y) per iteration: the weight pins tau.
  * - The box projection. Its metric weighs t by 1 / rho_y, so the larger the
  *   factor, the nearer to tau b_t the t at which the box rows are clipped.
  *
- * Tradeoff. Larger: t tracks tau more tightly, fewer stops claim solved or
- * infeasible at points that fail an independent check, and fewer false
- * dual-infeasibility claims come from tau collapsing (QGROW below). But tau
- * moves more slowly, so infeasibility and unboundedness certificates take
- * more iterations. As the factor goes to infinity tau freezes and SCS becomes
- * Douglas-Rachford with tau fixed: it still converges when a solution exists,
- * but certificates come only at rate O(1/k). Smaller (factor 1, the weight in
- * SCS 3.3): t drifts from tau and fewer problems solve. Any positive value is
- * a valid metric: it changes the path SCS takes, never the solution.
+ * Tradeoff. Larger: t tracks tau more tightly, and fewer stops claim solved
+ * or infeasible at points that fail an independent check (the table below).
+ * But the pin on tau grows with the factor, so tau moves more slowly:
+ * - Certificates of infeasibility take more iterations. Against 1000, the
+ *   infeasible problems below took 1.04x the iterations at 100, 1.12x at 1e4
+ *   and 1.69x at 1e5. As the factor goes to infinity tau freezes and SCS
+ *   becomes Douglas-Rachford with tau fixed: it still converges when a
+ *   solution exists, but certificates come only at rate O(1/k).
+ * - A problem that needs tau to move can stall. QPLIB 8515 as a QP benchmark
+ *   harness poses it, at eps 1e-4 with QDLDL: its normalized b_t is 9.46, so
+ *   at the default scale the t row's pull on tau is 8.9e3 at 1000, against
+ *   TAU_FACTOR = 10 (8.9 at factor 1). With tau pinned the dual objective
+ *   lags, the first convergence check (iteration 25) misses on the gap, and
+ *   then Anderson acceleration extrapolates a slow primal drift and the
+ *   adaptive scale walks to its floor. From the default start every factor
+ *   from 10 to 1e5 reaches a 20,000-iteration cap. At 1000 so does every
+ *   start within 4 ulps of the default scale (#548's code solved 2 of those
+ *   9, in 13,925 and 16,950 iterations), and the harness's 300 s limit stops
+ *   it at 685,000 iterations with the gap at 5.6e-2. Only factor 1, the
+ *   weight in SCS 3.3, solves it, in 25 iterations as SCS 3.3.2 does. 3.3.2
+ *   itself reaches the 20,000 cap at eps 2e-5, 1e-5 and 1e-6 (it solves at
+ *   3e-5): it solves 8515 only by that early stop.
+ * Smaller: t drifts from tau, and fewer problems solve (factor 1 below). Any
+ * positive value is a valid metric: it changes the path SCS takes, never the
+ * solution.
  *
  * Data. 492 benchmark problems, 483 of them with box cones (Netlib,
  * Kennington, Maros-Meszaros, Netlib infeasible and MIPLIB LP relaxations),
@@ -289,13 +306,13 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * 10 x eps. The problems were split into two halves, one to choose and one
  * to confirm, before any run. One run each at the default start:
  *
- *   factor  solved  pen. SGM [95%]        rejected  infeas. it  |t-1| p90
- *        1     922  1.093 [0.968, 1.225]        30         465     1.2e-3
- *       10     930  1.000 [0.895, 1.111]        23         381     2.1e-4
- *      100     938  0.936 [0.848, 1.032]        19         429     7.4e-5
- *     1000     933  1                           17         412     1.2e-5
- *      1e4     940  0.910 [0.827, 0.991]        12         462     5.0e-6
- *      1e5     943  0.874 [0.769, 0.974]        12         698     1.3e-6
+ *  factor  solved  pen. SGM [95%]        >= 1 s  rejected  infeas. it  |t-1|
+ *       1     922  1.093 [0.968, 1.225]   0.995        30         465  1.2e-3
+ *      10     930  1.000 [0.895, 1.111]   0.925        23         381  2.1e-4
+ *     100     938  0.936 [0.848, 1.032]   0.897        19         429  7.4e-5
+ *    1000     933  1                      1            17         412  1.2e-5
+ *     1e4     940  0.910 [0.827, 0.991]   0.960        12         462  5.0e-6
+ *     1e5     943  0.874 [0.769, 0.974]   0.996        12         698  1.3e-6
  *
  * Then factors 100 to 1e5 ran 8 more starts (the initial scale moved by +-1
  * to +-4 ulps) on the 163 problem / eps pairs where, at the default start,
@@ -304,106 +321,98 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * over its 9 starts. These shrink the differences above, as expected for
  * pairs picked because they differed:
  *
- *   factor  expected  pen. SGM [95%]        runs >= 1 s  rejected
+ *   factor  expected  pen. SGM [95%]        >= 1 s  rejected
  *             solved
- *      100    936.78  0.984 [0.926, 1.048]        0.946       142
- *     1000    936.22  1                           1           124
- *      1e4    938.78  0.948 [0.890, 1.003]        1.003        87
- *      1e5    941.78  0.914 [0.828, 0.993]        1.029        78
+ *      100    936.78  0.984 [0.926, 1.048]   0.946       142
+ *     1000    936.22  1                      1           124
+ *      1e4    938.78  0.948 [0.890, 1.003]   1.003        87
+ *      1e5    941.78  0.914 [0.828, 0.993]   1.029        78
  *
  * - solved: verified solved or certified infeasible, of 984; expected solved
  *   counts each of the 163 pairs as the fraction of its starts solved.
  * - pen. SGM: shifted geometric mean of the time (shift 10 s, a failure
  *   charged 3 x the time limit), over factor 1000's; the interval is a
  *   bootstrap over problems.
+ * - >= 1 s: geometric mean of the time over factor 1000's, on the runs both
+ *   solve whose geometric-mean time is 1 s or more.
  * - rejected: runs that stopped claiming solved or infeasible where the
  *   independent check rejected the claim (second table: over all starts).
  * - infeas. it: shifted geometric mean (shift 10) of the iterations on the
  *   58 runs of the 29 Netlib infeasible problems; 51 certificates verify at
- *   1000, 1e4 and 1e5 alike.
- * - |t-1| p90: 90th percentile of |t - 1| where SCS stops, at eps 1e-4, by
- *   nearest rank (the ceil(0.9 n)-th smallest), over the n = 453 to 455 runs
- *   with a box cone of size 2 or more that return a t (a stop that claims
+ *   every factor from 100 up, 50 at 1 and 10.
+ * - |t-1|: its 90th percentile where SCS stops, at eps 1e-4, by nearest rank
+ *   (the ceil(0.9 n)-th smallest), over the n = 453 to 455 runs with a box
+ *   cone of size 2 or more that return a t (a stop that claims
  *   infeasibility returns none).
- * - runs >= 1 s: time over factor 1000's on the runs both solve whose
- *   geometric-mean time is 1 s or more.
  *
- * Why 1e4. Every difference in verified solves from 100 to 1e5 is within
- * noise; factor 1 is worse beyond it (18 fewer solved than 1e4 at the
- * default start, sign test p = 0.002). Against 1000, 1e4 improves expected
- * solves and penalized SGM on both halves (+1.00 and +1.56 solved, SGM 0.943
- * and 0.953, every interval including no change), makes fewer claims that
- * fail the check (87 against 124), leaves long runs unchanged (1.003), and
- * costs the infeasible problems 12% more iterations. 1e5 costs them 70%,
- * with the largest slowdowns on infeasible problems whose certificates came
- * much later (reactor at eps 1e-6: 1,350 iterations at 1000, 4,900 at 1e4,
- * 460,675 at 1e5; ceria3d: 450, 575, 153,075), and is 1.029 on long runs.
- * 1e4 was a holistic choice by the maintainer within noise.
+ * Noise. In verified solves, 100, 1e4 and 1e5 are all within noise of 1000.
+ * At the default start the largest difference, 1e5's +10, has sign test
+ * p = 0.076; over the ensembles every bootstrap interval for the difference
+ * includes 0, over all problems and on each half (100: +0.56 [-4.78, +6.00],
+ * 1e4: +2.56 [-2.22, +7.89], 1e5: +5.56 [-2.22, +14.11]). Factor 10 is
+ * within noise too (3 fewer). Factor 1 is worse beyond it: 10 fewer solved
+ * than 1000 on the confirming half (sign test p = 0.031; 11 fewer over all,
+ * p = 0.061), and 16 to 21 fewer than 100, 1e4 and 1e5 (p <= 0.0025).
  *
- * Known cases at 1e4, solved of 9 starts (1000 in brackets):
- * - QGROW22: 2 at each eps (0: tau collapses and SCS claims dual
- *   infeasibility at 250 iterations, which the check rejects); 1e5 solves 9.
- * - QGROW7: 9 at eps 1e-4 (4), 4 at 1e-6 (9).
- * - QGFRDXPN: 9 at each eps, in about 1,100 iterations (3).
- * - KSIP at 1e-6: 1 (0); factor 100 solves 7. pilotnov at 1e-6: 0 (0).
- * - QSEBA at 1e-6: 7 (9).
- * - mzzv42z and mzzv11 at 1e-4: 1 and 3 (8 and 9, nearly all of them
- *   accepted by the check at the time limit).
+ * Why 1000. With 100 to 1e5 within noise, the choice is holistic. 1000 is
+ * the weight of an equality row, which the t row is, rather than a value
+ * picked as the best of six on the same data: the ensembles shrank the
+ * default-start gains of 100, 1e4 and 1e5 over 1000 (+5, +7 and +10 solved)
+ * to +0.56, +2.56 and +5.56, so the leaders' edges on this data are likely
+ * overstated. It is the same value in single and double precision. It is
+ * the value #548 was tested and benchmarked with. And it pins tau 10 times
+ * less than 1e4. Against 1e4 it gives up 2.56 expected solves (within
+ * noise), with a penalized SGM 1 / 0.948 = 1.05 times 1e4's and 124 rejected
+ * claims against 87, while long runs are level (1e4: 1.003) and 1e4 takes
+ * 1.12 times its iterations on the infeasible problems. 1000 was the
+ * maintainer's holistic choice within noise.
+ *
+ * Known cases at 1000, solved of the 9 starts (1e4 and 1e5 in brackets):
+ * - QGROW22: 0 at each eps (2, 9). Every start stops at 250 iterations
+ *   claiming dual infeasibility, with t collapsed to about 1e-8, and the
+ *   check rejects the claim.
+ * - QGROW15 at eps 1e-4: 0 (2, 9); on 8 starts t ends between 1.7e3 and
+ *   1.4e5. QGROW7 at 1e-4: 4 (9, 9).
+ * - KSIP at 1e-6: 0, all at the iteration cap (1, 0; factor 100: 7).
+ * - QGFRDXPN: 3 at each eps, the others at the iteration cap (9, 9; 100: 9).
+ * - pilotnov at 1e-6: 0, all at the iteration cap (0, 9).
+ * - QPLIB 8515 at 1e-4 (above).
+ * Where 1000 does better: mzzv42z at 1e-4, 8 (1, 1), and mzzv11 at 1e-4, 9
+ * (3, 4), nearly all accepted by the check at the time limit; QSEBA at
+ * 1e-6, 9 (7, 6).
+ *
+ * Single precision uses the same value. Before, it kept 1000 while double
+ * precision had 1e4, because 1e4 failed there: it makes tau 10 times
+ * smaller at the solution, and the absolute floor on CG's tolerance
+ * (CG_BEST_TOL, 1e-6 in single precision) then kept CG from improving the
+ * iterate. hs21_tiny_qp's last solve as the test runs it (CG, eps 1e-4,
+ * normalize and adaptive_scale off, USE_LAPACK=0) ended with tau 0.0026
+ * against 0.026 at 1000, and reached max_iters from 23 of 41 starting
+ * scales near the default on x86 (-march=x86-64-v3, AMD and Intel) and 26
+ * of 41 on an Apple M4, so CI's single-precision tests failed on AMD
+ * runners. With QDLDL at eps 1e-5 and default settings it stalled from 8
+ * (AMD) and 17 (M4) of 41. At 1000, none of either. A CG floor of 1e-7
+ * removed the CG stall at 1e4, while at 1000 even 1e-5 causes none. The
+ * absolute floor remains a weakness: any change that makes tau smaller in
+ * single precision can stall CG again.
  *
  * What it needs. The box projection must be exact (proj_box_cone): with the
  * weight, a projection that stopped short of t* made ADMM cycle. The weight
  * also makes tau smaller at the solution, since the t entry of v is
  * y_t + s_t / rho_y with s_t = tau b_t (hs21_tiny_qp's first solve, in double
- * precision with the test's settings and acceleration: tau 0.0019 at 1e4,
- * 0.019 at 1000, 0.34 at factor 1). That is harmless in double precision, but
- * fixed absolute floors on the iterate, such as the CG floor in single
- * precision, count for more (docs/src/algorithm/scale.rst), so single
- * precision keeps 1000 (the last paragraph).
+ * precision with the test's settings and acceleration: tau 0.019 at 1000,
+ * 0.34 at factor 1). That is harmless in double precision, but fixed
+ * absolute floors on the iterate, such as the CG floor in single precision,
+ * count for more (docs/src/algorithm/scale.rst).
  *
  * Not measured: the GPU and cuDSS solvers, MKL, timings on x86 (the sweep
- * and the ensembles ran on 64-bit ARM Linux), and problems outside the
- * benchmark set above. The sweep and the ensembles ran on SCS f8d2778d
- * (#548) with only this value changed. Between it and the change to 1e4 came
- * #549, which refines the solve for g further (G_TOL_EPS) and so moves g in
- * double precision only at rounding level, and #550, the parallel PSD cost
- * model; neither touches the box cone.
- *
- * Single precision (SFLOAT) keeps 1000, as RHO_X and CG_BEST_TOL have
- * single-precision values of their own. At 1e4, tau and with it x are 10
- * times smaller at the solution, while CG's floor CG_BEST_TOL is an absolute
- * 1e-6 in single precision. On hs21_tiny_qp's last solve (CG, eps 1e-4,
- * normalize and adaptive_scale off, no acceleration, as the test runs it
- * with USE_LAPACK=0) tau ended at 0.0026 against 0.026 at 1000. On about 80%
- * of the iterations CG's warm start already met the floor and CG took no
- * step (at 1000: 11% or fewer), x's error against an exact solve of each
- * iteration's linear system stayed near 1e-4 of tau (at 1000: 5e-6 to 7e-6)
- * and the dual residual stalled at about 3 times its tolerance (Apple M4
- * traces). The solve reached max_iters from about half of the starting
- * scales near the default on every host tried: 26 of 41 (the default scale
- * moved by -20 to +20 ulps) on an Apple M4 and 23 of 41 on x86 (AMD Zen 3
- * and Zen 4); at 1000, none. Which starts stall depends on the generated
- * code; the test's own start stalls with gcc's -march=native code on AMD, so
- * CI's single-precision tests failed on AMD runners. The floor is the cause:
- * at 1e4 a floor of 1e-7 stalls on none of the 41 and one of 1e-5 on all 41,
- * while at 1000 even 1e-5 stalls on none. QDLDL, which has no such floor,
- * stalls at 1e4 too: at eps 1e-5 with default settings and USE_LAPACK=0, on
- * 17 of 41 starts on the M4 and 8 of 41 on Zen 3 and Zen 4, held by the
- * duality gap; at 1000, none. And 1e4 showed no gain in single precision
- * beyond noise: on 33 benchmark problems with box cones (QDLDL at eps 1e-4
- * and 1e-5, CG at 1e-4, 5 starts each, x86-64-v3 builds) the stops SCS
- * called solved that land within 10 x eps of the optimal objective were 38.4
- * of 99 expected at 1e4 and 36.2 at 1000 (40.2 and 38.0 in an earlier run on
- * ARM). Of the 99 problem and setting pairs, 5 did better at 1000 and 10
- * worse (QDLDL at 1e-4: 2 and 6, at 1e-5: 2 and 3; CG: 1 and 1; sign test
- * p >= 0.29 for each). Tradeoff: problems with box cones take different
- * paths in single and double precision, and the absolute CG floor remains a
- * weakness: any other change that makes tau smaller in single precision can
- * stall CG again. */
-#ifdef SFLOAT
-#define BOX_T_RY_FACTOR (1000.)
-#else
-#define BOX_T_RY_FACTOR (1e4)
-#endif
+ * and the ensembles ran on 64-bit ARM Linux), single precision beyond the
+ * cases above, and problems outside the benchmark set above other than QPLIB
+ * 8515. The sweep and the ensembles ran on SCS #548 with only this value
+ * changed. Since then #549 refined the solve for g further (G_TOL_EPS),
+ * which moves g in double precision only at rounding level, and nothing
+ * that touches the box cone has changed. */
+#define BOX_T_RY_FACTOR (ZERO_CONE_RY_FACTOR)
 
 /* --- Anderson Acceleration (AA) parameters --- */
 /* Default AA type: 1 = type-I (better empirical performance, default),
