@@ -27,7 +27,8 @@
  * solver is set up, and SCS(eigcg_free) frees it: W and AW (2 DEFLATE_VECTORS
  * vectors of length n) and the harvest's window (V, one vector per window
  * entry, and VS, 2 DEFLATE_VECTORS more), (4 DEFLATE_VECTORS + window) n
- * numbers in all, 210 n with the defaults, plus small arrays on the host. If
+ * numbers in all, 210 n with the defaults, plus small arrays on the host
+ * (numbers and integers, sized by the window and DEFLATE_VECTORS). If
  * that cannot be allocated, SCS(eigcg_init) fails with a message and the
  * solver's setup fails with it. So whether a solve deflates is fixed when SCS
  * is built, and never depends on the memory free while it runs (on a shared
@@ -39,11 +40,15 @@
  * window at each harvest and freed it after: the same values and the same
  * peak memory, held for less of the run, and plain CG when it did not fit.)
  *
- * Failures while solving. A failed syev or Cholesky factorization, or a
- * filter that keeps no vector, leaves that harvest without a set (plain CG
- * until the next harvest): deterministic functions of the values, as before
- * SCS 3.4.0. A failed operation of the solver (only the GPU solver's can
- * fail) fails the solve.
+ * Failures while solving. A failed syev, or a filter that keeps no vector,
+ * leaves that harvest without a set (plain CG until the next harvest): a
+ * deterministic function of the values. A vector that is numerically
+ * dependent on the ones before it is dropped on its own, and the rest of
+ * the set is kept (EIGCG_CHOL_REL_PIVOT; before SCS 3.4.0 the whole set was
+ * dropped, or kept with the dependent vector, on the sign of a rounding
+ * error). A set of any size is held until SCS(eigcg_reset); only a harvest
+ * that keeps none lets the next cold solve harvest again. A failed operation
+ * of the solver (only the GPU solver's can fail) fails the solve.
  *
  * A solver keeps one ScsEigcg in its workspace and calls:
  *  - SCS(eigcg_init) in scs_init_lin_sys_work (failing with it),
@@ -70,8 +75,9 @@ extern "C" {
 #include "glbopts.h"
 #include "scs.h"
 
-/* The safeguards of eigCG. They were set when deflation was written (August
- * 2026) without a sweep of their values.
+/* The safeguards of eigCG. The first three were set when deflation was
+ * written (August 2026) without a sweep of their values; the fourth was
+ * measured for SCS 3.4.0.
  *
  * EIGCG_RITZ_RES_TOL: after a harvest, a Ritz pair (theta, w) is kept only if
  * its eigenresidual ||G w - theta M^{-1} w||_2 (M the Jacobi preconditioner)
@@ -93,14 +99,39 @@ extern "C" {
  * dependent columns, which the following eigenproblem then has to resolve;
  * higher drops columns that carry information.
  *
- * EIGCG_CHOL_MIN_PIVOT: the Cholesky factorization of W' G W fails, and the
- * harvest keeps no set, when a pivot is below this or not a number. It only
- * guards a division by zero: the filter above has already removed vectors
- * that would make W' G W nearly singular. */
+ * EIGCG_CHOL_REL_PIVOT: the Cholesky factorization of W' G W takes the
+ * vectors of the set in order (ascending Ritz value) and drops each vector
+ * whose pivot is at most this times its diagonal entry, that is, whose
+ * squared sine of the angle (in the G inner product) to the span of the
+ * vectors kept before it is at most this (1e-4: an angle of 0.01 radians);
+ * the rest of the set is kept. Lanczos without reorthogonalization returns a
+ * converged eigenvector more than once (on issue_220, 17 CG steps on 12
+ * unknowns give the Ritz value 1 twice); both copies pass the filter above,
+ * which tests each vector on its own, and W' G W is then singular to working
+ * precision. The test is relative to the vector's own diagonal entry, so it
+ * does not depend on the vectors' scale or eigenvalue. Lower keeps more
+ * nearly dependent vectors, and one kept at a relative pivot rho corrupts
+ * the pivots after it, by up to about 4e5 eps / rho as measured (a relative
+ * pivot of -2.5e-2 after vectors kept at 1.4e-9): rounding, not the data,
+ * then decides which vectors are kept. Higher drops vectors that add a
+ * direction the projection could use. Measured for SCS 3.4.0
+ * (eigcg_singular_2026-11-22: the CPU solver's 823 harvests, 14,166 vectors,
+ * on the seven test data files, socp100, socp1000 and 30 Netlib, Maros-
+ * Meszaros and SDPLIB problems at eps 1e-4, 1e-6 and 1e-7): the relative
+ * pivots of nearly dependent vectors fill every decade from rounding level
+ * to 1e-2, so no gap separates them, and 1e-4 is the smallest power of ten
+ * at which, by that worst growth, a vector kept at the tolerance leaves the
+ * later pivots an error below a tenth of it (the error measured at 1e-4:
+ * 1.4e-9). It dropped 4.7% of the vectors, in 21% of the harvests. With
+ * NVPL's BLAS the worst growth was larger (3e7 eps / rho, which would ask
+ * for 1e-3) and the error measured at 1e-4 smaller (1.4e-10). Before SCS
+ * 3.4.0 the factorization failed, and the harvest kept no set, only when a
+ * pivot was below an absolute 1e-300, which decided a dependent set on the
+ * sign of a rounding error. */
 #define EIGCG_RITZ_RES_TOL (0.25)
 #define EIGCG_UNDO_GROWTH (1.5)
 #define EIGCG_MGS_RANK_TOL (1e-8)
-#define EIGCG_CHOL_MIN_PIVOT (1e-300)
+#define EIGCG_CHOL_REL_PIVOT (1e-4)
 
 /** The solver's operations on vectors of length n, for its ScsEigcg. Every
  * vector argument (named in upper case, or x, r, z, v, Kv) is storage from
@@ -165,6 +196,8 @@ typedef struct {
    * projection (2 max x 2 max), work syev's workspace (lwork) */
   scs_float *V, *VS, *T, *E, *ev, *S, *TS, *H, *Gr, *work;
   scs_int win, lwork;
+  /* the columns the Gram factorization keeps (max integers) */
+  scs_int *idx;
   /* the harvest: j the vectors in the window, jd those whose row of T is
    * complete, step the CG iterations observed, have_prev whether pa and pb
    * (the previous alpha and beta) are set, dead whether this harvest stopped
@@ -222,6 +255,17 @@ void SCS(eigcg_step)(ScsEigcg *e, scs_float alpha, scs_float beta_next,
  * this harvest (no set is kept; the solver fails the solve).
  */
 scs_int SCS(eigcg_end_solve)(ScsEigcg *e);
+
+/**
+ * The Cholesky factorization of a set's Gram matrix G = W' G W (k x k by
+ * column, lower triangle read), in place, that drops each column whose
+ * pivot is at most EIGCG_CHOL_REL_PIVOT times its diagonal entry (or not a
+ * number) and keeps the rest, in order. On return idx[0 .. kept) are the
+ * kept columns and the leading kept x kept block of G (leading dimension
+ * kept) is the Cholesky factor of their principal submatrix. Returns kept.
+ * Used by the harvest; exposed for test/problems/test_deflation.h.
+ */
+scs_int SCS(eigcg_gram_factor)(scs_float *G, scs_int k, scs_int *idx);
 
 #ifdef __cplusplus
 }

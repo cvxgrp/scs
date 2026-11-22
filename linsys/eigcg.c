@@ -7,6 +7,55 @@
 
 #include <string.h>
 
+/* Cholesky factorization of the Gram matrix W' G W of a harvest's vectors
+ * (k x k by column, G[c * k + r]; only the lower triangle, r >= c, is read),
+ * in place, that keeps the vectors that are numerically independent of the
+ * ones before them (EIGCG_CHOL_REL_PIVOT, eigcg.h). The columns are taken in
+ * order; column c's pivot is its diagonal entry less its part in the span
+ * of the columns kept before it, and the column is kept if the pivot exceeds
+ * EIGCG_CHOL_REL_PIVOT times the diagonal entry, and dropped otherwise. A
+ * dropped column takes no part in the later columns' pivots. The pivot never
+ * exceeds the diagonal entry (it is the entry less a sum of squares), so a
+ * diagonal entry that is not positive, or anything that is not a number,
+ * drops the column too. On return idx[0 .. kept) are the kept columns in
+ * order, and the leading kept x kept block of G (leading dimension kept)
+ * holds the Cholesky factor of their principal submatrix, as
+ * eigcg_chol_solve reads it. When no column is dropped, every operation is
+ * that of the plain factorization, in the same order. Returns kept. Not
+ * static: test/problems/test_deflation.h tests it directly. */
+scs_int SCS(eigcg_gram_factor)(scs_float *G, scs_int k, scs_int *idx) {
+  scs_int c, r, u, i, j, kept = 0;
+  for (c = 0; c < k; ++c) {
+    const scs_float g = G[c * k + c];
+    for (r = c; r < k; ++r) {
+      scs_float acc = G[c * k + r];
+      for (u = 0; u < kept; ++u) {
+        acc -= G[idx[u] * k + r] * G[idx[u] * k + c];
+      }
+      G[c * k + r] = acc;
+    }
+    if (!(G[c * k + c] > EIGCG_CHOL_REL_PIVOT * g)) {
+      continue; /* dropped */
+    }
+    G[c * k + c] = SQRTF(G[c * k + c]);
+    for (r = c + 1; r < k; ++r) {
+      G[c * k + r] /= G[c * k + c];
+    }
+    idx[kept++] = c;
+  }
+  if (kept < k) {
+    /* compact in place, by column: idx increases, so every entry moves to
+     * an index no larger than its own, and none is overwritten before it
+     * is read */
+    for (j = 0; j < kept; ++j) {
+      for (i = j; i < kept; ++i) {
+        G[j * kept + i] = G[idx[j] * k + idx[i]];
+      }
+    }
+  }
+  return kept;
+}
+
 #ifdef USE_LAPACK
 #include "scs_blas.h"
 
@@ -26,30 +75,7 @@ void BLAS(gemm)(const char *transa, const char *transb, blas_int *m,
 }
 #endif
 
-/* Cholesky of a k x k column-major matrix, lower triangle, in place.
- * Returns nonzero on failure (also catches NaN via the negated compare). */
-static scs_int eigcg_chol(scs_float *G, scs_int k) {
-  scs_int c, r, t;
-  for (c = 0; c < k; ++c) {
-    for (r = c; r < k; ++r) {
-      scs_float acc = G[c * k + r];
-      for (t = 0; t < c; ++t) {
-        acc -= G[t * k + r] * G[t * k + c];
-      }
-      G[c * k + r] = acc;
-    }
-    if (!(G[c * k + c] > EIGCG_CHOL_MIN_PIVOT)) {
-      return 1;
-    }
-    G[c * k + c] = SQRTF(G[c * k + c]);
-    for (r = c + 1; r < k; ++r) {
-      G[c * k + r] /= G[c * k + c];
-    }
-  }
-  return 0;
-}
-
-/* solve L L' x = rhs in place given the factor from eigcg_chol */
+/* solve L L' x = rhs in place given the factor from SCS(eigcg_gram_factor) */
 static void eigcg_chol_solve(const scs_float *G, scs_float *x, scs_int k) {
   scs_int c, t;
   for (c = 0; c < k; ++c) {
@@ -270,8 +296,10 @@ void SCS(eigcg_step)(ScsEigcg *e, scs_float alpha, scs_float beta_next,
 
 /* After the deep solve: extract the lowest-kv Ritz vectors, form their true
  * images through the operator (kv extra matvecs, counted by the caller),
- * factor the Gram matrix. Returns the number of matvecs spent; sets
- * e->failed if one of the solver's ops failed. */
+ * keep those that pass the filter, factor their Gram matrix, and keep those
+ * that the factorization keeps (numerically independent of the ones before
+ * them). Returns the number of matvecs spent; sets e->failed if one of the
+ * solver's ops failed. */
 static scs_int eigcg_extract(ScsEigcg *e) {
   const ScsEigcgOps *ops = e->ops;
   scs_int n = e->n, jd = e->jd, kv, a, probes = 0, kept = 0;
@@ -321,10 +349,20 @@ static scs_int eigcg_extract(ScsEigcg *e) {
     e->failed = 1;
     return probes;
   }
-  if (eigcg_chol(e->G, kv)) {
-    return probes;
+  kept = SCS(eigcg_gram_factor)(e->G, kv, e->idx);
+  /* move the kept vectors and their images to the front, in order (each
+   * column moves to a lower index, so source and destination differ) */
+  for (a = 0; a < kept; ++a) {
+    scs_int src = e->idx[a];
+    if (src != a &&
+        (ops->copy(e->w, e->W + (size_t)a * n, e->W + (size_t)src * n, 1) ||
+         ops->copy(e->w, e->AW + (size_t)a * n, e->AW + (size_t)src * n,
+                   1))) {
+      e->failed = 1;
+      return probes;
+    }
   }
-  e->count = kv;
+  e->count = kept;
   return probes;
 }
 
@@ -344,11 +382,12 @@ scs_int SCS(eigcg_end_solve)(ScsEigcg *e) {
 }
 
 /* Deflation: Galerkin-project the residual against the harvested
- * eigenvector approximations, solve (W'AW) c = W'r via the stored
- * Cholesky factor, and remove the correction. Because W spans a
- * near-invariant subspace of the preconditioned operator, CG does not
- * reintroduce the deflated components -- a single projection here
- * suffices (init-CG). Costs dot products and axpys only. */
+ * eigenvector approximations (the vectors the harvest kept), solve
+ * (W'AW) c = W'r via the stored Cholesky factor, and remove the
+ * correction. Because W spans a near-invariant subspace of the
+ * preconditioned operator, CG does not reintroduce the deflated
+ * components -- a single projection here suffices (init-CG). Costs dot
+ * products and axpys only. */
 scs_int SCS(eigcg_deflate)(ScsEigcg *e, scs_float *x, scs_float *r) {
   const ScsEigcgOps *ops = e->ops;
   scs_int kd = e->count;
@@ -393,6 +432,8 @@ void SCS(eigcg_free)(ScsEigcg *e) {
   scs_free(e->H);
   scs_free(e->Gr);
   scs_free(e->work);
+  scs_free(e->idx);
+  e->idx = SCS_NULL;
   e->W = e->AW = e->V = e->VS = SCS_NULL;
   e->G = e->c = e->T = e->E = e->ev = e->S = e->TS = e->H = e->Gr = e->work =
       SCS_NULL;
@@ -448,8 +489,10 @@ scs_int SCS(eigcg_init)(ScsEigcg *e, ScsLinSysWork *w, const ScsEigcgOps *ops,
   e->H = (scs_float *)scs_calloc((size_t)nev2 * nev2, sizeof(scs_float));
   e->Gr = (scs_float *)scs_calloc((size_t)win * nev2, sizeof(scs_float));
   e->work = (scs_float *)scs_calloc(e->lwork, sizeof(scs_float));
+  e->idx = (scs_int *)scs_calloc(e->max, sizeof(scs_int));
   if (!e->W || !e->AW || !e->V || !e->VS || !e->G || !e->c || !e->T ||
-      !e->E || !e->ev || !e->S || !e->TS || !e->H || !e->Gr || !e->work) {
+      !e->E || !e->ev || !e->S || !e->TS || !e->H || !e->Gr || !e->work ||
+      !e->idx) {
     scs_printf("ERROR: eigCG deflation: could not allocate %.3g MB, "
                "4 x %li + %li vectors of length %li (DEFLATE_VECTORS and "
                "EIGCG_WINDOW in glbopts.h; DEFLATE_VECTORS 0 turns "

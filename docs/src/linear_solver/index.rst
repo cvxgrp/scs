@@ -585,7 +585,10 @@ matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
 the smallest eigenvalues from subsequent solves, which substantially reduces
 the CG iterations needed on ill-conditioned problems. Applying the deflation
 in a solve costs no matrix multiplies. Each harvest costs the multiplies of
-one CG iteration per vector.
+one CG iteration per vector. A harvest keeps only the vectors that pass a
+check of their accuracy and are not numerically dependent on the vectors it
+already keeps (CG's Lanczos process can return one eigenvector twice); a
+dependent vector is dropped on its own and the rest are kept.
 
 Deflation needs LAPACK and double precision. It is switched off when SCS is
 built without LAPACK (:code:`USE_LAPACK=0`) or in single precision

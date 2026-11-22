@@ -21,8 +21,10 @@
  * [TD_BULK_MIN, 1], so a condition number of 1e5 that deflating the tail
  * brings down to 1e2: the case deflation is for. A cold solve to 1e-12 runs
  * about 400 CG iterations, so the harvest goes through about ten thick
- * restarts, and keeps 24 to 30 vectors (seeds 1 to 6 and 42; with seed 42,
- * which the test uses, 24 with Apple's Accelerate and 29 with NVPL). (A
+ * restarts, and kept 24 to 30 vectors before SCS 3.4.0 dropped nearly
+ * dependent ones (seeds 1 to 6 and 42); with seed 42, which the test uses,
+ * it keeps 23 with Apple's Accelerate and 27 with NVPL (24 and 29 before,
+ * the dropped ones at relative pivots down to 9e-7). (A
  * spectrum spread evenly in log scale over [1e-4, 1] instead kept 8 to 10
  * vectors and deflation saved 3 to 4% of the iterations; one with its tail
  * down to 1e-6 kept none: the filter is relative to theta.) In a build with
@@ -34,10 +36,14 @@
  *      theta); and the smallest rho is within 10% of lambda_min (the next
  *      eigenvalue is twice it; a broken harvest gives Ritz values off by
  *      order one, or a filter that keeps none; measured: 4e-13 to 1.5e-12);
+ *      and the set's Gram matrix, recomputed from W and AW, has every
+ *      relative pivot above half EIGCG_CHOL_REL_PIVOT (td_check_gram;
+ *      measured: 1.2e-4 with Accelerate, 1.6e-4 with NVPL; the rule
+ *      before SCS 3.4.0 kept a vector at 9e-7 here, which fails it);
  *  (b) a cold solve of a new right-hand side to 1e-8 with the set takes at
  *      most 0.8 times the CG iterations of the same solve without it (a
- *      deflation that does nothing gives 1.0; measured: 0.27 to 0.28, 88
- *      iterations against 314 to 322),
+ *      deflation that does nothing gives 1.0; measured: 0.27 to 0.32, 88
+ *      to 99 iterations against 314 to 322),
  *      and its residual, recomputed, is at most 100 times the tolerance (a
  *      projection inconsistent with its images leaves CG's tracked residual
  *      off the true one by the size of the correction);
@@ -62,9 +68,31 @@
  *      (g) a CG that stops before SCS(eigcg_start) (initial residual below
  *      tol), leave no set and allocate nothing, and the next cold solve
  *      harvests.
+ *  (h) a harvest on a 12 x 12 K whose CG runs 120 iterations (10 n, with
+ *      tolerance 0), so Lanczos without reorthogonalization returns each
+ *      converged eigenvector many times (as issue_220's 17 steps on 12
+ *      unknowns return the Ritz value 1 twice): the set's Gram matrix is
+ *      singular to working precision. The harvest keeps a set (before SCS
+ *      3.4.0 the factorization failed, or kept a dependent vector, on the
+ *      sign of a rounding error), at most n vectors, and td_check_gram holds
+ *      (measured: 3 vectors kept with Accelerate, 2 with NVPL; the rule
+ *      before SCS 3.4.0 kept none, with Accelerate).
  * In a build without deflation, init succeeds and leaves it off (max 0),
  * checked against the build flags, allocates nothing, and the hooks leave x
  * and r untouched.
+ *
+ * test_eigcg_gram_factor tests SCS(eigcg_gram_factor), the Gram matrix's
+ * factorization that drops numerically dependent vectors, on constructed
+ * matrices (in every double-precision build; it is pure C): (T1) k = 30
+ * independent vectors: all kept, and the factor is the plain Cholesky
+ * factor (to 1e-12 relative; the same operations in the same order, so
+ * usually bit for bit, which is printed); (T2) one vector equal to an
+ * earlier one: it alone is dropped, and the factor is the plain one of the
+ * other 29; (T3) a 2 x 2 matrix with relative pivot 10 times
+ * EIGCG_CHOL_REL_PIVOT keeps both vectors, with a tenth of it keeps one,
+ * the same with the second vector scaled by 1e6 (the test is relative); (T4)
+ * a negative pivot, a diagonal entry that is not a number and a zero
+ * diagonal entry each drop that vector alone, and the rest are kept.
  *
  * test_lin_sys_deflation exercises the linear solver's own ops (the GPU
  * solver's on the GPU) through scs_solve_lin_sys: a K whose reduced matrix is
@@ -230,13 +258,12 @@ static const ScsEigcgOps td_ops = {td_alloc,     td_free,  td_scale_copy,
                                    td_gram,      td_coeffs, td_project,
                                    td_norm};
 
-/* K = Q diag(lambda) Q' with Q orthogonal (Gram-Schmidt, twice, of a random
- * matrix) and lambda as above */
-static scs_float *td_matrix(scs_int n) {
+/* K = Q diag(lam) Q' with Q orthogonal (Gram-Schmidt, twice, of a random
+ * matrix) */
+static scs_float *td_matrix_lam(scs_int n, const scs_float *lam) {
   scs_int i, j, k, pass;
   scs_float *Q = (scs_float *)scs_calloc((size_t)n * n, sizeof(scs_float));
   scs_float *K = (scs_float *)scs_calloc((size_t)n * n, sizeof(scs_float));
-  scs_float *lam = (scs_float *)scs_calloc(n, sizeof(scs_float));
   for (i = 0; i < n * n; ++i) {
     Q[i] = rand_scs_float();
   }
@@ -250,11 +277,6 @@ static scs_float *td_matrix(scs_int n) {
     }
     nrm = SCS(norm_2)(qj, n);
     SCS(scale_array)(qj, 1. / nrm, n);
-    lam[j] = j < TD_TAIL
-                 ? TD_LAMBDA_MIN * POWF(TD_BULK_MIN / TD_LAMBDA_MIN,
-                                        (scs_float)j / TD_TAIL)
-                 : TD_BULK_MIN * POWF(1. / TD_BULK_MIN, (scs_float)(j - TD_TAIL) /
-                                                            (n - 1 - TD_TAIL));
   }
   for (j = 0; j < n; ++j) {
     for (i = j; i < n; ++i) {
@@ -266,8 +288,77 @@ static scs_float *td_matrix(scs_int n) {
     }
   }
   scs_free(Q);
+  return K;
+}
+
+/* td_matrix_lam with lambda as above */
+static scs_float *td_matrix(scs_int n) {
+  scs_int j;
+  scs_float *K, *lam = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  for (j = 0; j < n; ++j) {
+    lam[j] = j < TD_TAIL
+                 ? TD_LAMBDA_MIN * POWF(TD_BULK_MIN / TD_LAMBDA_MIN,
+                                        (scs_float)j / TD_TAIL)
+                 : TD_BULK_MIN * POWF(1. / TD_BULK_MIN, (scs_float)(j - TD_TAIL) /
+                                                            (n - 1 - TD_TAIL));
+  }
+  K = td_matrix_lam(n, lam);
   scs_free(lam);
   return K;
+}
+
+/* the plain Cholesky factorization (k x k by column, lower triangle, in
+ * place), the harvest's before SCS 3.4.0 without its pivot test: the
+ * reference for SCS(eigcg_gram_factor). Writes each pivot over its diagonal
+ * entry, as rel[c] (if rel is not SCS_NULL) the pivot over the diagonal
+ * entry, and goes on past a pivot that is not positive (its column is then
+ * left unscaled) */
+static void td_plain_chol(scs_float *G, scs_int k, scs_float *rel) {
+  scs_int c, r, t;
+  for (c = 0; c < k; ++c) {
+    const scs_float g = G[c * k + c];
+    for (r = c; r < k; ++r) {
+      scs_float acc = G[c * k + r];
+      for (t = 0; t < c; ++t) {
+        acc -= G[t * k + r] * G[t * k + c];
+      }
+      G[c * k + r] = acc;
+    }
+    if (rel) {
+      rel[c] = G[c * k + c] / g;
+    }
+    if (G[c * k + c] > 0.) {
+      G[c * k + c] = SQRTF(G[c * k + c]);
+      for (r = c + 1; r < k; ++r) {
+        G[c * k + r] /= G[c * k + c];
+      }
+    }
+  }
+}
+
+/* the set's Gram matrix recomputed from W and AW (the solver's gram, after
+ * the harvest moved the kept vectors to the front): the smallest relative
+ * pivot of its plain factorization. The harvest kept only vectors whose
+ * relative pivot was above EIGCG_CHOL_REL_PIVOT, with these same products;
+ * recomputing moves a relative pivot by rounding only (by at most 1.4e-9 at
+ * that tolerance where it was measured, linsys/eigcg.h), so it must stay
+ * above half the tolerance, and a dependent vector kept in the set gives
+ * about 1e-16 */
+static scs_float td_check_gram(ScsLinSysWork *w, const ScsEigcg *e) {
+  scs_int k = e->count, c;
+  scs_float *G = (scs_float *)scs_calloc((size_t)k * k, sizeof(scs_float));
+  scs_float *rel = (scs_float *)scs_calloc(k, sizeof(scs_float));
+  scs_float mn = INFINITY;
+  td_gram(w, e->W, e->AW, k, G);
+  td_plain_chol(G, k, rel);
+  for (c = 0; c < k; ++c) {
+    if (!(rel[c] >= mn)) {
+      mn = rel[c]; /* NaN stays */
+    }
+  }
+  scs_free(G);
+  scs_free(rel);
+  return mn;
 }
 
 /* the test's CG on K x = b from zero to tol, with the hooks where the
@@ -424,6 +515,13 @@ static const char *td_core_on(TdCtx *c, ScsEigcg *e, scs_float *b1,
              (double)rho_min, (double)lmin, (double)err);
   mu_assert("test_eigcg_core: (a) the set misses the smallest eigenvalue",
             err <= 0.1);
+  res = td_check_gram((ScsLinSysWork *)c, e);
+  scs_printf("test_eigcg_core: (a) the set's smallest relative pivot %.3e "
+             "(EIGCG_CHOL_REL_PIVOT %.0e)\n",
+             (double)res, (double)EIGCG_CHOL_REL_PIVOT);
+  mu_assert("test_eigcg_core: (a) the set holds a numerically dependent "
+            "vector",
+            res > 0.5 * EIGCG_CHOL_REL_PIVOT);
   /* (b) a new right-hand side, without and with the set */
   its0 = td_cg(c, e, b2, x, 1e-8, 0, &probes);
   its1 = td_cg(c, e, b2, x, 1e-8, 1, &probes);
@@ -502,6 +600,56 @@ static const char *td_core_on(TdCtx *c, ScsEigcg *e, scs_float *b1,
   return SCS_NULL;
 }
 
+/* (h): a harvest whose Lanczos process returns eigenvectors more than once;
+ * returns an error message or SCS_NULL */
+static const char *td_core_ghost(void) {
+  TdCtx c;
+  ScsEigcg e;
+  scs_int i, n = 12, its, probes, kd;
+  scs_float mn;
+  scs_float *lam = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *b = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  scs_float *x = (scs_float *)scs_calloc(n, sizeof(scs_float));
+  const char *fail = SCS_NULL;
+  memset(&c, 0, sizeof(c));
+  c.n = n;
+  c.fail_from = -1;
+  ran_start(220);
+  for (i = 0; i < n; ++i) {
+    lam[i] = POWF(1e-3, 1. - (scs_float)i / (n - 1)); /* 1e-3 to 1 */
+  }
+  c.K = td_matrix_lam(n, lam);
+  for (i = 0; i < n; ++i) {
+    b[i] = rand_scs_float();
+  }
+  if (SCS(eigcg_init)(&e, (ScsLinSysWork *)&c, &td_ops, n) != 0) {
+    fail = "test_eigcg_core: (h) SCS(eigcg_init) failed";
+  } else {
+    /* tolerance 0: CG runs its 10 n iterations, far past convergence */
+    its = td_cg(&c, &e, b, x, 0., 1, &probes);
+    kd = e.count;
+    mn = kd > 0 ? td_check_gram((ScsLinSysWork *)&c, &e) : 0.;
+    scs_printf("test_eigcg_core: (h) n %li, %li CG iterations: %li probed, "
+               "%li kept; smallest relative pivot %.3e\n",
+               (long)n, (long)its, (long)probes, (long)kd, (double)mn);
+    if (its <= 2 * n) {
+      fail = "test_eigcg_core: (h) premise: CG stopped before 2 n iterations";
+    } else if (kd < 1 || kd > n) {
+      fail = "test_eigcg_core: (h) the harvest kept no vector, or more than "
+             "n";
+    } else if (!(mn > 0.5 * EIGCG_CHOL_REL_PIVOT)) {
+      fail = "test_eigcg_core: (h) the set holds a numerically dependent "
+             "vector";
+    }
+    SCS(eigcg_free)(&e);
+  }
+  scs_free(c.K);
+  scs_free(lam);
+  scs_free(b);
+  scs_free(x);
+  return fail;
+}
+
 /* (e): alloc failures at init; returns an error message or SCS_NULL */
 static const char *td_core_alloc_fail(TdCtx *c) {
   ScsEigcg e;
@@ -520,6 +668,177 @@ static const char *td_core_alloc_fail(TdCtx *c) {
               c->live == 0 && e.max == 0);
   }
   c->fail_from = -1;
+  return SCS_NULL;
+}
+
+/* G = W' diag(lam) W (k x k by column) for W n x k by column */
+static void td_gram_diag(const scs_float *W, const scs_float *lam, scs_int n,
+                         scs_int k, scs_float *G) {
+  scs_int a, b, t;
+  for (b = 0; b < k; ++b) {
+    for (a = 0; a < k; ++a) {
+      scs_float acc = 0.;
+      for (t = 0; t < n; ++t) {
+        acc += W[(size_t)a * n + t] * lam[t] * W[(size_t)b * n + t];
+      }
+      G[b * k + a] = acc;
+    }
+  }
+}
+
+/* the largest difference between the lower triangles of the kept x kept
+ * factor F and the reference R (both leading dimension kept), relative to
+ * R's largest entry; 0 when bit for bit */
+static scs_float td_factor_diff(const scs_float *F, const scs_float *R,
+                                scs_int kept, scs_int *bitwise) {
+  scs_int i, j;
+  scs_float d = 0., mx = 0.;
+  *bitwise = 1;
+  for (j = 0; j < kept; ++j) {
+    for (i = j; i < kept; ++i) {
+      d = MAX(d, ABS(F[j * kept + i] - R[j * kept + i]));
+      mx = MAX(mx, ABS(R[j * kept + i]));
+      if (F[j * kept + i] != R[j * kept + i]) {
+        *bitwise = 0;
+      }
+    }
+  }
+  return mx > 0. ? d / mx : d;
+}
+
+/* the principal submatrix of G (k x k) on the columns idx[0 .. kept) */
+static void td_principal(const scs_float *G, scs_int k, const scs_int *idx,
+                         scs_int kept, scs_float *S) {
+  scs_int i, j;
+  for (j = 0; j < kept; ++j) {
+    for (i = 0; i < kept; ++i) {
+      S[j * kept + i] = G[idx[j] * k + idx[i]];
+    }
+  }
+}
+
+/* 1e-12 relative: the factor and its reference do the same operations in
+ * the same order, so they agree to rounding (in practice bit for bit); a
+ * factor of the wrong columns, or compacted wrongly, differs by order one */
+#define TD_FACTOR_TOL (1e-12)
+
+static const char *test_eigcg_gram_factor(void) {
+  scs_int i, j, n = 60, k = 30, kept, bitwise, idx[30], ref[30];
+  scs_float W[60 * 30], lam[60], G[900], G0[900], R[900], d;
+  scs_float tol = EIGCG_CHOL_REL_PIVOT, s2[4], rho;
+#ifdef SFLOAT
+  return mu_skipped; /* deflation is off in single precision (eigcg.h), and
+                        T3's relative pivots are below its rounding */
+#endif
+  ran_start(30);
+  for (i = 0; i < n * k; ++i) {
+    W[i] = rand_scs_float();
+  }
+  for (i = 0; i < n; ++i) {
+    lam[i] = POWF(1e-2, 1. - (scs_float)i / (n - 1));
+  }
+  /* (T1) independent vectors: all kept, the plain factor */
+  td_gram_diag(W, lam, n, k, G0);
+  memcpy(G, G0, sizeof(G));
+  memcpy(R, G0, sizeof(R));
+  kept = SCS(eigcg_gram_factor)(G, k, idx);
+  td_plain_chol(R, k, SCS_NULL);
+  mu_assert("test_eigcg_gram_factor: (T1) an independent vector was dropped",
+            kept == k);
+  for (i = 0; i < k; ++i) {
+    mu_assert("test_eigcg_gram_factor: (T1) wrong kept columns", idx[i] == i);
+  }
+  d = td_factor_diff(G, R, k, &bitwise);
+  scs_printf("test_eigcg_gram_factor: (T1) %li of %li kept; factor vs plain "
+             "Cholesky %.2e relative (bit for bit: %s)\n",
+             (long)kept, (long)k, (double)d, bitwise ? "yes" : "no");
+  mu_assert("test_eigcg_gram_factor: (T1) not the plain factor",
+            d <= TD_FACTOR_TOL);
+  /* (T2) vector 7 equal to vector 6: it alone is dropped */
+  memcpy(W + 7 * n, W + 6 * n, n * sizeof(scs_float));
+  td_gram_diag(W, lam, n, k, G0);
+  memcpy(G, G0, sizeof(G));
+  kept = SCS(eigcg_gram_factor)(G, k, idx);
+  for (i = 0, j = 0; i < k; ++i) {
+    if (i != 7) {
+      ref[j++] = i;
+    }
+  }
+  mu_assert("test_eigcg_gram_factor: (T2) not exactly the copy dropped",
+            kept == k - 1);
+  for (i = 0; i < kept; ++i) {
+    mu_assert("test_eigcg_gram_factor: (T2) wrong kept columns",
+              idx[i] == ref[i]);
+  }
+  td_principal(G0, k, ref, kept, R);
+  td_plain_chol(R, kept, SCS_NULL);
+  d = td_factor_diff(G, R, kept, &bitwise);
+  scs_printf("test_eigcg_gram_factor: (T2) a copy: %li of %li kept; factor "
+             "vs the plain one of the rest %.2e relative (bit for bit: %s)\n",
+             (long)kept, (long)k, (double)d, bitwise ? "yes" : "no");
+  mu_assert("test_eigcg_gram_factor: (T2) not the plain factor of the rest",
+            d <= TD_FACTOR_TOL);
+  /* (T3) the threshold, both sides, and the second vector scaled by 1e6 */
+  for (i = 0; i < 4; ++i) {
+    scs_float sc = (i % 2) ? 1e6 : 1.;
+    scs_float c01;
+    rho = (i < 2) ? 10. * tol : 0.1 * tol;
+    c01 = SQRTF(1. - rho);
+    s2[0] = 1.;
+    s2[1] = s2[2] = sc * c01;
+    s2[3] = sc * sc;
+    kept = SCS(eigcg_gram_factor)(s2, 2, idx);
+    scs_printf("test_eigcg_gram_factor: (T3) relative pivot %.0e, scale %.0e: "
+               "%li of 2 kept\n",
+               (double)rho, (double)sc, (long)kept);
+    mu_assert("test_eigcg_gram_factor: (T3) wrong side of the threshold",
+              kept == ((i < 2) ? 2 : 1) && idx[0] == 0);
+  }
+  /* (T4) G = L L' (k = 10), then a negative pivot in column 3, a NaN
+   * diagonal entry in column 5 and a zero one in column 8 */
+  k = 10;
+  memset(R, 0, sizeof(R));
+  for (j = 0; j < k; ++j) {
+    R[j * k + j] = 1. + ABS(rand_scs_float());
+    for (i = j + 1; i < k; ++i) {
+      R[j * k + i] = 0.5 * rand_scs_float(); /* L(i, j) */
+    }
+  }
+  for (j = 0; j < k; ++j) {
+    for (i = 0; i < k; ++i) {
+      scs_float acc = 0.;
+      scs_int t;
+      for (t = 0; t <= MIN(i, j); ++t) {
+        acc += R[t * k + i] * R[t * k + j];
+      }
+      G0[j * k + i] = acc;
+    }
+  }
+  G0[3 * k + 3] -= 2. * R[3 * k + 3] * R[3 * k + 3];
+  G0[5 * k + 5] = NAN;
+  G0[8 * k + 8] = 0.;
+  memcpy(G, G0, sizeof(scs_float) * k * k);
+  kept = SCS(eigcg_gram_factor)(G, k, idx);
+  for (i = 0, j = 0; i < k; ++i) {
+    if (i != 3 && i != 5 && i != 8) {
+      ref[j++] = i;
+    }
+  }
+  mu_assert("test_eigcg_gram_factor: (T4) not exactly columns 3, 5 and 8 "
+            "dropped",
+            kept == k - 3);
+  for (i = 0; i < kept; ++i) {
+    mu_assert("test_eigcg_gram_factor: (T4) wrong kept columns",
+              idx[i] == ref[i]);
+  }
+  td_principal(G0, k, ref, kept, R);
+  td_plain_chol(R, kept, SCS_NULL);
+  d = td_factor_diff(G, R, kept, &bitwise);
+  scs_printf("test_eigcg_gram_factor: (T4) negative, NaN and zero pivots: %li "
+             "of %li kept; factor vs the plain one of the rest %.2e relative\n",
+             (long)kept, (long)k, (double)d);
+  mu_assert("test_eigcg_gram_factor: (T4) not the plain factor of the rest",
+            d <= TD_FACTOR_TOL);
   return SCS_NULL;
 }
 
@@ -559,6 +878,9 @@ static const char *test_eigcg_core(void) {
     }
     if (!fail) {
       fail = td_core_alloc_fail(&c);
+    }
+    if (!fail) {
+      fail = td_core_ghost();
     }
   } else {
     /* off: no memory, no harvest, and the hooks leave x and r as they are */
