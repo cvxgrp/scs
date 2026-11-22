@@ -236,10 +236,10 @@ how to choose them.
      - Permitted values
      - Default
    * - :code:`DEFLATE_VECTORS`
-     - CPU indirect solver only: the number of approximate eigenvectors used to deflate the CG solves (eigCG). Costs :math:`2n` numbers of memory per vector, a few vector operations of length :math:`n` per vector in each solve, and one CG iteration's matrix multiplies per vector when they are harvested. More vectors take more of the smallest eigenvalues out of the solves, which then need fewer CG iterations on ill-conditioned problems, for more memory and work. :code:`0` turns deflation off. Deflation is also off without LAPACK (:code:`USE_LAPACK=0`) and in single precision (:code:`SFLOAT=1`)
+     - Indirect solvers (CPU and GPU): the number of approximate eigenvectors used to deflate the CG solves (eigCG). Costs :math:`4n` numbers of memory per vector (:math:`2n` for the vector and its image, :math:`2n` for the harvest's restarts), allocated when the solver is set up (GPU memory for the GPU solver; setup fails if it does not fit), a few vector operations of length :math:`n` per vector in each solve, and one CG iteration's matrix multiplies per vector when they are harvested. More vectors take more of the smallest eigenvalues out of the solves, which then need fewer CG iterations on ill-conditioned problems, for more memory and work. :code:`0` turns deflation off. Deflation is also off without LAPACK (:code:`USE_LAPACK=0`) and in single precision (:code:`SFLOAT=1`)
      - :math:`\mathbf{N}`
      - 30
    * - :code:`EIGCG_WINDOW`
-     - CPU indirect solver only: the number of CG vectors (:math:`n` numbers each) that a harvest of eigenvectors keeps in memory while it runs. A larger window compresses the CG history less often, for more memory during the harvest. It is raised to at least three times the number of deflation vectors (90 with the default 30), and has no effect when :code:`DEFLATE_VECTORS` is :code:`0`
+     - Indirect solvers (CPU and GPU): the number of CG vectors (:math:`n` numbers each, allocated when the solver is set up, in GPU memory for the GPU solver) that a harvest of eigenvectors keeps in memory. A larger window compresses the CG history less often, for more memory. It is raised to at least three times the number of deflation vectors (90 with the default 30), and has no effect when :code:`DEFLATE_VECTORS` is :code:`0`
      - :math:`\mathbf{N}`
      - 60
