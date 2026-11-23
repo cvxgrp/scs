@@ -220,18 +220,13 @@ static void eigcg_restart(ScsEigcg *e, scs_float tlink) {
   e->jd = q;
 }
 
-/* begin a harvest: column 0 is the first preconditioned residual */
+/* begin a harvest: column 0 is the first preconditioned residual (the
+ * harvest's state was cleared by SCS(eigcg_begin_solve)) */
 void SCS(eigcg_start)(ScsEigcg *e, const scs_float *z, scs_float ztr) {
   scs_float isr;
   if (!e->harvest) {
     return;
   }
-  e->j = 0;
-  e->jd = 0;
-  e->step = 0;
-  e->have_prev = 0;
-  e->dead = 0;
-  e->failed = 0;
   memset(e->T, 0, (size_t)e->win * e->win * sizeof(scs_float));
   if (!(ztr > 0.)) {
     e->dead = 1;
@@ -463,9 +458,9 @@ scs_int SCS(eigcg_init)(ScsEigcg *e, ScsLinSysWork *w, const ScsEigcgOps *ops,
   e->win = win;
   nev2 = 2 * e->max;
   {
-    scs_float wkopt = 0., dummy = 0.;
+    scs_float wkopt = 0., dummy = 0., wdummy = 0.;
     blas_int bn = (blas_int)win, lda = (blas_int)win, lw = -1, info = 0;
-    BLAS(syev)("V", "U", &bn, &dummy, &lda, &wkopt, &wkopt, &lw, &info);
+    BLAS(syev)("V", "U", &bn, &dummy, &lda, &wdummy, &wkopt, &lw, &info);
     e->lwork = info ? 0 : (scs_int)wkopt;
   }
   if (e->lwork <= 0) {
@@ -557,4 +552,10 @@ void SCS(eigcg_reset)(ScsEigcg *e) {
 
 void SCS(eigcg_begin_solve)(ScsEigcg *e, scs_int cold) {
   e->harvest = (e->max > 0 && cold && e->count == 0);
+  /* the harvest's state starts afresh at every solve, here rather than in
+   * SCS(eigcg_start), which a solve may not reach (CG returns before it when
+   * the initial residual is below tol): nothing of an earlier harvest, a
+   * failed op above all, carries into this solve's SCS(eigcg_end_solve) */
+  e->j = e->jd = e->step = e->have_prev = 0;
+  e->dead = e->failed = 0;
 }

@@ -77,6 +77,21 @@
  *      sign of a rounding error), at most n vectors, and td_check_gram holds
  *      (measured: 3 vectors kept with Accelerate, 2 with NVPL; the rule
  *      before SCS 3.4.0 kept none, with Accelerate).
+ *  (i) each op that can fail (all but alloc, free and norm) made to fail
+ *      once, where the shared code calls it: scale_copy in SCS(eigcg_start)
+ *      and in SCS(eigcg_step), mul_small and copy in the first thick
+ *      restart, and mul_small, the first and the last probe and gram in the
+ *      extraction, and the first and the last copy there if it moves vectors
+ *      (if the filter or the factorization drops one before a kept one):
+ *      SCS(eigcg_end_solve) returns -1 (the solver fails the solve), no set
+ *      is kept, no op is called after the failed one, nothing is allocated;
+ *  (j) after each, a solve that returns before SCS(eigcg_start) returns 0
+ *      (a failed op does not carry into the next solve), and the next cold
+ *      solve harvests a set (measured: the healthy harvest's, the same
+ *      number of vectors probed and kept);
+ *  (k) SCS(eigcg_deflate) returns -1 when coeffs or project fails, and (l)
+ *      when the undo's project fails (with the mismatched images of (c));
+ *      the set is kept.
  * In a build without deflation, init succeeds and leaves it off (max 0),
  * checked against the build flags, allocates nothing, and the hooks leave x
  * and r untouched.
@@ -123,6 +138,18 @@
 #define TD_LSS_BAR (1e-6)
 #define TD_LSS_DELTA (0.1)
 
+/* the ops that the test can make fail (alloc fails through fail_from; free
+ * and norm cannot fail), indices into TdCtx.calls */
+#define TD_OP_NONE (0)
+#define TD_OP_SCALE_COPY (1)
+#define TD_OP_COPY (2)
+#define TD_OP_MUL_SMALL (3)
+#define TD_OP_PROBE (4)
+#define TD_OP_GRAM (5)
+#define TD_OP_COEFFS (6)
+#define TD_OP_PROJECT (7)
+#define TD_OPS (8)
+
 /* the test's solver: K dense (n x n, by column), identity preconditioner */
 typedef struct {
   scs_int n;
@@ -130,7 +157,37 @@ typedef struct {
   scs_int allocs;    /* calls to alloc */
   scs_int fail_from; /* alloc fails from this call on (-1: never) */
   scs_int live;      /* allocations not freed */
+  /* op fail_op (TD_OP_*) fails at its call fail_at (counted from 0 since
+   * td_arm) and at no other: calls[op] counts the calls of each op, failed
+   * whether fail_op has failed, after the calls of any op made after that */
+  scs_int fail_op, fail_at, failed, after;
+  scs_int calls[TD_OPS];
 } TdCtx;
+
+/* make op fail at its call at from now on (TD_OP_NONE: no op fails; at -1:
+ * only count the calls) */
+static void td_arm(TdCtx *c, scs_int op, scs_int at) {
+  c->fail_op = op;
+  c->fail_at = at;
+  c->failed = 0;
+  c->after = 0;
+  memset(c->calls, 0, sizeof(c->calls));
+}
+
+/* counts a call of op; whether it fails */
+static scs_int td_fails(ScsLinSysWork *w, scs_int op) {
+  TdCtx *c = (TdCtx *)w;
+  scs_int call = c->calls[op]++;
+  if (c->failed) {
+    c->after++;
+    return 0;
+  }
+  if (op == c->fail_op && call == c->fail_at) {
+    c->failed = 1;
+    return 1;
+  }
+  return 0;
+}
 
 /* the allocations of the ops when deflation is on: W, AW, V and VS */
 #define TD_ALLOCS (4)
@@ -170,6 +227,9 @@ static void td_free(ScsLinSysWork *w, scs_float *v) {
 static scs_int td_scale_copy(ScsLinSysWork *w, scs_float *dst,
                              const scs_float *src, scs_float a) {
   scs_int t;
+  if (td_fails(w, TD_OP_SCALE_COPY)) {
+    return -1;
+  }
   for (t = 0; t < ((TdCtx *)w)->n; ++t) {
     dst[t] = a * src[t];
   }
@@ -178,6 +238,9 @@ static scs_int td_scale_copy(ScsLinSysWork *w, scs_float *dst,
 
 static scs_int td_copy(ScsLinSysWork *w, scs_float *dst, const scs_float *src,
                        scs_int cols) {
+  if (td_fails(w, TD_OP_COPY)) {
+    return -1;
+  }
   memcpy(dst, src, (size_t)cols * ((TdCtx *)w)->n * sizeof(scs_float));
   return 0;
 }
@@ -185,6 +248,9 @@ static scs_int td_copy(ScsLinSysWork *w, scs_float *dst, const scs_float *src,
 static scs_int td_mul_small(ScsLinSysWork *w, scs_float *C, const scs_float *A,
                             scs_int k, const scs_float *B, scs_int cols) {
   scs_int i, j, l, n = ((TdCtx *)w)->n;
+  if (td_fails(w, TD_OP_MUL_SMALL)) {
+    return -1;
+  }
   for (j = 0; j < cols; ++j) {
     scs_float *cj = C + (size_t)j * n;
     memset(cj, 0, n * sizeof(scs_float));
@@ -204,6 +270,9 @@ static scs_int td_probe(ScsLinSysWork *w, const scs_float *v, scs_float *Kv,
   TdCtx *c = (TdCtx *)w;
   scs_int t;
   scs_float r2 = 0., m2 = 0.;
+  if (td_fails(w, TD_OP_PROBE)) {
+    return -1;
+  }
   td_matvec(c, v, Kv);
   for (t = 0; t < c->n; ++t) {
     scs_float mw = theta * v[t]; /* D = I */
@@ -218,6 +287,9 @@ static scs_int td_probe(ScsLinSysWork *w, const scs_float *v, scs_float *Kv,
 static scs_int td_gram(ScsLinSysWork *w, const scs_float *W,
                        const scs_float *AW, scs_int k, scs_float *G) {
   scs_int a, b, n = ((TdCtx *)w)->n;
+  if (td_fails(w, TD_OP_GRAM)) {
+    return -1;
+  }
   for (a = 0; a < k; ++a) {
     for (b = 0; b < k; ++b) {
       G[b * k + a] = SCS(dot)(W + (size_t)a * n, AW + (size_t)b * n, n);
@@ -229,6 +301,9 @@ static scs_int td_gram(ScsLinSysWork *w, const scs_float *W,
 static scs_int td_coeffs(ScsLinSysWork *w, const scs_float *W, scs_int k,
                          const scs_float *r, scs_float *c) {
   scs_int j, n = ((TdCtx *)w)->n;
+  if (td_fails(w, TD_OP_COEFFS)) {
+    return -1;
+  }
   for (j = 0; j < k; ++j) {
     c[j] = SCS(dot)(W + (size_t)j * n, r, n);
   }
@@ -240,6 +315,9 @@ static scs_int td_project(ScsLinSysWork *w, const scs_float *W,
                           scs_float *x, scs_float *r, scs_int undo) {
   scs_int j, t, n = ((TdCtx *)w)->n;
   scs_float sg = undo ? -1. : 1.;
+  if (td_fails(w, TD_OP_PROJECT)) {
+    return -1;
+  }
   for (j = 0; j < k; ++j) {
     for (t = 0; t < n; ++t) {
       x[t] += sg * c[j] * W[(size_t)j * n + t];
@@ -375,7 +453,9 @@ static scs_int td_cg(TdCtx *c, ScsEigcg *e, const scs_float *b, scs_float *x,
   memset(x, 0, n * sizeof(scs_float));
   memcpy(r, b, n * sizeof(scs_float));
   if (deflate) {
-    (void)SCS(eigcg_deflate)(e, x, r); /* the test's ops do not fail */
+    /* no op is armed to fail while a set is held here: td_core_op_fail
+     * calls SCS(eigcg_deflate) itself to test its failures */
+    (void)SCS(eigcg_deflate)(e, x, r);
   }
   if (SCS(norm_inf)(r, n) >= tol) {
     /* z = r: the preconditioner is the identity */
@@ -597,6 +677,137 @@ static const char *td_core_on(TdCtx *c, ScsEigcg *e, scs_float *b1,
             e->count > 0);
   mu_assert("test_eigcg_core: (f, g) memory allocated after setup",
             c->allocs == allocs && c->live == TD_ALLOCS);
+  return SCS_NULL;
+}
+
+/* a case of td_core_op_fail: op fails at its call at */
+typedef struct {
+  scs_int op, at;
+  const char *where;
+} TdFailCase;
+
+static void td_fail_case(TdFailCase *cases, scs_int *ncase, scs_int op,
+                         scs_int at, const char *where) {
+  cases[*ncase].op = op;
+  cases[*ncase].at = at;
+  cases[*ncase].where = where;
+  (*ncase)++;
+}
+
+/* (i) to (l): failed ops; e holds a set on entry (the end of td_core_on).
+ * Returns an error message or SCS_NULL */
+static const char *td_core_op_fail(TdCtx *c, ScsEigcg *e, const scs_float *b1,
+                                   scs_float *x, scs_float *r) {
+  scs_int k, j, n = c->n, probes, probes0, kd0, nmul, ncopy, nprobe, restarts;
+  scs_int kd, ncase, allocs = c->allocs;
+  scs_float *aw0;
+  TdFailCase cases[10];
+  /* a healthy harvest, counting the calls of each op */
+  SCS(eigcg_reset)(e);
+  td_arm(c, TD_OP_NONE, -1);
+  td_cg(c, e, b1, x, 1e-12, 1, &probes0);
+  kd0 = e->count;
+  nmul = c->calls[TD_OP_MUL_SMALL];
+  ncopy = c->calls[TD_OP_COPY];
+  nprobe = c->calls[TD_OP_PROBE];
+  restarts = nmul - 1; /* each restart calls mul_small once, as does the
+                        * extraction, and then copy once */
+  scs_printf("test_eigcg_core: (i) a healthy harvest: %li thick restarts, "
+             "%li probed, %li kept; calls: %li scale_copy, %li copy (%li in "
+             "the extraction), %li mul_small, %li gram\n",
+             (long)restarts, (long)probes0, (long)kd0,
+             (long)c->calls[TD_OP_SCALE_COPY], (long)ncopy,
+             (long)(ncopy - restarts), (long)nmul,
+             (long)c->calls[TD_OP_GRAM]);
+  mu_assert("test_eigcg_core: (i) premise: the harvest did not restart, "
+            "probe or keep a set",
+            restarts >= 1 && probes0 == nprobe && nprobe >= 2 && kd0 > 0);
+  /* the cases: each op that can fail, where the shared code calls it; the
+   * extraction moves vectors only if the filter or the factorization drops
+   * one before a kept one (BLAS-dependent) */
+  ncase = 0;
+  td_fail_case(cases, &ncase, TD_OP_SCALE_COPY, 0,
+               "scale_copy in SCS(eigcg_start)");
+  td_fail_case(cases, &ncase, TD_OP_SCALE_COPY, 1,
+               "scale_copy in SCS(eigcg_step)");
+  td_fail_case(cases, &ncase, TD_OP_MUL_SMALL, 0,
+               "mul_small in the first thick restart");
+  td_fail_case(cases, &ncase, TD_OP_COPY, 0, "copy in the first thick restart");
+  td_fail_case(cases, &ncase, TD_OP_MUL_SMALL, nmul - 1,
+               "mul_small in the extraction");
+  td_fail_case(cases, &ncase, TD_OP_PROBE, 0, "probe, the first");
+  td_fail_case(cases, &ncase, TD_OP_PROBE, nprobe - 1, "probe, the last");
+  td_fail_case(cases, &ncase, TD_OP_GRAM, 0, "gram");
+  if (ncopy > restarts) {
+    td_fail_case(cases, &ncase, TD_OP_COPY, restarts,
+                 "copy, the first in the extraction");
+    td_fail_case(cases, &ncase, TD_OP_COPY, ncopy - 1,
+                 "copy, the last in the extraction");
+  }
+  for (k = 0; k < ncase; ++k) {
+    /* (i) the failed harvest: the solve fails, no set, nothing allocated,
+     * and no op called after the failure */
+    SCS(eigcg_reset)(e);
+    td_arm(c, cases[k].op, cases[k].at);
+    td_cg(c, e, b1, x, 1e-12, 1, &probes);
+    scs_printf("test_eigcg_core: (i) %s fails: SCS(eigcg_end_solve) %li, "
+               "%li kept, %li op calls after it\n",
+               cases[k].where, (long)probes, (long)e->count, (long)c->after);
+    mu_assert("test_eigcg_core: (i) premise: the op was not called",
+              c->failed);
+    mu_assert("test_eigcg_core: (i) a harvest whose op failed did not fail "
+              "the solve, kept a set, or called an op after the failure",
+              probes == -1 && e->count == 0 && c->after == 0);
+    mu_assert("test_eigcg_core: (i) memory allocated after setup",
+              c->allocs == allocs && c->live == TD_ALLOCS);
+    /* (j) a healthy solve that returns before SCS(eigcg_start), then a
+     * healthy harvest */
+    td_arm(c, TD_OP_NONE, -1);
+    memset(r, 0, n * sizeof(scs_float));
+    td_cg(c, e, r, x, 1e-12, 1, &probes);
+    mu_assert("test_eigcg_core: (j) a solve after a failed harvest failed "
+              "without an op failing, or left a set",
+              probes == 0 && e->count == 0);
+    td_cg(c, e, b1, x, 1e-12, 1, &probes);
+    scs_printf("test_eigcg_core: (j) then a solve without iterations, and a "
+               "harvest: %li probed, %li kept (the healthy one: %li, %li)\n",
+               (long)probes, (long)e->count, (long)probes0, (long)kd0);
+    mu_assert("test_eigcg_core: (j) no harvest after a failed one",
+              probes > 0 && e->count > 0);
+  }
+  /* (k) the projection fails: coeffs, then project (x and r are undefined
+   * after; the set is untouched), with the set of the last harvest */
+  kd = e->count;
+  td_arm(c, TD_OP_COEFFS, 0);
+  memset(x, 0, n * sizeof(scs_float));
+  memcpy(r, b1, n * sizeof(scs_float));
+  mu_assert("test_eigcg_core: (k) a failed coeffs did not fail the projection",
+            SCS(eigcg_deflate)(e, x, r) == -1 && c->failed && c->after == 0);
+  td_arm(c, TD_OP_PROJECT, 0);
+  memset(x, 0, n * sizeof(scs_float));
+  memcpy(r, b1, n * sizeof(scs_float));
+  mu_assert("test_eigcg_core: (k) a failed project did not fail the "
+            "projection",
+            SCS(eigcg_deflate)(e, x, r) == -1 && c->failed && c->after == 0);
+  /* (l) the undo fails: images that do not match (AW scaled by 100, as in
+   * (c)) and r = W(:, 0), so the projection grows r and is undone */
+  aw0 = (scs_float *)scs_calloc((size_t)kd * n, sizeof(scs_float));
+  memcpy(aw0, e->AW, (size_t)kd * n * sizeof(scs_float));
+  for (j = 0; j < kd * n; ++j) {
+    e->AW[j] *= 100.;
+  }
+  td_arm(c, TD_OP_PROJECT, 1);
+  memset(x, 0, n * sizeof(scs_float));
+  memcpy(r, e->W, n * sizeof(scs_float));
+  probes = SCS(eigcg_deflate)(e, x, r);
+  memcpy(e->AW, aw0, (size_t)kd * n * sizeof(scs_float));
+  scs_free(aw0);
+  mu_assert("test_eigcg_core: (l) a failed undo did not fail the projection",
+            probes == -1 && c->failed && c->calls[TD_OP_PROJECT] == 2);
+  td_arm(c, TD_OP_NONE, -1);
+  mu_assert("test_eigcg_core: (k, l) the set changed, or memory was "
+            "allocated after setup",
+            e->count == kd && c->allocs == allocs && c->live == TD_ALLOCS);
   return SCS_NULL;
 }
 
@@ -872,6 +1083,9 @@ static const char *test_eigcg_core(void) {
   } else if (e.max > 0) {
     c.K = td_matrix(n);
     fail = td_core_on(&c, &e, b1, b2, x, r);
+    if (!fail) {
+      fail = td_core_op_fail(&c, &e, b1, x, r);
+    }
     SCS(eigcg_free)(&e);
     if (!fail && c.live != 0) {
       fail = "test_eigcg_core: memory left after SCS(eigcg_free)";

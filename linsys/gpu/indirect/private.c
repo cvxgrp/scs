@@ -283,8 +283,12 @@ static scs_int gpu_malloc(void **ptr, size_t count, size_t size,
  * GPU: W, AW and the window are in GPU memory. The small matrices and
  * coefficients of the shared code, on the host, go through p->dfl_small.
  * cuBLAS runs in its default host pointer mode, as in CG, so a dot product
- * or a copy to the host waits for the work before it. Every status is
- * checked: a failure fails the solve (linsys/eigcg.h). */
+ * or a copy to the host waits for the work before it. The status of every
+ * cuBLAS call and copy of these ops is checked, and a failure fails the
+ * solve (linsys/eigcg.h). Two parts are CG's own and unchecked, as they are
+ * in CG: the product by G in gpu_eig_probe (mat_vec, which checks none of
+ * its cuSPARSE calls, copies or scaling) and the norm (cg_gpu_norm, which
+ * checks neither its amax nor its copy). */
 
 /* called by SCS(eigcg_init) only, at setup */
 static scs_float *gpu_eig_alloc(ScsLinSysWork *p, scs_int rows, scs_int cols) {

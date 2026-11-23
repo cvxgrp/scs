@@ -40,15 +40,20 @@
  * window at each harvest and freed it after: the same values and the same
  * peak memory, held for less of the run, and plain CG when it did not fit.)
  *
- * Failures while solving. A failed syev, or a filter that keeps no vector,
- * leaves that harvest without a set (plain CG until the next harvest): a
- * deterministic function of the values. A vector that is numerically
- * dependent on the ones before it is dropped on its own, and the rest of
- * the set is kept (EIGCG_CHOL_REL_PIVOT; before SCS 3.4.0 the whole set was
- * dropped, or kept with the dependent vector, on the sign of a rounding
- * error). A set of any size is held until SCS(eigcg_reset); only a harvest
- * that keeps none lets the next cold solve harvest again. A failed operation
- * of the solver (only the GPU solver's can fail) fails the solve.
+ * Failures while solving. A failed syev in a thick restart, an empty restart
+ * stack, or a CG scalar out of range (alpha or z'r not positive, beta
+ * negative, or any not a number) stops the harvest observing, and the set is
+ * extracted from the window as it stands then. A failed syev at the
+ * extraction, or a filter that keeps no vector, leaves that harvest without
+ * a set (plain CG until the next harvest). Each of these is a deterministic
+ * function of the values. A vector that is numerically dependent on the ones
+ * before it is dropped on its own, and the rest of the set is kept
+ * (EIGCG_CHOL_REL_PIVOT; before SCS 3.4.0 the whole set was dropped, or kept
+ * with the dependent vector, on the sign of a rounding error). A set of any
+ * size is held until SCS(eigcg_reset); only a harvest that keeps none lets
+ * the next cold solve harvest again. A failed operation of the solver (only
+ * the GPU solver's can fail) fails the solve, and a harvest in which one
+ * failed keeps no set.
  *
  * A solver keeps one ScsEigcg in its workspace and calls:
  *  - SCS(eigcg_init) in scs_init_lin_sys_work (failing with it),
@@ -198,11 +203,12 @@ typedef struct {
   scs_int win, lwork;
   /* the columns the Gram factorization keeps (max integers) */
   scs_int *idx;
-  /* the harvest: j the vectors in the window, jd those whose row of T is
-   * complete, step the CG iterations observed, have_prev whether pa and pb
-   * (the previous alpha and beta) are set, dead whether this harvest stopped
-   * observing (its window is still extracted), failed whether one of the
-   * solver's ops failed (nothing is extracted, and the solve fails) */
+  /* the harvest, cleared at each SCS(eigcg_begin_solve): j the vectors in
+   * the window, jd those whose row of T is complete, step the CG iterations
+   * observed, have_prev whether pa and pb (the previous alpha and beta) are
+   * set, dead whether this harvest stopped observing (its window is still
+   * extracted), failed whether one of the solver's ops failed (nothing is
+   * extracted, and the solve fails) */
   scs_int j, jd, step, have_prev, dead, failed;
   scs_float pa, pb;
 } ScsEigcg;
@@ -227,7 +233,8 @@ void SCS(eigcg_free)(ScsEigcg *e);
 void SCS(eigcg_reset)(ScsEigcg *e);
 
 /** At the start of a plain solve: cold (no warm start) solves harvest when
- * no set is held. */
+ * no set is held. Clears the harvest's state (j to failed), so nothing of an
+ * earlier solve, a failed op included, carries into this one. */
 void SCS(eigcg_begin_solve)(ScsEigcg *e, scs_int cold);
 
 /**
