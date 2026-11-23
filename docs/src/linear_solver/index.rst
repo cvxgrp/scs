@@ -163,18 +163,49 @@ of :math:`K`'s residual: the solve started from :math:`g_0` is limited by
 that rounding, but each further step solves only for the correction, so it
 is not.
 
-**If it fails.** The solve should never fail. If the linear solver returns
-an error, :math:`g` is not finite, or the residual of the refined :math:`g`
-is more than half the size of its terms (:code:`G_FAIL_REL_RES`: not even
-the leading digit right; with working solvers it measured at most about
-:math:`10^{-2}` of the size, and that only where the solver could do no
-better, such as conjugate gradients at its iteration limit), SCS stops with
-status :code:`SCS_FAILED` (see :ref:`exit_flags`) and prints what failed,
-that this indicates a bug in SCS or its linear solver, and a request to open
-an issue at https://github.com/cvxgrp/scs/issues with the problem data (the
-``write_data_filename`` setting saves it). If :math:`b` or :math:`c`
-contains a NaN or infinite entry, SCS stops with :code:`SCS_FAILED` and says
-so instead.
+**If it fails at the start of a solve.** The solve has failed if the linear
+solver returns an error, :math:`g` is not finite, or the residual of the
+refined :math:`g` is more than half the size of its terms
+(:code:`G_FAIL_REL_RES`: not even the leading digit right; with working
+solvers it measured at most about :math:`10^{-2}` of the size, and that only
+where the solver could do no better, such as conjugate gradients at its
+iteration limit). At the start of a solve that should never happen, so SCS
+stops with status :code:`SCS_FAILED` (see :ref:`exit_flags`) and prints what
+failed, that this indicates a bug in SCS or its linear solver, and a request
+to open an issue at https://github.com/cvxgrp/scs/issues with the problem
+data (the ``write_data_filename`` setting saves it). If :math:`b` or
+:math:`c` contains a NaN or infinite entry, SCS stops with
+:code:`SCS_FAILED` and says so instead.
+
+**If it fails after a scale update.** There a working solver can fail too,
+at the limit of what it can do with the new :math:`R`. On the Netlib LP
+beaconfd, with the indirect solver, runs that diverged moved the
+:code:`scale` and the per-row multipliers until :math:`R_y` spanned nine
+orders of magnitude, and conjugate gradients then ran its :math:`10 n`
+iterations without a correct digit, before and after refinement; 3 of 564
+starting points stopped with :code:`SCS_FAILED`. So after a scale update SCS
+goes back to the previous :math:`R`, where :math:`g` was solved, and
+continues:
+
+- it puts back the :code:`scale` and the per-row multipliers, gives the
+  linear solver the previous :math:`R` again, and solves for :math:`g` again
+  there, which with conjugate gradients also rebuilds the deflation vectors;
+- it keeps everything else, including the acceleration's memory and the warm
+  starts of the cone projections, so the iterates continue as if the update
+  had not been attempted: bit for bit with a direct solver whose
+  factorization is reproducible, and with conjugate gradients in the first
+  solve after setup (in a later solve on the same workspace the rebuilt
+  deflation vectors can differ from those the solve started with);
+- the next update can come 100 iterations later at the earliest
+  (:code:`RESCALING_MIN_ITERS`, as after any update), from new samples
+  (see :ref:`updating_scale`);
+- with :code:`verbose` on it prints a line saying so, and :code:`scale_updates`
+  in the :ref:`info <info>` struct counts only the updates kept.
+
+A rollback costs the failed attempt and the way back: two factorizations
+(or, with conjugate gradients, two preconditioners) and two solves for
+:math:`g`. Only if the solve for :math:`g` fails at the previous :math:`R`
+as well does SCS stop as at the start of a solve. There is nothing to set.
 
 **Cost.** One multiply by :math:`K` each time :math:`g` is solved for (the
 residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the

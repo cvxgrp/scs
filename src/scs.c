@@ -146,7 +146,7 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
 static void set_diag_r(ScsWork *w);
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs);
-static scs_int update_work_cache(ScsWork *w);
+static scs_int update_work_cache(ScsWork *w, scs_int report);
 static scs_float kkt_terms_inf(const ScsWork *w, const scs_float *h,
                                const scs_float *g, scs_float *t);
 static void reset_tracking(ScsWork *w);
@@ -1496,9 +1496,14 @@ static scs_int all_finite(const scs_float *x, scs_int len) {
   return 1;
 }
 
-/* The message of a failed solve for g: what failed (with the residual and
- * its ratio to the size of the terms when rel >= 0), and that it is a bug. */
-static void g_solve_failed(const char *what, scs_float res, scs_float rel) {
+/* A failed solve for g: returns -1, and if report is 1 prints what failed
+ * (with the residual and its ratio to the size of the terms when rel >= 0),
+ * and that it is a bug. */
+static scs_int g_solve_failed(scs_int report, const char *what, scs_float res,
+                              scs_float rel) {
+  if (!report) {
+    return -1;
+  }
   scs_printf("ERROR: SCS could not solve the linear system K g = (c, -b) "
              "that every iteration uses: %s",
              what);
@@ -1512,13 +1517,17 @@ static void g_solve_failed(const char *what, scs_float res, scs_float rel) {
              "an issue at https://github.com/cvxgrp/scs/issues, with the "
              "problem data if you can (the write_data_filename setting saves "
              "it).\n");
+  return -1;
 }
 
 /* g = K^{-1} [c; -b] to about machine precision, see "Accuracy of the solve
  * for g" in glbopts.h. h = [c; -b] is kept in kkt_res for the refinement;
- * kkt_corr holds the refined candidate. Returns 0, or -1 with a message if
- * the solve failed (the caller stops with SCS_FAILED). */
-static scs_int update_work_cache(ScsWork *w) {
+ * kkt_corr holds the refined candidate. Returns 0, or -1 if the solve failed,
+ * with a message saying why if report is 1. At the setup of a solve
+ * (update_work) and when a rollback restores the previous R, report is 1 and
+ * the caller stops with SCS_FAILED; at a scale update it is 0, and the caller
+ * goes back to the previous R instead (scale_update_rollback). */
+static scs_int update_work_cache(ScsWork *w, scs_int report) {
   scs_int i, n = w->d->n, m = w->d->m, nm = n + m, refined = 0;
   scs_float *h = w->kkt_res, *gc = w->kkt_corr;
   scs_float res0, res, scale, tol_g;
@@ -1527,9 +1536,12 @@ static scs_int update_work_cache(ScsWork *w) {
     h[n + i] = -w->d->b[i];
   }
   if (!all_finite(h, nm)) {
-    /* the data, not SCS: no g can be finite */
-    scs_printf("ERROR: b or c contains a NaN or infinite entry, so SCS "
-               "cannot solve K g = (c, -b).\n");
+    /* the data, not SCS: no g can be finite (found at setup; the data do not
+     * change within a solve) */
+    if (report) {
+      scs_printf("ERROR: b or c contains a NaN or infinite entry, so SCS "
+                 "cannot solve K g = (c, -b).\n");
+    }
     return -1;
   }
   /* g0: a plain solve (no warm start, no steps; for CG a cold solve to
@@ -1538,22 +1550,22 @@ static scs_int update_work_cache(ScsWork *w) {
    * cannot be asked for in this call. */
   memcpy(w->g, h, nm * sizeof(scs_float));
   if (scs_solve_lin_sys(w->p, w->g, SCS_NULL, CG_BEST_TOL, 0, &res0) != 0) {
-    g_solve_failed("the linear solver returned an error", 0., -1.);
-    return -1;
+    return g_solve_failed(report, "the linear solver returned an error", 0.,
+                          -1.);
   }
   /* checked entry by entry, since SCS(norm_inf) may skip a NaN entry (res0
    * and the size below would then look finite). Steps from a g0 that is not
    * finite cannot help: every solve spreads its NaN or Inf entries. */
   if (!all_finite(w->g, nm)) {
-    g_solve_failed("the solution is not finite (NaN or Inf)", 0., -1.);
-    return -1;
+    return g_solve_failed(report, "the solution is not finite (NaN or Inf)",
+                          0., -1.);
   }
   /* the size of the terms res0 is computed from; gc is scratch here */
   scale = kkt_terms_inf(w, h, w->g, gc);
   if (!isfinite(scale)) {
-    g_solve_failed("the size of the terms of its residual overflows", 0.,
-                   -1.);
-    return -1;
+    return g_solve_failed(report,
+                          "the size of the terms of its residual overflows",
+                          0., -1.);
   }
   tol_g = G_TOL_EPS * SCS_MACH_EPS * scale;
   res = res0;
@@ -1567,8 +1579,8 @@ static scs_int update_work_cache(ScsWork *w) {
     memcpy(gc, h, nm * sizeof(scs_float));
     if (scs_solve_lin_sys(w->p, gc, w->g, tol_g, G_REFINE_MAX_STEPS - 1,
                           &res) != 0) {
-      g_solve_failed("the linear solver returned an error", 0., -1.);
-      return -1;
+      return g_solve_failed(report, "the linear solver returned an error", 0.,
+                            -1.);
     }
     /* (the residual's norm may skip a NaN entry, hence the check) */
     if (res < res0 && all_finite(gc, nm)) {
@@ -1586,8 +1598,8 @@ static scs_int update_work_cache(ScsWork *w) {
     scale = kkt_terms_inf(w, h, w->g, gc);
   }
   if (!(res <= G_FAIL_REL_RES * scale)) {
-    g_solve_failed("its residual is far too large", res, res / scale);
-    return -1;
+    return g_solve_failed(report, "its residual is far too large", res,
+                          res / scale);
   }
   return 0;
 }
@@ -1598,6 +1610,7 @@ static void reset_tracking(ScsWork *w) {
   w->sum_log_scale_factor = 0.;
   w->n_log_scale_factor = 0;
   w->scale_updates = 0;
+  w->scale_rollbacks = 0;
   w->time_limit_reached = 0;
   /* certificate persistence */
   w->infeas_cert_streak = 0;
@@ -1631,7 +1644,8 @@ static scs_int update_work(ScsWork *w, ScsSolution *sol) {
    * solve, which the (re)start above has just discarded */
   SCS(reset_cone_cache)(w->cone_work);
 
-  return update_work_cache(w);
+  /* the hard check: a failed solve for g stops the solve here */
+  return update_work_cache(w, 1);
 }
 
 /* will update if the factor is outside of range */
@@ -1670,6 +1684,84 @@ static void set_den_floor(ScsWork *w) {
     s2 += d * d;
   }
   w->den_floor = DEN_FLOOR_FRAC * SQRTF(s2 / (scs_float)MAX(m, 1));
+}
+
+/* Exchanges scale_mults and scale_mults_next: installs the multipliers an
+ * update built in scale_mults_next and keeps the previous ones there, or
+ * puts them back (scale_update_rollback). No copy. */
+static void swap_scale_mults(ScsWork *w) {
+  scs_float *t = w->scale_mults;
+  w->scale_mults = w->scale_mults_next;
+  w->scale_mults_next = t;
+}
+
+/* Goes back to the previous R after a scale update whose solve for g failed
+ * (update_work_cache at the new R, with report 0, so without its message):
+ * K g = (c, -b) has no correct digit with the new R, though it had one with
+ * the previous R. Instead of stopping with SCS_FAILED, SCS keeps the previous
+ * R and continues. It puts back the scale (scale_prev), the per-row
+ * multipliers (swapped back from scale_mults_next when the update installed
+ * new ones), R (set_diag_r, the same function of the same values, so the same
+ * bits), the linear solver's R, and g, solved again at the previous R.
+ * Nothing else changed: the update resets the acceleration and the cone
+ * cache and remaps v only after a solve for g that passes, and the
+ * per-iteration refinement's state is not touched. So where the linear
+ * solver's factorization or preconditioner is a deterministic function of R,
+ * the iterates continue bit for bit as if the update had not been attempted.
+ * With eigCG deflation (CG), the solve for g also harvests the deflation
+ * basis again, the same one provided the solve for g that last installed
+ * this R had started with no basis (always after a scale update, and in the
+ * first solve after scs_init) and no iteration's solve has harvested since
+ * (possible only if that solve kept no vector).
+ *
+ * Why: the check of the solve for g exists to catch a broken linear solver,
+ * and the setup of every solve still stops on it (update_work). At a scale
+ * update it can also fire on a working solver at the limit of what it can do
+ * with the new R. On beaconfd (Netlib LP, n 262, m 436) with the CPU
+ * indirect solver, a diverged trajectory moved the scale from 0.1 to 3.9 with
+ * the per-row multipliers at both clamps (R_y from 2.6e-7 to 255); CG ran its
+ * 10 n = 2620 iterations without a correct digit, refinement too (residual
+ * 0.73 of the size of its terms, above G_FAIL_REL_RES), and SCS stopped with
+ * the message asking for a bug report. Master's own trajectories stopped that
+ * way at 3 of 564 starts there (eps 1e-4, NVPL). No direct solver has done it
+ * (0 of 3,700 benchmark rows).
+ *
+ * Tradeoff: a rollback costs the failed attempt (a factorization or
+ * preconditioner at the new R and its solve for g) and the restore (the same
+ * at the previous R with one solve for g), and the solve goes on with the R
+ * the update meant to replace. The attempt is paced as an update
+ * (last_scale_update_iter is this iteration and the samples start again,
+ * update_scale), so the next one comes at least RESCALING_MIN_ITERS
+ * iterations later, from new samples. If the restore fails too, the linear
+ * solver now fails at an R where it worked before: SCS stops with SCS_FAILED
+ * and the message, as at setup. The decision depends only on the iterates
+ * and the linear solver (deterministic), is the same on every backend, and
+ * has no setting. Returns 0, or < 0 if the restore failed. */
+static scs_int scale_update_rollback(ScsWork *w, scs_int iter,
+                                     scs_float scale_prev,
+                                     scs_int restore_mults) {
+  scs_int linsys_status;
+  scs_float scale_tried = w->stgs->scale;
+  w->stgs->scale = scale_prev;
+  if (restore_mults) {
+    swap_scale_mults(w);
+  }
+  set_diag_r(w);
+  linsys_status = scs_update_lin_sys_diag_r(w->p, w->diag_r);
+  if (linsys_status < 0) {
+    return linsys_status;
+  }
+  if (update_work_cache(w, 1) != 0) {
+    return -1;
+  }
+  w->scale_rollbacks++;
+  if (w->stgs->verbose) {
+    scs_printf("scale update at iteration %li rolled back: K g = (c, -b) "
+               "could not be solved accurately with the new R (scale %.2e); "
+               "continuing with the previous R (scale %.2e)\n",
+               (long)iter, (double)scale_tried, (double)scale_prev);
+  }
+  return 0;
 }
 
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
@@ -1791,7 +1883,8 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
   }
   {
     scs_int linsys_status;
-    w->scale_updates++;
+    scs_float scale_prev = w->stgs->scale;
+    /* the pacing of the next update, also if this one is rolled back */
     w->sum_log_scale_factor = 0;
     w->n_log_scale_factor = 0;
     w->last_scale_update_iter = iter;
@@ -1799,9 +1892,9 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       w->stgs->scale = new_scale;
     }
     if (apply_diag) {
-      /* already clamped and in the form the cone blocks need */
-      memcpy(w->scale_mults, w->scale_mults_next,
-             w->d->m * sizeof(scs_float));
+      /* already clamped and in the form the cone blocks need; the previous
+       * multipliers stay in scale_mults_next for a rollback */
+      swap_scale_mults(w);
     }
 
     /* update diag r vector */
@@ -1813,10 +1906,12 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
       return linsys_status;
     }
 
-    /* update pre-solved quantities */
-    if (update_work_cache(w) != 0) {
-      return -1;
+    /* update pre-solved quantities, or, if g cannot be solved for with the
+     * new R, go back to the previous R (and nothing below runs) */
+    if (update_work_cache(w, 0) != 0) {
+      return scale_update_rollback(w, iter, scale_prev, apply_diag);
     }
+    w->scale_updates++;
 
     /* reset acceleration so that old iterates aren't affecting new values */
     if (w->accel) {

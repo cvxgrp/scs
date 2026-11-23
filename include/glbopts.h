@@ -541,26 +541,31 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * residual, at a solve and a multiply each. */
 #define G_TOL_EPS (0.25)
 #define G_REFINE_MAX_STEPS (5)
-/* G_FAIL_REL_RES: SCS stops with SCS_FAILED, and a message asking for a bug
- * report, when the solve for g returns an error, g is not finite (or the
- * size of its terms overflows), or the residual of the refined g is above
- * this fraction of the size of its terms (as for tol_g): not even its
- * leading digit is right. The fraction is at
- * most 1 for every g (g = 0 has 1); a solver solving with an R 1e12 times
- * too large gives 1.00 (test_g_accuracy). The refined g of working solvers
- * is far below it, at about a machine epsilon or less (with G_TOL_EPS 4 it
- * was at most 1e-15 in double precision and 5e-7 in single, on the sets
- * below) except where the solver itself cannot do better: at most 5e-3
- * with CG at its iteration limit (QSCFXM1, double precision), 2e-3 with
- * QDLDL in single precision (neos-4413714-turia), and 1.5e-2 with
- * test_refine_perturbed's solver on R (1 - 0.55); first solves, before
- * refinement, reached 0.17 (single-precision CG, neos-3656078-kumeu) and
- * were refined to 5e-7 with G_TOL_EPS 4 (measured with QDLDL and CG in both
- * precisions on the test suite, 250 random SOCPs and 17 badly scaled LPs and
- * QPs, 14 of them with CG in double precision; dense and Accelerate on the
- * test suite). Lower would also stop solvers that are inaccurate rather than
- * broken, which SCS's iterations cope with; higher would let through a g
- * with no correct digit. */
+/* G_FAIL_REL_RES: the solve for g has failed when it returns an error, g is not
+ * finite (or the size of its terms overflows), or the residual of the refined g
+ * is above this fraction of the size of its terms (as for tol_g): not even its
+ * leading digit is right. At the setup of a solve SCS then stops with
+ * SCS_FAILED and a message asking for a bug report: that is what catches a
+ * broken linear solver. At a scale update SCS instead goes back to the previous
+ * R, where g was solved, and continues (scale_update_rollback in src/scs.c; it
+ * stops as at setup only if g cannot be solved there either): there the check
+ * can also fire on a working solver at the limit of what it can do with the new
+ * R, as CG did on beaconfd (10 n iterations without a correct digit, 0.73 after
+ * refinement, with R_y spanning 1e9; 3 of 564 starts). The fraction is at most
+ * 1 for every g (g = 0 has 1); a solver solving with an R 1e12 times too large
+ * gives 1.00 (test_g_accuracy). The refined g of working solvers is far below
+ * it, at about a machine epsilon or less (with G_TOL_EPS 4 it was at most 1e-15
+ * in double precision and 5e-7 in single, on the sets below) except where the
+ * solver itself cannot do better: at most 5e-3 with CG at its iteration limit
+ * (QSCFXM1, double precision), 2e-3 with QDLDL in single precision
+ * (neos-4413714-turia), and 1.5e-2 with test_refine_perturbed's solver on R
+ * (1 - 0.55); first solves, before refinement, reached 0.17 (single-precision
+ * CG, neos-3656078-kumeu) and were refined to 5e-7 with G_TOL_EPS 4 (measured
+ * with QDLDL and CG in both precisions on the test suite, 250 random SOCPs and
+ * 17 badly scaled LPs and QPs, 14 of them with CG in double precision; dense
+ * and Accelerate on the test suite). Lower would also stop solvers that are
+ * inaccurate rather than broken, which SCS's iterations cope with (and roll
+ * back more updates); higher would let through a g with no correct digit. */
 #define G_FAIL_REL_RES (0.5)
 
 /* --- Accuracy of each iteration's solve ---

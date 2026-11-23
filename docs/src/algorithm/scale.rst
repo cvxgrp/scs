@@ -380,8 +380,17 @@ with one call every :code:`acceleration_interval` iterations. With the default
 settings that is 55 iterations without an accelerated step after each update,
 and updates can be as close as 100 iterations apart.
 
+Every update also solves for :math:`g` again with the new :math:`R` (see
+:ref:`g_refinement`). If that solve fails, which a working linear solver can
+do only at the limit of what it can do with the new :math:`R` (conjugate
+gradients on a badly scaled problem, for instance), the update is rolled back:
+SCS goes back to the previous :code:`scale` and per-row multipliers, keeps the
+acceleration's memory and continues, and the next update can come 100
+iterations later at the earliest, as after an update that was kept.
+
 The number of updates made in a solve is returned in :code:`scale_updates` in
-the :ref:`info <info>` struct, and the final :code:`scale` in :code:`scale`.
+the :ref:`info <info>` struct (an update that was rolled back is not counted),
+and the final :code:`scale` in :code:`scale`.
 
 
 .. _per_row_refinement:
