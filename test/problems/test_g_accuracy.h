@@ -516,46 +516,93 @@ static const char *test_g_accuracy_iteration(void) {
  * solver had failed at the new R. The rollback writes the old R back, and
  * the two agree again. No hook in the library.
  *
- * Why the scale setting is G_RB_SCALE. Any scalar update from it is clamped
- * to at least MIN_SCALE_VALUE (1e-6), so it divides every entry of R_y by at
- * least 1e6. The residual the check measures in the rows of y is then
- * (R_old - R_new) g_y, about 1e6 times R_new g_y, while the terms it is
- * divided by are of the size of R_new g_y: the check fails by a wide margin
- * whatever the linear solver and the precision. The scale setting may be any
- * positive number (scale.rst: the limits apply to the updates only).
+ * Why the scale setting is G_RB_SCALE. Any scalar update from a scale below
+ * MIN_SCALE_VALUE (1e-6) is clamped to at least that, so it divides every
+ * entry of R_y by at least 1e-6 / G_RB_SCALE. The residual the check measures
+ * in the rows of y is then (R_old - R_new) g_y, that many times R_new g_y,
+ * while the terms it is divided by are of the size of R_new g_y: the check
+ * fails by a wide margin whatever the linear solver. The scale setting may be
+ * any positive number (scale.rst: the limits apply to the updates only).
  *
- * Every attempted update is rolled back, so R never changes, and the solve
- * must be bit-identical to the same solve with adaptive_scale off, which
- * never attempts one: status, iterations, residuals, objectives, x, y and s.
- * Two runs (the instance of test_g_accuracy, g_acc_data, with the default
- * settings otherwise, verbose with the output captured):
+ * What is checked. Every attempted update is rolled back, so R never
+ * changes, and the solve must go on as if no update had been attempted, that
+ * is as the same solve with adaptive_scale off, which never attempts one.
+ * Not bit for bit: where the arithmetic is not reproducible from one solve to
+ * the next (threaded MKL BLAS and Pardiso without conditional numerical
+ * reproducibility, cuDSS, GPUs), two solves differ by rounding, and this
+ * fixture amplifies it (MKL in CI, 1000 iterations: pobj -624644852.7
+ * against -624644853.6). Two runs (the instance of test_g_accuracy,
+ * g_acc_data, with the default settings otherwise, verbose with the output
+ * captured), each against the same solve with adaptive_scale off:
  * 1. G_RB_ITERS iterations with adaptive_diag_scale off, so that every
- *    attempt is a scalar one: at least one rollback, at most one per
- *    RESCALING_MIN_ITERS iterations (the pacing), no scale update kept, the
- *    scale still G_RB_SCALE, the rollback's line in the output and no message
- *    asking for a bug report.
- * 2. G_RB_ITERS_DIAG iterations with adaptive_diag_scale on: the attempt at
- *    iteration RESCALING_MIN_ITERS also installs per-row multipliers, so its
- *    rollback must put them back (all 1 at the end).
+ *    attempt is a scalar one: all G_RB_ITERS iterations run (a failed
+ *    restore stops the solve at once, with SCS_FAILED), at least one
+ *    rollback, at most one per RESCALING_MIN_ITERS iterations (the pacing),
+ *    no scale update kept, the scale still G_RB_SCALE, the rollback's line in
+ *    the output and no message asking for a bug report. Not the reference's
+ *    status or iterates: after 1000 iterations, rounding alone (as below)
+ *    moved CG's iterates by up to 2 and changed the status of one of the two
+ *    solves in 5 of 192 runs (double precision).
+ * 2. G_RB_ITERS_DIAG iterations with adaptive_diag_scale on: the same, the
+ *    per-row multipliers back at 1 (the attempt at iteration
+ *    RESCALING_MIN_ITERS also installs them), the reference's status, and x,
+ *    y and s within G_RB_TOL of the reference's: the largest over x, y and s
+ *    of ||a - b||_inf / max(||a||_inf, ||b||_inf) (g_rb_dev).
  * Skipped where the linear solver measures with its own K, which follows the
  * update, as check 4 is.
  *
  * Not covered: a failed restore (the restored R is consistent by
- * construction here; that path is the setup's, checks 4 and 5), and the
- * cases where CG's deflation basis does not come back bit for bit (a later
- * solve on the same workspace, or a solve for g that kept no vector).
+ * construction here; that path is the setup's, checks 4 and 5); the cases
+ * where CG's deflation basis does not come back bit for bit (a later solve on
+ * the same workspace, or a solve for g that kept no vector); and the cone
+ * cache: a rollback that also reset it (SCS(reset_cone_cache)) passes, since
+ * the cache holds only the warm starts of the logdet cone's Newton solves
+ * (USE_SPECTRAL_CONES builds) and this instance has no such cone. A PSD cone
+ * would not help: without USE_SPECTRAL_CONES the reset does nothing.
  */
 /* G_RB_SCALE: the scale setting (see above). G_RB_ITERS: the long run, room
  * for 9 attempts, one per RESCALING_MIN_ITERS. G_RB_ITERS_DIAG: one attempt,
- * at iteration RESCALING_MIN_ITERS. Measured on the Mac (QDLDL, CG, dense and
- * Accelerate, double and single precision): an attempt at every check where
- * one is allowed (iterations 100 to 900), each a scalar update from 1e-12 to
- * 1e-6, with the factor of the update between 100 and 4e4 (it fires outside
- * [1/sqrt(10), sqrt(10)]) and the check's ratio between 5e5 and 6e6 (it fails
- * above G_FAIL_REL_RES, 0.5). At this scale the iterates diverge (residuals
- * up to 1e14 after 1000 iterations): the runs are a fixture for the
- * rollback, not a solve, and both runs follow the same path. */
+ * at iteration RESCALING_MIN_ITERS, and the iterates compared 50 iterations
+ * later. G_RB_TOL: the largest g_rb_dev of run 2.
+ *
+ * Measured on the Mac (QDLDL, CG and dense): an attempt at every check where
+ * one is allowed (iterations 100 to 900), every one rolled back, the check's
+ * ratio far above G_FAIL_REL_RES (0.5). In double precision G_RB_SCALE is
+ * 1e-12: every attempt clamped from 1e-12 to 1e-6, ratio 5e5 to 6e6. In single
+ * precision it is 1e-7: at 1e-12, K is far beyond single precision, and
+ * rounding alone (as below) moved run 2's iterates by up to 2e-2 and changed
+ * its status in 11 of 768 runs; at 1e-7 the attempts move the scale 46- to
+ * 183-fold (to 4.6e-6 to 1.8e-5), ratio 22 to 88. Either way the iterates
+ * diverge or stall: the runs are a fixture for the rollback, not a solve.
+ *
+ * G_RB_TOL sits between the two measured sizes of g_rb_dev in run 2:
+ * - rounding: every BLAS dot and norm, or every entry of every linear
+ *   solve's answer, or both, moved by -1, 0 or +1 ulp at random (64 seeds
+ *   each, per solver and precision), OpenBLAS 0.3.34 threaded against
+ *   Accelerate, one entry of b or c or the scale moved by one ulp: at most
+ *   1.8e-10 in double and 2.1e-3 in single, and no change of the status,
+ *   the rollbacks or the multipliers (nor of run 1's rollbacks);
+ * - a broken rollback (the review's mutants): the acceleration reset at the
+ *   rollback, 0.096 (CG) to 0.20 (QDLDL, dense) in double and 0.056 in
+ *   single; the linear solver not given the previous R back, 1.3 (CG, double)
+ *   and 0.076 (CG, single), SCS_FAILED with QDLDL and dense; g not solved
+ *   again at the restore, SCS_FAILED or a certificate status in double, 0.96
+ *   in single; the scale or the multipliers not put back, SCS_FAILED; no
+ *   pacing after a rollback, 36 rollbacks in run 1.
+ * So G_RB_TOL is 1e-3 in double, 96 times below the smallest effect and 5.6e6
+ * times above rounding, and 1e-2 in single, where the two are only 27 times
+ * apart: 4.8 times above rounding and 5.6 times below the smallest effect.
+ * Where the arithmetic is reproducible from one solve to the next (on the
+ * Mac: Accelerate's or OpenBLAS's BLAS at their default threading, QDLDL, CG,
+ * dense and Accelerate's solver), the two runs are the same bits and
+ * g_rb_dev is 0. */
+#ifdef SFLOAT
+#define G_RB_SCALE (1e-7)
+#define G_RB_TOL (1e-2)
+#else
 #define G_RB_SCALE (1e-12)
+#define G_RB_TOL (1e-3)
+#endif
 #define G_RB_ITERS (1000)
 #define G_RB_ITERS_DIAG (150)
 
@@ -612,17 +659,32 @@ static scs_int g_rb_solve(scs_int adaptive, scs_int diag, scs_int max_iters,
   return status;
 }
 
-/* 1 if the two solves are bit-identical: status, iterations, residuals,
- * objectives, x, y and s */
-static scs_int g_rb_same(scs_int n, scs_int m, const ScsSolution *a,
-                         const ScsInfo *ia, const ScsSolution *b,
-                         const ScsInfo *ib) {
-  return ia->status_val == ib->status_val && ia->iter == ib->iter &&
-         ia->res_pri == ib->res_pri && ia->res_dual == ib->res_dual &&
-         ia->gap == ib->gap && ia->pobj == ib->pobj && ia->dobj == ib->dobj &&
-         !memcmp(a->x, b->x, n * sizeof(scs_float)) &&
-         !memcmp(a->y, b->y, m * sizeof(scs_float)) &&
-         !memcmp(a->s, b->s, m * sizeof(scs_float));
+/* How far solve b's iterates are from solve a's: the largest over x, y and s
+ * of ||a - b||_inf / max(||a||_inf, ||b||_inf) (0 where both are 0), in
+ * double; NaN if an entry of either is NaN or infinite, so that the
+ * comparison with G_RB_TOL fails. */
+static double g_rb_dev(scs_int n, scs_int m, const ScsSolution *a,
+                       const ScsSolution *b) {
+  const scs_float *va[3], *vb[3];
+  scs_int len[3], i, j;
+  double dev = 0., num, den;
+  va[0] = a->x, vb[0] = b->x, len[0] = n;
+  va[1] = a->y, vb[1] = b->y, len[1] = m;
+  va[2] = a->s, vb[2] = b->s, len[2] = m;
+  for (j = 0; j < 3; ++j) {
+    num = den = 0.;
+    for (i = 0; i < len[j]; ++i) {
+      if (!isfinite((double)va[j][i]) || !isfinite((double)vb[j][i])) {
+        return NAN;
+      }
+      num = MAX(num, fabs((double)va[j][i] - (double)vb[j][i]));
+      den = MAX(den, MAX(fabs((double)va[j][i]), fabs((double)vb[j][i])));
+    }
+    if (num > 0.) {
+      dev = MAX(dev, num / den);
+    }
+  }
+  return dev;
 }
 
 static const char *test_g_rollback(void) {
@@ -633,7 +695,8 @@ static const char *test_g_rollback(void) {
   ScsSolution *opt_sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   ScsInfo info = {0}, info_ref = {0};
   scs_int run, status, status_ref, rollbacks, mults_one, found, rb_ref,
-      mults_ref, found_ref, nnz, same, skip;
+      mults_ref, found_ref, nnz, skip;
+  double dev;
   const char *fail = SCS_NULL, *method = scs_get_lin_sys_method();
 
   /* the instance's dimensions, for the comparisons and the skip rule */
@@ -649,22 +712,26 @@ static const char *test_g_rollback(void) {
                method);
   }
   for (run = 0; run < 2 && !skip && !fail; ++run) {
-    /* run 0: adaptive_diag_scale off; run 1: on */
+    /* run 0 (1. above): adaptive_diag_scale off; run 1 (2.): on */
     scs_int max_iters = run == 0 ? G_RB_ITERS : G_RB_ITERS_DIAG;
     status = g_rb_solve(1, run, max_iters, sol, &info, &rollbacks, &mults_one,
                         &found);
     status_ref = g_rb_solve(0, run, max_iters, ref, &info_ref, &rb_ref,
                             &mults_ref, &found_ref);
-    same = g_rb_same(d->n, d->m, sol, &info, ref, &info_ref);
+    dev = (status_ref == SCS_FAILED || status == SCS_FAILED)
+              ? NAN
+              : g_rb_dev(d->n, d->m, sol, ref);
     scs_printf("test_g_rollback: %s, adaptive_diag_scale %li: status %li "
                "after %li iterations, %li rollbacks, %li scale updates, "
                "scale %.2e; with adaptive_scale off: status %li after %li "
-               "iterations; bit-identical: %s\n",
+               "iterations; iterates apart by %.2e (%s)\n",
                method, (long)run, (long)status, (long)info.iter,
                (long)rollbacks, (long)info.scale_updates, (double)info.scale,
-               (long)status_ref, (long)info_ref.iter, same ? "yes" : "no");
-    if (status == SCS_FAILED || info.status_val == SCS_FAILED) {
-      fail = "test_g_rollback: the solve failed";
+               (long)status_ref, (long)info_ref.iter, dev,
+               run == 0 ? "not compared in this run" : "at most G_RB_TOL");
+    if (info.iter != max_iters) {
+      fail = "test_g_rollback: the solve did not run all its iterations (a "
+             "failed restore stops it with SCS_FAILED)";
     } else if (rollbacks < 1) {
       fail = "test_g_rollback: no rollback, the test is vacuous";
     } else if (rollbacks * RESCALING_MIN_ITERS >= info.iter) {
@@ -678,11 +745,14 @@ static const char *test_g_rollback(void) {
     } else if (!found) {
       fail = "test_g_rollback: no rollback line in the output, or a message "
              "asking for a bug report";
-    } else if (status_ref == SCS_FAILED || rb_ref != 0) {
+    } else if (info_ref.iter != max_iters || rb_ref != 0) {
       fail = "test_g_rollback: the solve with adaptive_scale off failed";
-    } else if (!same) {
-      fail = "test_g_rollback: not bit-identical to the solve with "
+    } else if (run == 1 && info.status_val != info_ref.status_val) {
+      fail = "test_g_rollback: not the status of the solve with "
              "adaptive_scale off";
+    } else if (run == 1 && !(dev <= G_RB_TOL)) {
+      fail = "test_g_rollback: the iterates are more than G_RB_TOL from "
+             "those of the solve with adaptive_scale off";
     }
   }
   SCS(free_data)(d);

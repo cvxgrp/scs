@@ -194,8 +194,10 @@ continues:
   starts of the cone projections, so the iterates continue as if the update
   had not been attempted: bit for bit with a direct solver whose
   factorization is reproducible, and with conjugate gradients in the first
-  solve after setup (in a later solve on the same workspace the rebuilt
-  deflation vectors can differ from those the solve started with);
+  solve after setup if the solve for :math:`g` kept at least one deflation
+  vector (in a later solve on the same workspace, or after a solve for
+  :math:`g` that kept none, the rebuilt deflation vectors can differ from
+  those in use before the attempt);
 - the next update can come 100 iterations later at the earliest
   (:code:`RESCALING_MIN_ITERS`, as after any update), from new samples
   (see :ref:`updating_scale`);

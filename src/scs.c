@@ -1734,7 +1734,11 @@ static void swap_scale_mults(ScsWork *w) {
  * update_scale), so the next one comes at least RESCALING_MIN_ITERS
  * iterations later, from new samples. If the restore fails too, the linear
  * solver now fails at an R where it worked before: SCS stops with SCS_FAILED
- * and the message, as at setup. The decision depends only on the iterates
+ * and the message, as at setup. That is also the one way a working solver
+ * can still stop here: where the restored g is not the bits of the one before
+ * the attempt (CG outside the two conditions above, or a factorization that
+ * is not reproducible), at an R where that g passed the check only narrowly,
+ * the restored one can fail it. The decision depends only on the iterates
  * and the linear solver (deterministic), is the same on every backend, and
  * has no setting. Returns 0, or < 0 if the restore failed. */
 static scs_int scale_update_rollback(ScsWork *w, scs_int iter,
@@ -1755,6 +1759,7 @@ static scs_int scale_update_rollback(ScsWork *w, scs_int iter,
     return -1;
   }
   w->scale_rollbacks++;
+  (void)scale_tried; /* read only by the message, which NO_PRINTING removes */
   if (w->stgs->verbose) {
     scs_printf("scale update at iteration %li rolled back: K g = (c, -b) "
                "could not be solved accurately with the new R (scale %.2e); "
