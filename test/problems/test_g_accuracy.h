@@ -792,7 +792,8 @@ static const char *test_g_rollback(void) {
  * the direct solvers check at every factorization, at setup and at every
  * update (at setup: test_non_psd_p): QDLDL through its pivots, the dense
  * solver through its Cholesky factorization, MKL Pardiso and cuDSS through
- * the numbers of positive and negative pivots they report. With a P that is
+ * the numbers of positive and negative pivots they report, Apple Accelerate
+ * through the signs of its pivots (the diagonal of D). With a P that is
  * not positive semidefinite, that depends on R_y. Here P = diag(G_FR_P11, 1)
  * over the box -1e5 <= x <= 1e5 (A = G_FR_A [I; -I], b = 1, c = 1,
  * normalize off), so that matrix is diagonal, its first entry R_x + G_FR_P11
@@ -827,9 +828,9 @@ static const char *test_g_rollback(void) {
  *    no update kept, the scale still G_FR_SCALE, the per-row multipliers back
  *    at 1, a status other than SCS_FAILED, the WARNING line saying that the
  *    linear solver could not factorize K with the new R (printed whatever
- *    verbose is; the status it gives is the solver's: -1 for QDLDL, MKL
- *    Pardiso and cuDSS, dpotrf's info, 1, for the dense solver), and no
- *    message asking for a bug report.
+ *    verbose is; the status it gives is the solver's: -1 for QDLDL, Apple
+ *    Accelerate, MKL Pardiso and cuDSS, dpotrf's info, 1, for the dense
+ *    solver), and no message asking for a bug report.
  * 2. The same with SCS's copy of rho_x set to G_FR_BAD_RHO_X after scs_init
  *    (written into the workspace, as test_g_rollback writes w->diag_r: setup
  *    would refuse it), so that both diagonal entries are negative at every R
@@ -844,17 +845,16 @@ static const char *test_g_rollback(void) {
  * iterations: the same bits; one ulp in one entry of b moved the solve with
  * adaptive_scale off by at most 8e-8, relative.)
  *
- * Skipped where the linear solver cannot fail this way, with the reason
- * printed: the CPU and GPU CG solvers factorize nothing (their update builds a
- * preconditioner and returns 0; at an update only the check of the solve for g
- * applies to them, test_g_rollback); Apple Accelerate's unpivoted LDL^T
- * reports a failed or singular factorization but does not check the
- * inertia. With CG and Accelerate (measured on the Mac) the first update is
- * kept and the solve continues with that K.
+ * Skipped with the CPU and GPU CG solvers, with the reason printed: they
+ * factorize nothing (their update builds a preconditioner and returns 0; at
+ * an update only the check of the solve for g applies to them,
+ * test_g_rollback). With CG (measured on the Mac) the first update is kept
+ * and the solve continues with that K.
  */
 /* G_FR_A, G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts,
- * at iterations 100 and 200 (measured: 2 rollbacks, QDLDL and dense, double
- * and single precision, Mac). G_FR_BAD_RHO_X: 500 times the largest
+ * at iterations 100 and 200 (measured: 2 rollbacks, QDLDL, dense and Apple
+ * Accelerate, double and single precision, Mac). G_FR_BAD_RHO_X: 500 times
+ * the largest
  * G_FR_A^2 R_y^-1 term of setup (20 over both rows), so that
  * R_x + P + A' R_y^-1 A is negative definite at every R. */
 #define G_FR_A (1e-5)
@@ -922,11 +922,10 @@ static const char *test_factor_rollback(void) {
   scs_int status, rollbacks, mults_one, found;
   const char *fail = SCS_NULL, *method = scs_get_lin_sys_method();
 
-  if (strstr(method, "indirect") || strstr(method, "accelerate")) {
+  if (strstr(method, "indirect")) {
     scs_printf("test_factor_rollback: %s does not refuse a K with fewer than "
                "n positive eigenvalues at a scale update (the CG solvers "
-               "factorize nothing; Apple Accelerate does not check the "
-               "inertia): skipped\n",
+               "factorize nothing): skipped\n",
                method);
     SCS(free_sol)(sol);
     return mu_skipped;

@@ -1803,10 +1803,9 @@ static void print_scale_update_failure(scs_float scale_tried,
  * restored one can fail it. The decision depends only on the iterates and the
  * linear solver (deterministic), is the same on every backend (any nonzero
  * status is a failure, as linsys.h says), and has no setting. What each
- * backend reports as a failed factorization is its own: QDLDL, the dense
- * solver, MKL Pardiso and cuDSS also refuse a K with fewer than n positive
- * eigenvalues, at setup (test_non_psd_p) and at every update
- * (test_factor_rollback), and Apple Accelerate does not check it; the CG
+ * backend reports as a failed factorization is its own: every direct solver
+ * also refuses a K with fewer than n positive eigenvalues, at setup
+ * (test_non_psd_p) and at every update (test_factor_rollback); the CG
  * solvers factorize nothing and never fail here, so for them only the check
  * of g applies. Returns 0, or -1 if the restore failed. */
 static scs_int scale_update_rollback(ScsWork *w, scs_int iter,

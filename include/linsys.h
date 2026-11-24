@@ -140,10 +140,10 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  *          printed why. SCS then goes back to the previous R: it writes that
  *          R into the same array and calls this function again, so a failed
  *          update must leave the workspace able to take another one. If that
- *          call fails too, SCS stops with `SCS_FAILED`. QDLDL, the dense
- *          solver, MKL Pardiso and cuDSS fail (here and in
- *          `scs_init_lin_sys_work`) when the factorization has fewer than n
- *          positive pivots too: K is then not quasi-definite
+ *          call fails too, SCS stops with `SCS_FAILED`. The direct solvers
+ *          in `linsys/` fail (here and in `scs_init_lin_sys_work`) when the
+ *          factorization has fewer than n positive pivots too: K is then
+ *          not quasi-definite
  *          (R_x + P + A' R_y^-1 A is not positive definite, for instance
  *          because P is not positive semidefinite).
  *
