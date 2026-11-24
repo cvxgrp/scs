@@ -1,18 +1,40 @@
 /*
  * A QP whose KKT matrix is small but whose factor is not: min 1/2 ||x||^2
- * subject to L x = b, with L the 5-point Laplacian of a k x k grid (k = 50,
- * n = m = 2500). The KKT matrix has about 1.7e4 nonzeros in its upper
- * triangle; a fill-reducing ordering gives a factor of about 1.3e5 (AMD).
+ * subject to L x = b, with L the 5-point Laplacian of a k x k grid
+ * (n = m = k^2). The KKT matrix has 7 k^2 - 4 k nonzeros in its upper
+ * triangle.
  *
- * With MKL Pardiso this takes the branch of PARDISO_MIN_THREADED_NNZ (5e4,
+ * With MKL Pardiso, k = 50 (n = m = 2500): the KKT matrix has 1.7e4
+ * nonzeros and a fill-reducing ordering gives a factor of about 1.3e5 (AMD).
+ * This takes the branch of PARDISO_MIN_THREADED_NNZ (5e4,
  * linsys/mkl/direct/private.c) where the symbolic phase first runs on one
  * thread (small KKT matrix) and is then redone on MKL's threads (large
  * factor), after releasing the Pardiso handle. The test checks that the
- * solve is still right after that. The other backends simply solve it.
+ * solve is still right after that. The branch needs the KKT matrix below
+ * 5e4 nonzeros (k <= 84) and Pardiso's factor at or above it. That factor
+ * comes from Pardiso's own nested dissection ordering, which the test cannot
+ * see and which can change with the MKL version. AMD's factor (1.27e5 at
+ * k = 50) first reaches 5e4 at k = 35, so k = 50 is kept for a margin of
+ * about 2.5x rather than cut to the smallest size that might still work.
+ *
+ * The other backends have no such branch, so they solve the same problem at
+ * k = 10 (n = m = 100). The backend is fixed when the test binary is linked,
+ * so each binary always runs the same instance. What k = 50 cost them: it
+ * was the most expensive test under Valgrind (CI, November 2026: 478 s on
+ * the dense backend, 137 s on CG, 2 s on QDLDL, 10.3 of the job's 27
+ * minutes) and about 23 s of the Windows dense step. What k = 10 loses:
+ * nothing measured. On the Mac (QDLDL, CG, dense, Accelerate) the suite
+ * covers the same library lines and branches with either size, and the one
+ * size rule of the GPU backends, cuDSS's CUDSS_MIN_PRODUCT_NNZ, puts both
+ * sizes (660 and 1.7e4 KKT nonzeros) on the same side at its default (6e4)
+ * and in the CI build that sets it to 0.
+ *
  * Tolerances are SCS's 1e-5 and a residual check at 1e-4 of ||b||: the test
  * is about the handle logic, not accuracy. Skipped in single precision, which
  * the MKL handle logic does not depend on.
  */
+#include <string.h>
+
 #include "glbopts.h"
 #include "minunit.h"
 #include "problem_utils.h"
@@ -23,7 +45,8 @@ static const char *small_kkt_large_factor(void) {
 #ifdef SFLOAT
   return mu_skipped;
 #else
-  const scs_int k = 50, n = k * k;
+  const char *method = scs_get_lin_sys_method();
+  const scs_int k = strstr(method, "mkl") ? 50 : 10, n = k * k;
   ScsCone *cone = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
   ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
   ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
@@ -108,7 +131,8 @@ static const char *small_kkt_large_factor(void) {
   for (j = 0; j < n; ++j) {
     res_max = MAX(res_max, ABS(res[j]));
   }
-  scs_printf("small_kkt_large_factor: ||Lx - b||_inf = %.3e\n", res_max);
+  scs_printf("small_kkt_large_factor: %s, k = %li: ||Lx - b||_inf = %.3e\n",
+             method, (long)k, res_max);
   scs_free(res);
   if (res_max > 1e-4 * b_max) {
     fail = "small_kkt_large_factor: ||L x - b|| too large";
