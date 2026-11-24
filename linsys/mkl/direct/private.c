@@ -149,6 +149,43 @@ static void pardiso_call(ScsLinSysWork *p, scs_int phase, const scs_float *a,
   }
 }
 
+/* The inertia check of every numerical factorization: at setup and at each
+ * update of R (scs_update_lin_sys_diag_r), as QDLDL checks its pivots and the
+ * dense solver its Cholesky factorization at every factorization.
+ *
+ * What it checks. K = [R_x + P, A'; A, -R_y] with R > 0 has n positive
+ * eigenvalues exactly when R_x + P + A' R_y^{-1} A is positive definite,
+ * which holds whenever P is PSD; then the other m are negative. After the
+ * numerical phase Pardiso reports the signs of its pivots, which by
+ * Sylvester's law of inertia are those of K's eigenvalues: iparm[21]
+ * positive, iparm[22] negative (1x1 pivots, iparm[20] = 0; a pivot that
+ * Pardiso perturbs, iparm[9], keeps its sign). Fewer than n positive pivots
+ * means that the factorization is not of a quasi-definite K, so it fails:
+ * at setup (P not PSD) SCS stops, and at a scale update SCS goes back to the
+ * previous R (scale_update_rollback in src/scs.c). Same rule as QDLDL's:
+ * too many positive pivots are not refused (that needs a negative R_y entry,
+ * which SCS never makes). A P that is only mildly indefinite can pass.
+ *
+ * Cost: none beyond reading two integers. Pardiso writes the counts into
+ * iparm, on the host, during every numerical phase.
+ *
+ * Tested by test_non_psd_p (at setup) and test_factor_rollback (a scale
+ * update whose K has n - 1 positive eigenvalues fails, and the restore to the
+ * previous R, with the right inertia, passes). Returns 0, or -1 after
+ * printing the counts. */
+static scs_int check_inertia(const ScsLinSysWork *p) {
+  if (p->iparm[21] < p->n) {
+    scs_printf("MKL Pardiso: K has %li positive and %li negative pivots, "
+               "fewer than n = %li positive (m = %li negative expected): "
+               "R_x + P + A' R_y^-1 A is not positive definite (P not "
+               "PSD?)\n",
+               (long)p->iparm[21], (long)p->iparm[22], (long)p->n,
+               (long)p->m);
+    return -1;
+  }
+  return 0;
+}
+
 static scs_int prod_setup(ScsLinSysWork *p);
 static scs_int prod_make_handle(ScsLinSysWork *p);
 static void prod_free_handle(ScsLinSysWork *p);
@@ -314,8 +351,7 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
     return SCS_NULL;
   }
 
-  if (p->iparm[21] < p->n) {
-    scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.\n");
+  if (check_inertia(p) != 0) {
     scs_free_lin_sys_work(p);
     return SCS_NULL;
   }
@@ -386,6 +422,12 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
     scs_printf("Error in PARDISO factorization when updating: %d.\n",
                (int)p->error);
     return (scs_int)p->error;
+  }
+
+  /* K with the wrong inertia: fails, and SCS restores the previous R with
+   * another call, which refactorizes and rebuilds the product's handle */
+  if (check_inertia(p) != 0) {
+    return -1;
   }
 
   /* MKL may keep its own copy of the values after mkl_sparse_optimize, so

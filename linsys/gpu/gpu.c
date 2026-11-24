@@ -70,9 +70,12 @@ void SCS(accum_by_p_gpu)(const ScsGpuMatrix *Pg, const cusparseDnVecDescr_t x,
   SCS(accum_by_atrans_gpu)(Pg, x, y, cusparse_handle, buffer_size, buffer);
 }
 
+/* safe on a partly set up A (zeroed fields are skipped) */
 void SCS(free_gpu_matrix)(ScsGpuMatrix *A) {
   cudaFree(A->x);
   cudaFree(A->i);
   cudaFree(A->p);
-  cusparseDestroySpMat(A->descr);
+  if (A->descr) {
+    cusparseDestroySpMat(A->descr);
+  }
 }

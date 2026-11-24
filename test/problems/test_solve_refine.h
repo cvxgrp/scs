@@ -268,9 +268,8 @@ static const char *test_solve_refine_csv(void) {
  * iteration counts that change chaotically with rounding; for them the count
  * is printed. (test_refine_perturbed makes every solver that measures with
  * SCS's products refine, whatever its accuracy.)
- * The indirect solvers skip it: their rule is separate, and without
- * deflation the GPU conjugate gradient solver needs minutes on this
- * ill-conditioned instance at 1e-9.
+ * The indirect solvers skip it: their rule is separate (CG solvers refine
+ * with cold solves of the residual, not in correction form).
  */
 #define SOLVE_REFINE_DEP (1e-5)
 #ifdef SFLOAT
