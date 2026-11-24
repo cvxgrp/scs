@@ -43,6 +43,72 @@ static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
     }                                                                          \
   } while (0);
 
+/* The inertia check of every numerical factorization: at setup and after
+ * each refactorization at an update of R (scs_update_lin_sys_diag_r), as
+ * QDLDL checks its pivots and the dense solver its Cholesky factorization at
+ * every factorization.
+ *
+ * What it checks. K = [R_x + P, A'; A, -R_y] with R > 0 has n positive
+ * eigenvalues exactly when R_x + P + A' R_y^{-1} A is positive definite,
+ * which holds whenever P is PSD; then the other m are negative. cuDSS
+ * reports the numbers of positive and negative pivots of the factorization
+ * (CUDSS_DATA_INERTIA), which by Sylvester's law of inertia are those of K's
+ * eigenvalues. Fewer than n positive pivots means that the factorization is
+ * not of a quasi-definite K, so it fails: at setup (P not PSD) SCS stops, and
+ * at a scale update SCS goes back to the previous R (scale_update_rollback
+ * in src/scs.c). Same rule as QDLDL's: too many positive pivots are not
+ * refused (that needs a negative R_y entry, which SCS never makes). A P that
+ * is only mildly indefinite can pass.
+ *
+ * cuDSS returns the two counts in the matrix's index type (SCS_CUDA_INDEX):
+ * 64-bit integers under DLONG, where it writes 16 bytes, and 32-bit ones
+ * otherwise, where it rejects a 16-byte buffer (cuDSS 1.0.0). scs_int
+ * follows DLONG in the same way, so it matches; test_non_psd_p covers both
+ * widths.
+ *
+ * Cost: one cudssDataGet of two integers into host memory per factorization,
+ * so at most one per scale update (RESCALING_MIN_ITERS iterations apart at
+ * least). It synchronizes: it returns only once the factorization has
+ * finished (cuDSS's documentation says only that the value is copied to the
+ * host buffer when needed); after an explicit cudaDeviceSynchronize it takes
+ * 6 to 8 us. The refactorization runs asynchronously, so the check moves the
+ * wait for it out of the solve for g that follows every update (its copy of
+ * the result to the host, cudaMemcpy, waits for the factorization) and into
+ * scs_update_lin_sys_diag_r: the update call now takes the refactorization's
+ * time, and the update plus that solve take the same time as without the
+ * check. Measured (NVIDIA GB10, cuDSS 1.0.0, CUDA 13.0, random K of size
+ * 3,000 and 30,000, medians of 20, four passes): the update call took
+ * 2.66 to 2.67 ms against 0.04 to 0.05 ms without the check, and 0.358 to
+ * 0.359 s against 0.75 to 0.78 ms; the update plus the solve took 2.93 to
+ * 2.95 ms and 0.361 to 0.362 s, with and without the check alike.
+ *
+ * Tested by test_non_psd_p (at setup) and test_factor_rollback (a scale
+ * update whose K has n - 1 positive eigenvalues fails, and the restore to the
+ * previous R, with the right inertia, passes). Returns 0; cuDSS's status if
+ * the counts cannot be read; or -1 after printing the counts. */
+static scs_int check_inertia(ScsLinSysWork *p) {
+  scs_int inertia[2] = {0, 0}; /* [0] = positive, [1] = negative */
+  size_t inertia_written = 0;
+  cudssStatus_t status =
+      cudssDataGet(p->handle, p->solver_data, CUDSS_DATA_INERTIA, inertia,
+                   sizeof(inertia), &inertia_written);
+  if (status != CUDSS_STATUS_SUCCESS) {
+    scs_printf("cuDSS: reading the inertia of K (cudssDataGet) returned "
+               "status = %d\n",
+               (int)status);
+    return (scs_int)status;
+  }
+  if (inertia[0] < p->n) {
+    scs_printf("cuDSS: K has %li positive and %li negative pivots, fewer "
+               "than n = %li positive (m = %li negative expected): "
+               "R_x + P + A' R_y^-1 A is not positive definite (P not "
+               "PSD?)\n",
+               (long)inertia[0], (long)inertia[1], (long)p->n, (long)p->m);
+    return -1;
+  }
+  return 0;
+}
+
 /* Return the linear system method name */
 const char *scs_get_lin_sys_method() {
   return "sparse-direct-cuDSS";
@@ -271,26 +337,10 @@ ScsLinSysWork *scs_init_lin_sys_work(const ScsMatrix *A, const ScsMatrix *P,
                                  p->d_sol_mat, p->d_b_mat),
                     p, "cudssExecute: factorization");
 
-  /* Inertia check. The KKT matrix has n positive eigenvalues exactly when
-   * R_x + P + A' R_y^{-1} A is positive definite, which holds whenever P is
-   * PSD. Fewer means P is not PSD (a P that is only mildly indefinite can
-   * still pass). cuDSS returns the two counts in the matrix's index type
-   * (SCS_CUDA_INDEX): 64-bit integers under DLONG, where it writes 16 bytes,
-   * and 32-bit ones otherwise, where it rejects a 16-byte buffer (cuDSS 1.0.0).
-   * scs_int follows DLONG in the same way, so it matches; test_non_psd_p
-   * covers both widths. */
-  {
-    scs_int inertia[2]; /* [0] = positive, [1] = negative */
-    size_t inertia_written;
-    CUDSS_CHECK_ABORT(
-        cudssDataGet(p->handle, p->solver_data, CUDSS_DATA_INERTIA, inertia,
-                     sizeof(inertia), &inertia_written),
-        p, "cudssDataGet: inertia");
-    if (inertia[0] < p->n) {
-      scs_printf("KKT matrix has < n positive eigenvalues. P not PSD.\n");
-      scs_free_lin_sys_work(p);
-      return SCS_NULL;
-    }
+  /* the inertia check, as after every refactorization */
+  if (check_inertia(p) != 0) {
+    scs_free_lin_sys_work(p);
+    return SCS_NULL;
   }
 
   /* the multiplies by K of scs_solve_lin_sys on the GPU for a large enough
@@ -408,7 +458,10 @@ scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *p, const scs_float *diag_r) {
                (int)status);
     return (scs_int)status;
   }
-  return 0;
+
+  /* K with the wrong inertia: fails, and SCS restores the previous R with
+   * another call, which refactorizes */
+  return check_inertia(p);
 }
 
 /* ------------------------------------------------------------------------

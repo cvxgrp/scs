@@ -26,6 +26,7 @@ struct SCS_LIN_SYS_WORK {
   SparseOpaqueFactorization_Double factorization;
 #endif
   scs_int factorizations; /* Number of successful factorizations */
+  scs_float *pivots;      /* D's diagonal, for the inertia check (n + m) */
   /* the warm start, refinement and residual of scs_solve_lin_sys, with
    * SCS's products (linsys/scs_matrix.h) */
   ScsLinSysShared sh;
