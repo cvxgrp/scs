@@ -13,11 +13,12 @@
  * reads only the residuals computed at its convergence checks and at the end
  * of a solve. Before this change SCS set each iteration's CG tolerance
  * (project_lin_sys in src/scs.c) from the residuals as they stood, so with
- * logging from the previous iteration's instead of the last check's: on the
- * instance below, with CG on Apple silicon, the logged solve took 375
- * iterations instead of 300. Now the check saves the size the tolerance is
- * set from (set_cg_tol_res), as it saves the tol of the per-iteration
- * refinement (set_refine_tol).
+ * logging from the previous iteration's instead of the last check's. On the
+ * instance below, with CG on Apple silicon, both logged solves ended at other
+ * x, y and s than the unlogged ones (in single precision after 250 and 25
+ * iterations instead of 325 and 150). Now the check saves the size the
+ * tolerance is set from (set_cg_tol_res), as it saves the tol of the
+ * per-iteration refinement (set_refine_tol).
  *
  * test_csv_log solves a random SOCP (zero, linear and second-order cone
  * rows), with Anderson acceleration and adaptive scale on (the defaults),
