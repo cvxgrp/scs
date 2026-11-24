@@ -27,7 +27,7 @@ the following fields.
      - Status integer :ref:`exit flag <exit_flags>`
    * - :code:`scale_updates`
      - :code:`scs_int`
-     - Number of updates to the :code:`scale` parameter or to the per-row multipliers of :code:`adaptive_diag_scale` in this solve; an update of both at once is counted once. Each update requires a new factorization when a direct linear solver is used. This can be nonzero even if :code:`scale` never changes (see :ref:`updating_scale`)
+     - Number of updates to the :code:`scale` parameter or to the per-row multipliers of :code:`adaptive_diag_scale` in this solve; an update of both at once is counted once. Each update requires a new factorization when a direct linear solver is used. This can be nonzero even if :code:`scale` never changes (see :ref:`updating_scale`). An update that was rolled back because the linear solver could not factorize the new matrix, or :math:`g` could not be solved for with the new scaling, is not counted (see :ref:`g_refinement`)
    * - :code:`pobj`
      - :code:`scs_float`
      - Primal objective

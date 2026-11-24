@@ -423,8 +423,18 @@ iterate, and the first step comes <code class="code docutils literal notranslate
 with one call every <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> iterations. With the default
 settings that is 55 iterations without an accelerated step after each update,
 and updates can be as close as 100 iterations apart.</p>
+<p>Every update also factorizes <span class="math notranslate nohighlight">\(K\)</span> again (with a direct linear solver)
+and solves for <span class="math notranslate nohighlight">\(g\)</span> again with the new <span class="math notranslate nohighlight">\(R\)</span> (see
+<a class="reference internal" href="../linear_solver/index.html#g-refinement"><span class="std std-ref">The solve for (c, -b)</span></a>). If either fails, which a working linear solver can do
+only at the limit of what it can do with the new <span class="math notranslate nohighlight">\(R\)</span> (conjugate
+gradients on a badly scaled problem, for instance), the update is rolled back:
+SCS goes back to the previous <code class="code docutils literal notranslate"><span class="pre">scale</span></code> and per-row multipliers, keeps the
+acceleration’s memory and continues, prints a <code class="code docutils literal notranslate"><span class="pre">WARNING</span></code> line saying what
+failed (whether or not <code class="code docutils literal notranslate"><span class="pre">verbose</span></code> is on), and the next update can come
+100 iterations later at the earliest, as after an update that was kept.</p>
 <p>The number of updates made in a solve is returned in <code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code> in
-the <a class="reference internal" href="../api/info.html#info"><span class="std std-ref">info</span></a> struct, and the final <code class="code docutils literal notranslate"><span class="pre">scale</span></code> in <code class="code docutils literal notranslate"><span class="pre">scale</span></code>.</p>
+the <a class="reference internal" href="../api/info.html#info"><span class="std std-ref">info</span></a> struct (an update that was rolled back is not counted),
+and the final <code class="code docutils literal notranslate"><span class="pre">scale</span></code> in <code class="code docutils literal notranslate"><span class="pre">scale</span></code>.</p>
 </section>
 <section id="per-row-refinement">
 <span id="id1"></span><h2>Per-row refinement<a class="headerlink" href="#per-row-refinement" title="Link to this heading"></a></h2>

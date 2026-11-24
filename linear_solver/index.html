@@ -254,18 +254,95 @@ gradients solves a reduced system and computes <span class="math notranslate noh
 of <span class="math notranslate nohighlight">\(K\)</span>’s residual: the solve started from <span class="math notranslate nohighlight">\(g_0\)</span> is limited by
 that rounding, but each further step solves only for the correction, so it
 is not.</p>
-<p><strong>If it fails.</strong> The solve should never fail. If the linear solver returns
-an error, <span class="math notranslate nohighlight">\(g\)</span> is not finite, or the residual of the refined <span class="math notranslate nohighlight">\(g\)</span>
-is more than half the size of its terms (<code class="code docutils literal notranslate"><span class="pre">G_FAIL_REL_RES</span></code>: not even
-the leading digit right; with working solvers it measured at most about
-<span class="math notranslate nohighlight">\(10^{-2}\)</span> of the size, and that only where the solver could do no
-better, such as conjugate gradients at its iteration limit), SCS stops with
-status <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> (see <a class="reference internal" href="../api/exit_flags.html#exit-flags"><span class="std std-ref">Exit flags</span></a>) and prints what failed,
-that this indicates a bug in SCS or its linear solver, and a request to open
-an issue at <a class="reference external" href="https://github.com/cvxgrp/scs/issues">https://github.com/cvxgrp/scs/issues</a> with the problem data (the
-<code class="docutils literal notranslate"><span class="pre">write_data_filename</span></code> setting saves it). If <span class="math notranslate nohighlight">\(b\)</span> or <span class="math notranslate nohighlight">\(c\)</span>
-contains a NaN or infinite entry, SCS stops with <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> and says
-so instead.</p>
+<p><strong>If it fails at the start of a solve.</strong> The solve has failed if the linear
+solver returns an error, <span class="math notranslate nohighlight">\(g\)</span> is not finite, or the residual of the
+refined <span class="math notranslate nohighlight">\(g\)</span> is more than half the size of its terms
+(<code class="code docutils literal notranslate"><span class="pre">G_FAIL_REL_RES</span></code>: not even the leading digit right; with working
+solvers it measured at most about <span class="math notranslate nohighlight">\(10^{-2}\)</span> of the size, and that only
+where the solver could do no better, such as conjugate gradients at its
+iteration limit). At the start of a solve that should never happen, so SCS
+stops with status <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> (see <a class="reference internal" href="../api/exit_flags.html#exit-flags"><span class="std std-ref">Exit flags</span></a>) and prints what
+failed, that this indicates a bug in SCS or its linear solver, and a request
+to open an issue at <a class="reference external" href="https://github.com/cvxgrp/scs/issues">https://github.com/cvxgrp/scs/issues</a> with the problem
+data (the <code class="docutils literal notranslate"><span class="pre">write_data_filename</span></code> setting saves it). If <span class="math notranslate nohighlight">\(b\)</span> or
+<span class="math notranslate nohighlight">\(c\)</span> contains a NaN or infinite entry, SCS stops with
+<code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> and says so instead.</p>
+<p><strong>If it fails after a scale update.</strong> There a working solver can fail too,
+at the limit of what it can do with the new <span class="math notranslate nohighlight">\(R\)</span>. On the Netlib LP
+beaconfd, with the indirect solver, runs that diverged moved the
+<code class="code docutils literal notranslate"><span class="pre">scale</span></code> and the per-row multipliers until <span class="math notranslate nohighlight">\(R_y\)</span> spanned nine
+orders of magnitude, and conjugate gradients then ran its <span class="math notranslate nohighlight">\(10 n\)</span>
+iterations without a correct digit, before and after refinement; 3 of 564
+starting points stopped with <code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code>. A direct solver can
+likewise fail to factorize <span class="math notranslate nohighlight">\(K\)</span> with the new <span class="math notranslate nohighlight">\(R\)</span>: with
+<span class="math notranslate nohighlight">\(P\)</span> positive semidefinite, <span class="math notranslate nohighlight">\(K\)</span> can always be factorized in exact
+arithmetic, so that is rounding or a limit of the solver at that
+<span class="math notranslate nohighlight">\(R\)</span> (the dense solver’s Cholesky factorization of
+<span class="math notranslate nohighlight">\(R_x + P + A^\top R_y^{-1} A\)</span>, for instance, once
+<span class="math notranslate nohighlight">\(A^\top R_y^{-1} A\)</span> swamps <span class="math notranslate nohighlight">\(R_x + P\)</span> in rounding). So after a
+scale update whose factorization fails, or whose solve for <span class="math notranslate nohighlight">\(g\)</span> fails,
+SCS goes back to the previous <span class="math notranslate nohighlight">\(R\)</span>, where both worked, and continues:</p>
+<ul>
+<li><p>it puts back the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> and the per-row multipliers, gives the
+linear solver the previous <span class="math notranslate nohighlight">\(R\)</span> again (a direct solver factorizes the
+same matrix again), and solves for <span class="math notranslate nohighlight">\(g\)</span> again there, which with
+conjugate gradients also rebuilds the deflation vectors;</p></li>
+<li><p>it keeps everything else, including the acceleration’s memory and the warm
+starts of the cone projections, so the iterates continue as if the update
+had not been attempted: bit for bit with a direct solver whose
+factorization is reproducible, and with the CPU conjugate gradient solver
+in the first solve after setup if the solve for <span class="math notranslate nohighlight">\(g\)</span> kept at least one
+deflation vector (in a later solve on the same workspace, or after a solve
+for <span class="math notranslate nohighlight">\(g\)</span> that kept none, the rebuilt deflation vectors can differ from
+those in use before the attempt). The GPU conjugate gradient solver
+rebuilds them the same way, from the same code, but its matrix multiplies
+are not reproducible (see <a class="reference internal" href="#gpu-reproducibility"><span class="std std-ref">Reproducibility of the GPU solvers</span></a>), so with it the
+rebuilt <span class="math notranslate nohighlight">\(g\)</span> and deflation vectors can differ by rounding;</p></li>
+<li><p>the next update can come 100 iterations later at the earliest
+(<code class="code docutils literal notranslate"><span class="pre">RESCALING_MIN_ITERS</span></code>, as after any update), from new samples
+(see <a class="reference internal" href="../algorithm/scale.html#updating-scale"><span class="std std-ref">Dynamic scale updating</span></a>);</p></li>
+<li><p>it prints a line whether or not <code class="code docutils literal notranslate"><span class="pre">verbose</span></code> is on, after the linear
+solver’s own message if it printed one, for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WARNING</span><span class="p">:</span> <span class="n">scale</span> <span class="n">update</span> <span class="n">at</span> <span class="n">iteration</span> <span class="mi">100</span> <span class="n">rolled</span> <span class="n">back</span><span class="p">:</span> <span class="n">the</span> <span class="n">linear</span> <span class="n">solver</span>
+<span class="n">could</span> <span class="ow">not</span> <span class="n">factorize</span> <span class="n">K</span> <span class="k">with</span> <span class="n">the</span> <span class="n">new</span> <span class="n">R</span> <span class="p">(</span><span class="n">scale</span> <span class="mf">1.00e+06</span><span class="p">;</span> <span class="n">status</span> <span class="mi">1</span><span class="p">);</span> <span class="n">SCS</span>
+<span class="n">continues</span> <span class="k">with</span> <span class="n">the</span> <span class="n">previous</span> <span class="n">scale</span> <span class="p">(</span><span class="mf">1.00e+11</span><span class="p">)</span> <span class="ow">and</span> <span class="n">per</span><span class="o">-</span><span class="n">row</span> <span class="n">multipliers</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>(one line in the output), with the linear solver’s status when the
+factorization failed, or, when the solve for <span class="math notranslate nohighlight">\(g\)</span> failed, its
+residual’s ratio to the size of its terms; and <code class="code docutils literal notranslate"><span class="pre">scale_updates</span></code> in the
+<a class="reference internal" href="../api/info.html#info"><span class="std std-ref">info</span></a> struct counts only the updates kept.</p>
+</li>
+</ul>
+<p>Which factorizations fail is the linear solver’s own rule. Besides a
+factorization that breaks down, the direct solvers refuse a <span class="math notranslate nohighlight">\(K\)</span> with
+fewer than <span class="math notranslate nohighlight">\(n\)</span> positive eigenvalues (which with <span class="math notranslate nohighlight">\(P\)</span> positive
+semidefinite cannot happen in exact arithmetic), at setup and at every
+update of <span class="math notranslate nohighlight">\(R\)</span>: QDLDL through its pivots, the dense solver through its
+Cholesky factorization, MKL Pardiso and cuDSS through the numbers of
+positive and negative pivots they report after each factorization, and
+Apple Accelerate through the signs of its pivots (see
+<a class="reference internal" href="#apple-accelerate"><span class="std std-ref">Apple Accelerate</span></a>). Pardiso writes the numbers into <code class="docutils literal notranslate"><span class="pre">iparm</span></code> at no
+cost. cuDSS copies them from the GPU, and the copy waits for the
+factorization to finish, so the update now takes the factorization’s time,
+which the solve for <span class="math notranslate nohighlight">\(g\)</span> that follows every update used to wait for
+instead: the update and that solve together take the same time as before
+(on an NVIDIA GB10, 2.93 to 2.95 ms with or without the check for a
+<span class="math notranslate nohighlight">\(K\)</span> of size 3,000, and 0.361 to 0.362 s for 30,000; the copy itself
+takes 6 to 8 microseconds). The conjugate gradient solvers factorize nothing,
+so for them only the solve for <span class="math notranslate nohighlight">\(g\)</span> can fail, apart from the GPU solver’s
+copies of <span class="math notranslate nohighlight">\(R\)</span> and its preconditioner to the GPU, whose failure fails its
+update too. Any nonzero status a linear solver returns from
+<code class="code docutils literal notranslate"><span class="pre">scs_update_lin_sys_diag_r</span></code> is a failure (up to SCS 3.3.2 only a
+negative one was: the positive codes of the dense solver and cuDSS were
+ignored, and the solve went on after an update that had failed, with the dense
+solver on a matrix it had not factorized).</p>
+<p>A rollback costs the failed attempt and the way back: two factorizations
+(or, with conjugate gradients, two preconditioners) and up to two solves for
+<span class="math notranslate nohighlight">\(g\)</span>. Only if the linear solver cannot factorize <span class="math notranslate nohighlight">\(K\)</span> or solve for
+<span class="math notranslate nohighlight">\(g\)</span> at the previous <span class="math notranslate nohighlight">\(R\)</span> as well does SCS stop: with
+<code class="code docutils literal notranslate"><span class="pre">SCS_FAILED</span></code> and a line saying what failed (for <span class="math notranslate nohighlight">\(g\)</span>, with the
+message of the start of a solve). There is nothing to set.</p>
 <p><strong>Cost.</strong> One multiply by <span class="math notranslate nohighlight">\(K\)</span> each time <span class="math notranslate nohighlight">\(g\)</span> is solved for (the
 residual of <span class="math notranslate nohighlight">\(g_0\)</span>) and one pass over <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(P\)</span> for the
 size of the terms, paid even when the first solve is already accurate
@@ -603,6 +680,15 @@ a sparse LDL<sup>T</sup> factorization that is optimized for Apple hardware
 solver from the Accelerate Sparse Solvers API, which is well-suited for the
 quasi-definite KKT systems that SCS produces. Accelerate performs its own
 fill-reducing ordering internally so no external AMD package is needed.</p>
+<p>Like the other direct solvers, it refuses a KKT matrix with fewer than
+<span class="math notranslate nohighlight">\(n\)</span> positive pivots, at setup (a <span class="math notranslate nohighlight">\(P\)</span> that is not positive
+semidefinite) and after every refactorization (see <a class="reference internal" href="#g-refinement"><span class="std std-ref">The solve for (c, -b)</span></a>).
+Accelerate’s <code class="docutils literal notranslate"><span class="pre">SparseGetInertia</span></code> works only for its pivoted LDL<sup>T</sup>,
+so SCS reads the pivots, the diagonal of <span class="math notranslate nohighlight">\(D\)</span>, through Accelerate’s
+subfactor of <span class="math notranslate nohighlight">\(D\)</span> (<code class="docutils literal notranslate"><span class="pre">SparseCreateSubfactor</span></code>) and counts their signs;
+the factorization stays unpivoted. That costs <span class="math notranslate nohighlight">\(n + m\)</span> numbers of
+memory and, per factorization, a pass over them: on an Apple M4, 0.36 ms for
+a KKT matrix of size 60,000, 0.07% of a refactorization.</p>
 <p>This backend is macOS-only and is available without installing any additional
 libraries since the Accelerate framework ships with Xcode / the macOS SDK.
 It does not support 64-bit integer indexing (<code class="docutils literal notranslate"><span class="pre">DLONG</span></code>).</p>
@@ -1023,7 +1109,7 @@ them, become a residual function as above.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>status != 0 indicates failure. </p>
+<dd class="field-even"><p>0 on success; any other value, negative or positive, is a failure (for instance a factorization that failed, or with the GPU indirect solver a copy to the GPU that failed), after the solver has printed why. SCS then goes back to the previous R: it writes that R into the same array and calls this function again, so a failed update must leave the workspace able to take another one. If that call fails too, SCS stops with <code class="docutils literal notranslate"><span class="pre">SCS_FAILED</span></code>. The direct solvers in <code class="docutils literal notranslate"><span class="pre">linsys/</span></code> fail (here and in <code class="docutils literal notranslate"><a class="reference internal" href="#linsys_8h_1a0b08a00fdcc184671307a1e119113ec1"><span class="std std-ref"><span class="pre">scs_init_lin_sys_work</span></span></a></code>) when the factorization has fewer than n positive pivots too: K is then not quasi-definite (R_x + P + A’ R_y^-1 A is not positive definite, for instance because P is not positive semidefinite). </p>
 </dd>
 </dl>
 </dd></dl>
