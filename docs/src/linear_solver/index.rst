@@ -183,13 +183,20 @@ beaconfd, with the indirect solver, runs that diverged moved the
 :code:`scale` and the per-row multipliers until :math:`R_y` spanned nine
 orders of magnitude, and conjugate gradients then ran its :math:`10 n`
 iterations without a correct digit, before and after refinement; 3 of 564
-starting points stopped with :code:`SCS_FAILED`. So after a scale update SCS
-goes back to the previous :math:`R`, where :math:`g` was solved, and
-continues:
+starting points stopped with :code:`SCS_FAILED`. A direct solver can
+likewise fail to factorize :math:`K` with the new :math:`R`: with
+:math:`P` positive semidefinite, :math:`K` can always be factorized in exact
+arithmetic, so that is rounding or a limit of the solver at that
+:math:`R` (the dense solver's Cholesky factorization of
+:math:`R_x + P + A^\top R_y^{-1} A`, for instance, once
+:math:`A^\top R_y^{-1} A` swamps :math:`R_x + P` in rounding). So after a
+scale update whose factorization fails, or whose solve for :math:`g` fails,
+SCS goes back to the previous :math:`R`, where both worked, and continues:
 
 - it puts back the :code:`scale` and the per-row multipliers, gives the
-  linear solver the previous :math:`R` again, and solves for :math:`g` again
-  there, which with conjugate gradients also rebuilds the deflation vectors;
+  linear solver the previous :math:`R` again (a direct solver factorizes the
+  same matrix again), and solves for :math:`g` again there, which with
+  conjugate gradients also rebuilds the deflation vectors;
 - it keeps everything else, including the acceleration's memory and the warm
   starts of the cone projections, so the iterates continue as if the update
   had not been attempted: bit for bit with a direct solver whose
@@ -201,13 +208,35 @@ continues:
 - the next update can come 100 iterations later at the earliest
   (:code:`RESCALING_MIN_ITERS`, as after any update), from new samples
   (see :ref:`updating_scale`);
-- with :code:`verbose` on it prints a line saying so, and :code:`scale_updates`
-  in the :ref:`info <info>` struct counts only the updates kept.
+- it prints a line whether or not :code:`verbose` is on, after the linear
+  solver's own message if it printed one, for instance::
+
+      WARNING: scale update at iteration 100 rolled back: the linear solver
+      could not factorize K with the new R (scale 1.00e+06; status 1); SCS
+      continues with the previous scale (1.00e+12) and per-row multipliers.
+
+  (one line in the output), with the linear solver's status when the
+  factorization failed, or, when the solve for :math:`g` failed, its
+  residual's ratio to the size of its terms; and :code:`scale_updates` in the
+  :ref:`info <info>` struct counts only the updates kept.
+
+Which factorizations fail is the linear solver's own rule: QDLDL and the
+dense solver also refuse a :math:`K` with fewer than :math:`n` positive
+eigenvalues (which with :math:`P` positive semidefinite cannot happen in
+exact arithmetic), MKL Pardiso and cuDSS check that at setup only, and Apple
+Accelerate does not check it; the conjugate gradient solvers factorize
+nothing, so for them only the solve for :math:`g` can fail. Any nonzero
+status a linear solver returns from :code:`scs_update_lin_sys_diag_r` is a
+failure (up to SCS 3.3.2 only a negative one was: the positive codes of the
+dense solver and cuDSS were ignored, and the solve went on after an update
+that had failed, with the dense solver on a matrix it had not factorized).
 
 A rollback costs the failed attempt and the way back: two factorizations
-(or, with conjugate gradients, two preconditioners) and two solves for
-:math:`g`. Only if the solve for :math:`g` fails at the previous :math:`R`
-as well does SCS stop as at the start of a solve. There is nothing to set.
+(or, with conjugate gradients, two preconditioners) and up to two solves for
+:math:`g`. Only if the linear solver cannot factorize :math:`K` or solve for
+:math:`g` at the previous :math:`R` as well does SCS stop: with
+:code:`SCS_FAILED` and a line saying what failed (for :math:`g`, with the
+message of the start of a solve). There is nothing to set.
 
 **Cost.** One multiply by :math:`K` each time :math:`g` is solved for (the
 residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the

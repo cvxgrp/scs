@@ -30,8 +30,9 @@
  * with SCS_FAILED, asking for a bug report, if that solve fails at the setup
  * of a solve (glbopts.h, "Accuracy of the solve for g"; at a scale update it
  * goes back to the previous R instead, test_g_rollback at the end of this
- * file). test_g_accuracy checks both, for every
- * linear solver the test binary is built with, on a badly scaled QP that is
+ * file, as it does when the factorization fails there, test_factor_rollback).
+ * test_g_accuracy checks both, for every linear solver the test binary is
+ * built with, on a badly scaled QP that is
  * not normalized (so that K keeps the bad scaling), with that measure
  * computed here (test_g_accuracy_iteration below checks that g is as
  * accurate as the iteration needs):
@@ -528,21 +529,26 @@ static const char *test_g_accuracy_iteration(void) {
  * changes, and the solve must go on as if no update had been attempted, that
  * is as the same solve with adaptive_scale off, which never attempts one.
  * Not bit for bit: where the arithmetic is not reproducible from one solve to
- * the next (threaded MKL BLAS and Pardiso without conditional numerical
- * reproducibility, cuDSS, GPUs), two solves differ by rounding, and this
- * fixture amplifies it (MKL in CI, 1000 iterations: pobj -624644852.7
- * against -624644853.6). Two runs (the instance of test_g_accuracy,
- * g_acc_data, with the default settings otherwise, verbose with the output
- * captured), each against the same solve with adaptive_scale off:
+ * the next, two solves differ by rounding, and this fixture amplifies it (MKL
+ * in CI, 1000 iterations: pobj -624644852.7 against -624644853.6). With MKL
+ * that is heap alignment, not threading: two solves in one process get their
+ * arrays at other addresses (and the solve with adaptive_scale off allocates
+ * no per-row multipliers), and MKL's BLAS and Pardiso, without conditional
+ * numerical reproducibility, round according to the alignment. cuDSS and GPUs
+ * are not reproducible either. Two runs (the instance of test_g_accuracy,
+ * g_acc_data, with the default settings otherwise, verbose off, with the
+ * output captured), each against the same solve with adaptive_scale off:
  * 1. G_RB_ITERS iterations with adaptive_diag_scale off, so that every
  *    attempt is a scalar one: all G_RB_ITERS iterations run (a failed
  *    restore stops the solve at once, with SCS_FAILED), at least one
  *    rollback, at most one per RESCALING_MIN_ITERS iterations (the pacing),
- *    no scale update kept, the scale still G_RB_SCALE, the rollback's line in
- *    the output and no message asking for a bug report. Not the reference's
- *    status or iterates: after 1000 iterations, rounding alone (as below)
- *    moved CG's iterates by up to 2 and changed the status of one of the two
- *    solves in 5 of 192 runs (double precision).
+ *    no scale update kept, the scale still G_RB_SCALE, the rollback's
+ *    WARNING line in the output (printed whatever verbose is) with the
+ *    residual's ratio to the size of its terms, and no message asking for a
+ *    bug report. Not the reference's status or iterates: after 1000
+ *    iterations, rounding alone (as below) moved CG's iterates by up to 2 and
+ *    changed the status of one of the two solves in 5 of 192 runs (double
+ *    precision).
  * 2. G_RB_ITERS_DIAG iterations with adaptive_diag_scale on: the same, the
  *    per-row multipliers back at 1 (the attempt at iteration
  *    RESCALING_MIN_ITERS also installs them), the reference's status, and x,
@@ -552,9 +558,11 @@ static const char *test_g_accuracy_iteration(void) {
  * update, as check 4 is.
  *
  * Not covered: a failed restore (the restored R is consistent by
- * construction here; that path is the setup's, checks 4 and 5); the cases
- * where CG's deflation basis does not come back bit for bit (a later solve on
- * the same workspace, or a solve for g that kept no vector); and the cone
+ * construction here; test_factor_rollback below makes the restore's
+ * factorization fail, and the failure of its solve for g is the setup's path,
+ * checks 4 and 5); the cases where CG's deflation basis does not come back
+ * bit for bit (a later solve on the same workspace, or a solve for g that
+ * kept no vector); and the cone
  * cache: a rollback that also reset it (SCS(reset_cone_cache)) passes, since
  * the cache holds only the warm starts of the logdet cone's Newton solves
  * (USE_SPECTRAL_CONES builds) and this instance has no such cone. A PSD cone
@@ -606,12 +614,13 @@ static const char *test_g_accuracy_iteration(void) {
 #define G_RB_ITERS (1000)
 #define G_RB_ITERS_DIAG (150)
 
-/* One verbose solve of g_acc_data's instance at scale G_RB_SCALE and at most
+/* One solve of g_acc_data's instance at scale G_RB_SCALE and at most
  * max_iters iterations, adaptive_scale and adaptive_diag_scale as given, with
  * SCS's diag_r moved to an array of the test's as described above. Returns
  * the status; *rollbacks is w->scale_rollbacks, *mults_one whether every
  * per-row multiplier is 1 at the end (1 if there are none), *found whether
- * the output has the rollback's line and no message asking for a bug report
+ * the output has the rollback's WARNING line, for a solve for g that failed
+ * its check, and no message asking for a bug report
  * (see g_acc_solve_capture), or -1 for every output if setup failed. */
 static scs_int g_rb_solve(scs_int adaptive, scs_int diag, scs_int max_iters,
                           ScsSolution *sol, ScsInfo *info, scs_int *rollbacks,
@@ -631,7 +640,7 @@ static scs_int g_rb_solve(scs_int adaptive, scs_int diag, scs_int max_iters,
   stgs->adaptive_scale = adaptive;
   stgs->adaptive_diag_scale = diag;
   stgs->max_iters = max_iters;
-  stgs->verbose = 1;
+  stgs->verbose = 0;
   w = scs_init(d, k, stgs);
   if (w) {
     l = d->n + d->m + 1;
@@ -639,8 +648,11 @@ static scs_int g_rb_solve(scs_int adaptive, scs_int diag, scs_int max_iters,
     memcpy(dr, w->diag_r, l * sizeof(scs_float));
     dr_init = w->diag_r;
     w->diag_r = dr;
-    status = g_acc_solve_capture(w, sol, info, "rolled back", SCS_NULL,
-                                 "it indicates a bug in SCS", found);
+    status = g_acc_solve_capture(
+        w, sol, info, "WARNING: scale update at iteration",
+        "rolled back: K g = (c, -b) could not be solved accurately with the "
+        "new R",
+        "it indicates a bug in SCS", found);
     *rollbacks = w->scale_rollbacks;
     *mults_one = 1;
     for (i = 0; w->scale_mults && i < d->m; ++i) {
@@ -743,8 +755,8 @@ static const char *test_g_rollback(void) {
     } else if (!mults_one) {
       fail = "test_g_rollback: the per-row multipliers were not put back";
     } else if (!found) {
-      fail = "test_g_rollback: no rollback line in the output, or a message "
-             "asking for a bug report";
+      fail = "test_g_rollback: no WARNING line for the rollback in the "
+             "output, or a message asking for a bug report";
     } else if (info_ref.iter != max_iters || rb_ref != 0) {
       fail = "test_g_rollback: the solve with adaptive_scale off failed";
     } else if (run == 1 && info.status_val != info_ref.status_val) {
@@ -760,5 +772,204 @@ static const char *test_g_rollback(void) {
   SCS(free_sol)(opt_sol);
   SCS(free_sol)(sol);
   SCS(free_sol)(ref);
+  return fail;
+}
+
+/*
+ * test_factor_rollback: a scale update whose factorization fails at the new
+ * R is rolled back like one whose solve for g fails (scale_update_rollback in
+ * src/scs.c). Any nonzero status of scs_update_lin_sys_diag_r is a failure
+ * (linsys.h), so the dense solver's positive dpotrf info counts too. Before
+ * this change (and in SCS 3.3.2) update_scale tested < 0: it stopped with
+ * SCS_FAILED on QDLDL's -1 and ignored the dense solver's 1. On this problem
+ * (measured on the Mac, before this change) the dense solver then kept two
+ * updates whose factorizations had failed and iterated with the unfactorized
+ * matrix, while QDLDL stopped.
+ *
+ * How the factorization is made to fail at a scale update and not at setup,
+ * through the problem data alone. K = [R_x + P, A'; A, -R_y] has n positive
+ * eigenvalues exactly when R_x + P + A' R_y^-1 A is positive definite, which
+ * QDLDL (its pivots) and the dense solver (its Cholesky factorization) check
+ * at every factorization, at setup and at every update (at setup:
+ * test_non_psd_p). With a P that is not positive semidefinite, that depends on
+ * R_y. Here P = diag(G_FR_P11, 1) over the box -1 <= x <= 1 (A = [I; -I],
+ * b = 1, c = 1, normalize off), so that matrix is diagonal, its first entry
+ * R_x + G_FR_P11 plus R_y^-1 of the two rows of x_1. At setup every R_y^-1 is
+ * the scale setting G_FR_SCALE: the entry is 2e12 - 1e11 > 0, and K
+ * factorizes. Any update from a scale above MAX_SCALE_VALUE (1e6) is clamped
+ * to at most that, and the per-row multipliers to at most DIAG_SCALE_MULT_MAX
+ * (1e3), so every R_y^-1 an update can install is at most 1e9 and the entry at
+ * most 2e9 - 1e11 < 0: every attempt fails, whatever the iterates. The two
+ * R_y^-1 terms are 20 times |G_FR_P11| at setup and at most a fiftieth of it
+ * at an attempt. The problem is not convex; the solve is a fixture for the
+ * rollback, not a solve.
+ *
+ * Checked, with each solver that refuses such a K at an update:
+ * 1. G_FR_ITERS iterations with the default settings otherwise (verbose off):
+ *    all iterations run (a failed restore stops the solve at once, with
+ *    SCS_FAILED), at least one rollback, at most one per RESCALING_MIN_ITERS,
+ *    no update kept, the scale still G_FR_SCALE, the per-row multipliers back
+ *    at 1, a status other than SCS_FAILED, the WARNING line saying that the
+ *    linear solver could not factorize K with the new R (printed whatever
+ *    verbose is; the status it gives is the solver's: -1 for QDLDL, dpotrf's
+ *    info, 1, for the dense solver), and no message asking for a bug report.
+ * 2. The same with SCS's copy of rho_x set to G_FR_BAD_RHO_X after scs_init
+ *    (written into the workspace, as test_g_rollback writes w->diag_r: setup
+ *    would refuse it), so that both diagonal entries are negative at every R
+ *    an update can install and at the previous one: the restore fails too,
+ *    and SCS stops with SCS_FAILED and the ERROR line saying that the linear
+ *    solver could not factorize K with the previous R either, without a
+ *    rollback and without the message asking for a bug report.
+ * The messages are checked unless printing is compiled out (NO_PRINTING).
+ * The iterates are not compared with those of the same solve with
+ * adaptive_scale off: at this scale they are chaotic (one ulp in one entry of
+ * b moved them by 0.1 to 1.1, relative, after 150 to 1000 iterations, QDLDL
+ * and dense in double precision, Mac), so only bit for bit would mean
+ * anything, and that does not hold where the arithmetic is not reproducible
+ * from one solve to the next (see test_g_rollback). On the Mac they are the
+ * same bits; test_g_rollback compares the continuation.
+ *
+ * Skipped where the linear solver cannot fail this way, with the reason
+ * printed: the CPU and GPU CG solvers factorize nothing (their update builds a
+ * preconditioner and returns 0; at an update only the check of the solve for g
+ * applies to them, test_g_rollback); Apple Accelerate's unpivoted LDL^T
+ * reports a failed or singular factorization but not the inertia (its
+ * SparseGetInertia is for the pivoted LDL^T only); MKL Pardiso and cuDSS check
+ * the inertia at setup only. With CG and Accelerate (measured on the Mac) the
+ * first update is kept and the solve continues with that K.
+ */
+/* G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts, at
+ * iterations 100 and 200 (measured: 2 rollbacks, QDLDL and dense, double and
+ * single precision, Mac). G_FR_BAD_RHO_X: 500 times the largest R_y^-1 of
+ * setup (2e12 over both rows), so that R_x + P + A' R_y^-1 A is negative
+ * definite at every R. */
+#define G_FR_P11 (-1e11)
+#define G_FR_SCALE (1e12)
+#define G_FR_ITERS (300)
+#define G_FR_BAD_RHO_X (-1e15)
+
+/* One solve of the problem above (rho_x replaced by bad_rho_x after scs_init
+ * when it is nonzero), with the output captured as in g_acc_solve_capture
+ * (want, want2 and unwanted as there). Returns the status; *rollbacks is
+ * w->scale_rollbacks, *mults_one whether every per-row multiplier is 1 at the
+ * end (1 if there are none), or -1 for every output if setup failed. */
+static scs_int g_fr_solve(scs_float bad_rho_x, ScsSolution *sol, ScsInfo *info,
+                          const char *want, const char *want2,
+                          const char *unwanted, scs_int *rollbacks,
+                          scs_int *mults_one, scs_int *found) {
+  scs_float Ax[] = {1., -1., 1., -1.};
+  scs_int Ai[] = {0, 2, 1, 3};
+  scs_int Ap[] = {0, 2, 4};
+  scs_float Px[] = {G_FR_P11, 1.};
+  scs_int Pi[] = {0, 1};
+  scs_int Pp[] = {0, 1, 2};
+  scs_float b[] = {1., 1., 1., 1.};
+  scs_float c[] = {1., 1.};
+  ScsMatrix A, P;
+  ScsData d;
+  ScsCone k;
+  ScsSettings stgs;
+  ScsWork *w;
+  scs_int status = SCS_FAILED, i;
+  *rollbacks = *mults_one = *found = -1;
+  memset(info, 0, sizeof(ScsInfo));
+  A.x = Ax, A.i = Ai, A.p = Ap, A.m = 4, A.n = 2;
+  P.x = Px, P.i = Pi, P.p = Pp, P.m = 2, P.n = 2;
+  d.m = 4, d.n = 2, d.A = &A, d.P = &P, d.b = b, d.c = c;
+  memset(&k, 0, sizeof(ScsCone));
+  k.l = 4;
+  scs_set_default_settings(&stgs);
+  stgs.normalize = 0;
+  stgs.scale = G_FR_SCALE;
+  stgs.max_iters = G_FR_ITERS;
+  stgs.verbose = 0;
+  w = scs_init(&d, &k, &stgs);
+  if (w) {
+    if (bad_rho_x != 0.) {
+      w->stgs->rho_x = bad_rho_x;
+    }
+    status = g_acc_solve_capture(w, sol, info, want, want2, unwanted, found);
+    *rollbacks = w->scale_rollbacks;
+    *mults_one = 1;
+    for (i = 0; w->scale_mults && i < d.m; ++i) {
+      if (w->scale_mults[i] != 1.) {
+        *mults_one = 0;
+      }
+    }
+    scs_finish(w);
+  }
+  return status;
+}
+
+static const char *test_factor_rollback(void) {
+  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsInfo info = {0};
+  scs_int status, rollbacks, mults_one, found;
+  const char *fail = SCS_NULL, *method = scs_get_lin_sys_method();
+
+  if (!strstr(method, "qdldl") && !strstr(method, "cholesky")) {
+    scs_printf("test_factor_rollback: %s does not refuse a K with fewer than "
+               "n positive eigenvalues at a scale update (the CG solvers "
+               "factorize nothing; Apple Accelerate does not check the "
+               "inertia; MKL Pardiso and cuDSS check it at setup only): "
+               "skipped\n",
+               method);
+    SCS(free_sol)(sol);
+    return mu_skipped;
+  }
+  /* 1. every attempt fails to factorize and is rolled back */
+  status = g_fr_solve(0., sol, &info, "WARNING: scale update at iteration",
+                      "rolled back: the linear solver could not factorize K "
+                      "with the new R",
+                      "it indicates a bug in SCS", &rollbacks, &mults_one,
+                      &found);
+  scs_printf("test_factor_rollback: %s: status %li after %li iterations, %li "
+             "rollbacks, %li scale updates, scale %.2e\n",
+             method, (long)status, (long)info.iter, (long)rollbacks,
+             (long)info.scale_updates, (double)info.scale);
+  if (status == SCS_FAILED || info.status_val == SCS_FAILED) {
+    fail = "test_factor_rollback: SCS_FAILED: the failed factorization was "
+           "not rolled back";
+  } else if (info.iter != G_FR_ITERS) {
+    fail = "test_factor_rollback: the solve did not run all its iterations";
+  } else if (rollbacks < 1) {
+    fail = "test_factor_rollback: no rollback, the test is vacuous";
+  } else if (rollbacks * RESCALING_MIN_ITERS >= info.iter) {
+    fail = "test_factor_rollback: more than one rollback per "
+           "RESCALING_MIN_ITERS iterations";
+  } else if (info.scale_updates != 0 ||
+             info.scale != (scs_float)G_FR_SCALE) {
+    fail = "test_factor_rollback: a scale update was kept (a failed "
+           "factorization not caught?)";
+  } else if (!mults_one) {
+    fail = "test_factor_rollback: the per-row multipliers were not put back";
+  } else if (!found) {
+    fail = "test_factor_rollback: no WARNING line saying that K could not be "
+           "factorized with the new R, or a message asking for a bug report";
+  }
+
+  if (!fail) {
+    /* 2. the restore fails too */
+    status = g_fr_solve(G_FR_BAD_RHO_X, sol, &info,
+                        "ERROR: scale update at iteration",
+                        "could not factorize K with the previous R either",
+                        "it indicates a bug in SCS", &rollbacks, &mults_one,
+                        &found);
+    scs_printf("test_factor_rollback: %s, rho_x %.0e after setup: status %li, "
+               "%li rollbacks\n",
+               method, G_FR_BAD_RHO_X, (long)status, (long)rollbacks);
+    if (status != SCS_FAILED || info.status_val != SCS_FAILED) {
+      fail = "test_factor_rollback: a failed restore did not stop with "
+             "SCS_FAILED";
+    } else if (rollbacks != 0) {
+      fail = "test_factor_rollback: a failed restore was counted as a "
+             "rollback";
+    } else if (!found) {
+      fail = "test_factor_rollback: a failed restore: no ERROR line saying "
+             "that K could not be factorized with the previous R either, or a "
+             "message asking for a bug report";
+    }
+  }
+  SCS(free_sol)(sol);
   return fail;
 }

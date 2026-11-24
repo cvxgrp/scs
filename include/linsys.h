@@ -135,7 +135,12 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  *
  *  @param  w             Linear system private workspace.
  *  @param  new_diag_r    Updated `diag_r`, diagonal entries of R.
- *  @return status != 0 indicates failure.
+ *  @return 0 on success; any other value, negative or positive, is a failure
+ *          (for instance a factorization that failed), after the solver has
+ *          printed why. SCS then goes back to the previous R: it writes that
+ *          R into the same array and calls this function again, so a failed
+ *          update must leave the workspace able to take another one. If that
+ *          call fails too, SCS stops with `SCS_FAILED`.
  *
  */
 scs_int scs_update_lin_sys_diag_r(ScsLinSysWork *w, const scs_float *new_diag_r);
