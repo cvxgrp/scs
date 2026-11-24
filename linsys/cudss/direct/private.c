@@ -68,12 +68,16 @@ static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
  *
  * Cost: one cudssDataGet of two integers into host memory per factorization,
  * so at most one per scale update (RESCALING_MIN_ITERS iterations apart at
- * least). It synchronizes: cuDSS's documentation says only that the value is
- * copied to the host buffer when needed, but the counts exist only once the
- * factorization has finished, so the call waits for the GPU to finish it.
- * That wait is not new: the solve for g that follows every update copies its
- * result to the host (cudaMemcpy), which waits for the factorization too.
- * What it adds is a device-to-host copy of the two counts.
+ * least). It synchronizes: it returns only once the factorization has
+ * finished (cuDSS's documentation says only that the value is copied to the
+ * host buffer when needed). That wait is not new: the solve for g that
+ * follows every update copies its result to the host (cudaMemcpy), which
+ * waits for the factorization too. Measured (NVIDIA GB10, cuDSS 1.0.0,
+ * CUDA 13.0, random K of size 3,000 and 30,000, medians of 20): called right
+ * after the refactorization it took the refactorization's time (2.6 ms and
+ * 0.35 s); after an explicit cudaDeviceSynchronize it took 6 to 8 us; and
+ * scs_update_lin_sys_diag_r took the same time with and without it, within
+ * run-to-run noise (2.63 against 2.63 ms, 0.354 against 0.358 s).
  *
  * Tested by test_non_psd_p (at setup) and test_factor_rollback (a scale
  * update whose K has n - 1 positive eigenvalues fails, and the restore to the

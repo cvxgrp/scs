@@ -228,8 +228,10 @@ update of :math:`R`: QDLDL through its pivots, the dense solver through its
 Cholesky factorization, MKL Pardiso and cuDSS through the numbers of
 positive and negative pivots they report after each factorization (Pardiso
 writes them into ``iparm`` at no cost; cuDSS copies two integers from the
-GPU, once per factorization), and Apple Accelerate through the signs of its
-pivots (see :ref:`apple_accelerate`). The conjugate gradient solvers
+GPU once per factorization, which waits for the factorization to finish, as
+the next solve would anyway: 6 to 8 microseconds on an NVIDIA GB10, with no
+measurable change in the time of an update), and Apple Accelerate through
+the signs of its pivots (see :ref:`apple_accelerate`). The conjugate gradient solvers
 factorize nothing, so for them only the solve for :math:`g` can fail. Any nonzero
 status a linear solver returns from :code:`scs_update_lin_sys_diag_r` is a
 failure (up to SCS 3.3.2 only a negative one was: the positive codes of the
