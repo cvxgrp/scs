@@ -668,19 +668,28 @@ matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
 the smallest eigenvalues from subsequent solves, which substantially reduces
 the CG iterations needed on ill-conditioned problems. Applying the deflation
 in a solve costs no matrix multiplies. Each harvest costs the multiplies of
-one CG iteration per vector.
+one CG iteration per vector. A harvest keeps only the vectors that pass a
+check of their accuracy and are not numerically dependent on the vectors it
+already keeps (CG's Lanczos process can return one eigenvector twice); a
+dependent vector is dropped on its own and the rest are kept.
 
 Deflation needs LAPACK and double precision. It is switched off when SCS is
 built without LAPACK (:code:`USE_LAPACK=0`) or in single precision
-(:code:`SFLOAT=1`), and only the CPU indirect solver has it. Single precision
-builds also use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
+(:code:`SFLOAT=1`). The CPU and the :ref:`GPU <gpu_indirect>` indirect solvers
+both have it, the same algorithm in shared code. Single precision builds also
+use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
 :code:`CG_RATE`.
 
 Deflation keeps :math:`2n` numbers per vector in memory (:math:`60n` by
-default), and a harvest takes a further :math:`n` numbers per window entry and
-:math:`2n` per vector while it runs (:math:`150n` by default). That is much
-more than CG itself needs (a few vectors of length :math:`n`). Two constants
-in :code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
+default), and the window its harvests work in takes a further :math:`n`
+numbers per window entry and :math:`2n` per vector (:math:`150n` by default):
+:math:`210n` numbers in all by default, about 1.7 GB in double precision at
+:math:`n = 10^6`. That is much more than CG itself needs (a few vectors of
+length :math:`n`). All of it is allocated when the solver is set up and held
+until the solver is freed, so whether a solve deflates never depends on how
+much memory is free while it runs. If it cannot be allocated, setup fails
+with a message giving the size it needed. Two constants in
+:code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
 
 * :code:`DEFLATE_VECTORS` (default 30) is the number of deflation vectors.
   More vectors take more of the smallest eigenvalues out of the solves, for
@@ -688,8 +697,8 @@ in :code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
   gives plain preconditioned CG with no extra memory.
 * :code:`EIGCG_WINDOW` (default 60) is the size of the eigCG window, the
   number of CG vectors that a harvest keeps in memory. A larger window
-  compresses the CG history less often, for more memory while the harvest
-  runs. The window is never smaller than three times the number of deflation
+  compresses the CG history less often, for more memory. The window is never
+  smaller than three times the number of deflation
   vectors, so with the default 30 vectors it is 90 and a smaller
   :code:`EIGCG_WINDOW` has no effect unless :code:`DEFLATE_VECTORS` is lowered
   as well.
@@ -727,9 +736,20 @@ Sparse GPU indirect method
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU. It runs conjugate gradients with the same diagonal preconditioner,
-tolerance schedule and warm start as the CPU indirect solver, but it does not
-harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` and
-:code:`EIGCG_WINDOW` have no effect on it. Usually the direct GPU solver will be faster than this solver.
+tolerance schedule, warm start and eigCG deflation as the CPU indirect solver
+(see :ref:`above <indirect>`; the deflation is the same code). The vectors of
+length :math:`n` that deflation keeps are in GPU memory: with the defaults
+:math:`211n` numbers (the :math:`210n` above and the diagonal its harvests
+check vectors against), allocated when the solver is set up, about 1.7 GB in
+double precision at :math:`n = 10^6`. That can be several times what the
+solver needs otherwise: with as many rows as columns and ten nonzeros per
+column of :math:`A`, the solver takes about :math:`330n` bytes without
+deflation, and deflation adds about :math:`1700n` bytes. If that memory is not
+free on the GPU, setup fails with a message giving the size it needed; build
+with a lower :code:`DEFLATE_VECTORS` to need less, or with 0 to turn deflation
+off. The small eigenvalue problems of a harvest run on the CPU with LAPACK, as
+in the CPU solver, so deflation needs a build with LAPACK here too. Usually
+the direct GPU solver will be faster than this solver.
 
 .. _cudss_solver:
 

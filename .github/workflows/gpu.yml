@@ -149,7 +149,7 @@ jobs:
           echo "Prefetched $got of $want files ($(( bytes / 1000000 )) MB) in $SECONDS s"
           [[ $rc == 0 && $got == "$want" ]] || echo "::warning::aria2c exited $rc with $got of $want files fetched; apt downloads the rest itself."
       - name: Simulated GPU (NVIDIA T4) and Ubuntu's CUDA toolkit
-        uses: pantheongpu/setup-pantheonsim@68edfd58c091361dd6baf060b63de412e544d858 # v0.1.7
+        uses: pantheongpu/setup-pantheonsim@deff5781e8adfd83dec98dd5242dcbc96a564773 # v0.1.10
         with:
           gpu: nvidia/t4
           library-path: false
@@ -158,6 +158,15 @@ jobs:
       - run: make test_gpu CUDA_PATH=/usr
       - name: Run the GPU tests on the simulated GPU
         run: vgpu run out/run_tests_gpu_indirect
+      # eigCG deflation is a compile-time setting (DEFLATE_VECTORS,
+      # include/glbopts.h), on by default: the run above deflates. Rebuilt with
+      # it off, the GPU solver runs plain CG.
+      - name: GPU tests with eigCG deflation off (DEFLATE_VECTORS=0)
+        run: |
+          make purge
+          make gpu test_gpu CUDA_PATH=/usr \
+            CFLAGS="-Werror=implicit-function-declaration -DDEFLATE_VECTORS=0"
+          vgpu run out/run_tests_gpu_indirect
 
   # cuDSS, SCS's GPU direct backend, run. The linux job above builds
   # run_tests_cudss but cannot run it on a GPU-less runner. NVIDIA's libcudss
@@ -177,7 +186,7 @@ jobs:
       - name: Simulated GPU (NVIDIA T4) and CUDA 13.0 from NVIDIA
         # v0.1.5 builds the simulator's cuDSS as both libcudss.so.1 (cuDSS 1.0,
         # which apt's cudss now installs) and libcudss.so.0.
-        uses: pantheongpu/setup-pantheonsim@68edfd58c091361dd6baf060b63de412e544d858 # v0.1.7
+        uses: pantheongpu/setup-pantheonsim@deff5781e8adfd83dec98dd5242dcbc96a564773 # v0.1.10
         with:
           gpu: nvidia/t4
           cuda-toolkit: '13.0'

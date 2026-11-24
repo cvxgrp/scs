@@ -320,6 +320,7 @@ set(${PROJECT_NAME}_SRC
     src/scs_version.c
     src/util.c
     ${LINSYS}/csparse.c
+    ${LINSYS}/eigcg.c
     ${LINSYS}/scs_matrix.c)
 
 # Spectral source files
@@ -344,6 +345,7 @@ set(${PROJECT_NAME}_HDR
     ${SCS_BUILD_INCLUDE_HDR}
     ${SCS_GENERATED_TYPES_HDR}
     ${LINSYS}/csparse.h
+    ${LINSYS}/eigcg.h
     ${LINSYS}/scs_matrix.h)
 
 # Spectral header files

@@ -946,7 +946,8 @@ static inline void *scs_calloc(size_t count, size_t size) {
 /* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
  * values give more accurate CG solves at the cost of more CG iterations.
  * With deflation making inner accuracy cheap, 0.03 measured optimal on a
- * netlib / Maros-Meszaros / SOC suite (bracketed on both sides: 0.02
+ * netlib / Maros-Meszaros / SOC suite with the CPU indirect solver (the GPU
+ * one deflates the same way; bracketed on both sides: 0.02
  * starts flipping problems, 0.01 pays more CG for no outer-iteration
  * gain); together with CG_RATE 2.0 it buys roughly 30% fewer outer
  * iterations for roughly 8% more matvecs, which is wall-clock neutral
@@ -973,22 +974,29 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #else
 #define CG_RATE (2.0)
 #endif
-/* eigCG deflation in the CPU indirect solver (Stathopoulos & Orginos
- * 2010). The two settings below are fixed when SCS is compiled, so a
- * build has one behaviour and nothing is read at run time. Override them
- * with -D: make CFLAGS="-DDEFLATE_VECTORS=0" with the Makefile, or
+/* eigCG deflation in the indirect solvers, CPU and GPU (Stathopoulos &
+ * Orginos 2010; one implementation for both, in linsys/eigcg.c). The two
+ * settings below are fixed when SCS is compiled, so a build has one
+ * behaviour and nothing is read at run time. Override them with -D: make
+ * CFLAGS="-DDEFLATE_VECTORS=0" with the Makefile, or
  * -DCMAKE_C_FLAGS="-DDEFLATE_VECTORS=0" when configuring with CMake.
  * Deflation needs USE_LAPACK and double precision: without LAPACK or with
- * SFLOAT it is off whatever the values. The GPU indirect solver does not
- * deflate. */
+ * SFLOAT it is off whatever the values. Its memory, (4 * DEFLATE_VECTORS +
+ * window) * n floats with the window below (210 n with the defaults), is
+ * allocated when the solver is set up and held until it is freed, so
+ * whether a solve deflates never depends on the memory free while it runs;
+ * if it cannot be allocated, setup fails with a message. The GPU indirect
+ * solver keeps it in GPU memory, plus n for the diagonal its harvest's
+ * filter uses; the small eigenproblems run on the CPU. */
 
 /* DEFLATE_VECTORS: number of approximate eigenvectors, for the smallest
  * eigenvalues of the preconditioned reduced matrix, harvested from the CG
  * iterations of each cold solve (g = K^{-1}h, once per metric change) and
- * used to deflate the warm solves that follow. Cost: 2 * n floats per
- * vector kept in memory, one dot product and two axpys of length n per
- * vector in each solve (no matrix multiplies), and one CG iteration's
- * matrix multiplies per vector at each harvest.
+ * used to deflate the solves that follow. Cost: 4 * n floats of memory per
+ * vector (2 * n for the vector and its image, 2 * n for the harvest's
+ * restarts), one dot product and two axpys of length n per vector in each
+ * solve (no matrix multiplies), and one CG iteration's matrix multiplies
+ * per vector at each harvest.
  * Tradeoff: more vectors take more of the small end of the spectrum out
  * of the warm solves, which then need fewer CG iterations on
  * ill-conditioned problems, for more memory and more work per solve and
@@ -1002,18 +1010,18 @@ static inline void *scs_calloc(size_t count, size_t size) {
 #endif
 
 /* EIGCG_WINDOW: number of CG (Lanczos) vectors a harvest keeps, n floats
- * each, allocated for the cold solve and freed after it. When the window
- * is full, eigCG compresses it to at most 2 * DEFLATE_VECTORS Ritz vectors
- * (a thick restart: dense eigendecompositions of the window's size and an
- * n x window by window x 2 * DEFLATE_VECTORS product). Tradeoff: a larger
- * window restarts less often and keeps more of the CG history between
- * restarts, for more memory during the harvest and larger restarts. At
- * run time the window is raised to at least 3 * DEFLATE_VECTORS and
- * 2 * DEFLATE_VECTORS + 2, so each cycle has room for DEFLATE_VECTORS new
- * vectors: with the default 30 vectors the window is 90, so a value below
- * 90 has no effect unless DEFLATE_VECTORS is lowered as well (the default
- * 60 takes effect only when fewer than 20 vectors are used). Unused when
- * DEFLATE_VECTORS is 0. */
+ * each, allocated when the solver is set up and reused by every harvest
+ * (linsys/eigcg.h). When the window is full, eigCG compresses it to at most
+ * 2 * DEFLATE_VECTORS Ritz vectors (a thick restart: dense
+ * eigendecompositions of the window's size and an n x window by window x
+ * 2 * DEFLATE_VECTORS product). Tradeoff: a larger window restarts less
+ * often and keeps more of the CG history between restarts, for more memory
+ * and larger restarts. At run time the window is raised to at least
+ * 3 * DEFLATE_VECTORS and 2 * DEFLATE_VECTORS + 2, so each cycle has room
+ * for DEFLATE_VECTORS new vectors: with the default 30 vectors the window
+ * is 90, so a value below 90 has no effect unless DEFLATE_VECTORS is
+ * lowered as well (the default 60 takes effect only when fewer than 20
+ * vectors are used). Unused when DEFLATE_VECTORS is 0. */
 #ifndef EIGCG_WINDOW
 #define EIGCG_WINDOW (60)
 #endif
