@@ -303,7 +303,7 @@ int main(void) {
              (long)SCS(psd_fallbacks));
 #endif
   if (tests_skipped > 0) {
-    scs_printf("Skipped (compiled out by build flags):");
+    scs_printf("Skipped (not run in this build or configuration):");
     for (i = 0; i < tests_skipped && i < MU_MAX_FAILED_TESTS; ++i) {
       scs_printf(" %s", skipped_tests[i]);
     }
