@@ -11,7 +11,7 @@
  * Logging to CSV (log_csv_filename) recomputes SCS's residuals every
  * iteration, to log them, and must not change the iterates: the algorithm
  * reads only the residuals computed at its convergence checks and at the end
- * of a solve. SCS 3.3.2 and earlier set each iteration's CG tolerance
+ * of a solve. Before this change SCS set each iteration's CG tolerance
  * (project_lin_sys in src/scs.c) from the residuals as they stood, so with
  * logging from the previous iteration's instead of the last check's: on the
  * instance below, with CG on Apple silicon, the logged solve took 375
@@ -89,9 +89,10 @@ static void csv_log_data(ScsData **dp, ScsCone **kp) {
  * for bit. Returns 1 if any differs (or the probe cannot run). It calls only
  * SCS's own functions (the CMake test targets do not link the BLAS), so it
  * does not see Anderson acceleration's matrix products, which go to the BLAS
- * in every precision; a BLAS that rounds those by address but not its dot
- * products would go unnoticed. Without USE_LAPACK it is all SCS's own loops,
- * and there is no acceleration. */
+ * in every precision, or eigCG deflation's (CG in double precision with
+ * USE_LAPACK: gemm and LAPACK's syev); a BLAS that rounds those by address
+ * but not its dot products would go unnoticed. Without USE_LAPACK it is all
+ * SCS's own loops, and there is no acceleration or deflation. */
 static scs_int csv_log_blas_by_placement(scs_int len) {
 #ifndef USE_LAPACK
   (void)len;
