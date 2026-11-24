@@ -70,14 +70,17 @@ static scs_int dev_correct(ScsLinSysWork *p, const scs_float *x,
  * so at most one per scale update (RESCALING_MIN_ITERS iterations apart at
  * least). It synchronizes: it returns only once the factorization has
  * finished (cuDSS's documentation says only that the value is copied to the
- * host buffer when needed). That wait is not new: the solve for g that
- * follows every update copies its result to the host (cudaMemcpy), which
- * waits for the factorization too. Measured (NVIDIA GB10, cuDSS 1.0.0,
- * CUDA 13.0, random K of size 3,000 and 30,000, medians of 20): called right
- * after the refactorization it took the refactorization's time (2.6 ms and
- * 0.35 s); after an explicit cudaDeviceSynchronize it took 6 to 8 us; and
- * scs_update_lin_sys_diag_r took the same time with and without it, within
- * run-to-run noise (2.63 against 2.63 ms, 0.354 against 0.358 s).
+ * host buffer when needed); after an explicit cudaDeviceSynchronize it takes
+ * 6 to 8 us. The refactorization runs asynchronously, so the check moves the
+ * wait for it out of the solve for g that follows every update (its copy of
+ * the result to the host, cudaMemcpy, waits for the factorization) and into
+ * scs_update_lin_sys_diag_r: the update call now takes the refactorization's
+ * time, and the update plus that solve take the same time as without the
+ * check. Measured (NVIDIA GB10, cuDSS 1.0.0, CUDA 13.0, random K of size
+ * 3,000 and 30,000, medians of 20, four passes): the update call took
+ * 2.66 to 2.67 ms against 0.04 to 0.05 ms without the check, and 0.358 to
+ * 0.359 s against 0.75 to 0.78 ms; the update plus the solve took 2.93 to
+ * 2.95 ms and 0.361 to 0.362 s, with and without the check alike.
  *
  * Tested by test_non_psd_p (at setup) and test_factor_rollback (a scale
  * update whose K has n - 1 positive eigenvalues fails, and the restore to the

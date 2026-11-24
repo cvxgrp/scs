@@ -854,8 +854,7 @@ static const char *test_g_rollback(void) {
 /* G_FR_A, G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts,
  * at iterations 100 and 200 (measured: 2 rollbacks, QDLDL, dense and Apple
  * Accelerate, double and single precision, Mac). G_FR_BAD_RHO_X: 500 times
- * the largest
- * G_FR_A^2 R_y^-1 term of setup (20 over both rows), so that
+ * the largest G_FR_A^2 R_y^-1 term of setup (20 over both rows), so that
  * R_x + P + A' R_y^-1 A is negative definite at every R. */
 #define G_FR_A (1e-5)
 #define G_FR_P11 (-2.)

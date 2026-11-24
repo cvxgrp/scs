@@ -226,13 +226,17 @@ fewer than :math:`n` positive eigenvalues (which with :math:`P` positive
 semidefinite cannot happen in exact arithmetic), at setup and at every
 update of :math:`R`: QDLDL through its pivots, the dense solver through its
 Cholesky factorization, MKL Pardiso and cuDSS through the numbers of
-positive and negative pivots they report after each factorization (Pardiso
-writes them into ``iparm`` at no cost; cuDSS copies two integers from the
-GPU once per factorization, which waits for the factorization to finish, as
-the next solve would anyway: 6 to 8 microseconds on an NVIDIA GB10, with no
-measurable change in the time of an update), and Apple Accelerate through
-the signs of its pivots (see :ref:`apple_accelerate`). The conjugate gradient solvers
-factorize nothing, so for them only the solve for :math:`g` can fail. Any nonzero
+positive and negative pivots they report after each factorization, and
+Apple Accelerate through the signs of its pivots (see
+:ref:`apple_accelerate`). Pardiso writes the numbers into ``iparm`` at no
+cost. cuDSS copies them from the GPU, and the copy waits for the
+factorization to finish, so the update now takes the factorization's time,
+which the solve for :math:`g` that follows every update used to wait for
+instead: the update and that solve together take the same time as before
+(on an NVIDIA GB10, 2.93 to 2.95 ms with or without the check for a
+:math:`K` of size 3,000, and 0.361 to 0.362 s for 30,000; the copy itself
+takes 6 to 8 microseconds). The conjugate gradient solvers factorize
+nothing, so for them only the solve for :math:`g` can fail. Any nonzero
 status a linear solver returns from :code:`scs_update_lin_sys_diag_r` is a
 failure (up to SCS 3.3.2 only a negative one was: the positive codes of the
 dense solver and cuDSS were ignored, and the solve went on after an update
