@@ -13,7 +13,7 @@ libraries in the following places:
 * To form and factorize the matrix in the :ref:`dense direct <dense>` linear
   solver
 * To compute the eigenvectors that the :ref:`indirect <indirect>` linear
-  solver uses for deflation
+  solvers (CPU and :ref:`GPU <gpu_indirect>`) use for deflation
 * For the basic vector operations (norms, inner products, scaling and adding
   vectors), which are plain C loops otherwise
 
@@ -23,7 +23,7 @@ semidefinite cone larger than :math:`1 \times 1`), cannot include the spectral
 cones or the :ref:`parallel PSD projection <blas_lapack_openmp>`, does not
 apply Anderson acceleration (whatever the value of
 :code:`acceleration_lookback`), does not have the dense direct linear solver,
-and runs the indirect linear solver without deflation. If you need none of
+and runs the indirect linear solvers without deflation. If you need none of
 these then there is no need to use these libraries. To compile without these
 libraries you can set the
 :ref:`compiler flag <compile_flags>` :code:`USE_LAPACK` to :code:`0`, e.g., if
