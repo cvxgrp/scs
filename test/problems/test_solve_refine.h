@@ -209,8 +209,8 @@ static const char *test_solve_refine_idle(void) {
  * 26 refinement steps from 100 of 101 scales and 1 from the other), so the
  * test is skipped there; the bug it guards against does not depend on the
  * precision. Checked with QDLDL, where refinement fires on this instance
- * (the CG solvers' own tolerance follows the logged residuals, so there
- * logging changes the iterates whether or not refinement fires). */
+ * (test_csv_log checks that logging changes nothing at all, with CG and
+ * QDLDL, bit for bit where the BLAS allows). */
 static const char *test_solve_refine_csv(void) {
 #ifdef SFLOAT
   return mu_skipped;

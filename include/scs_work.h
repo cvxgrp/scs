@@ -92,6 +92,12 @@ struct SCS_WORK {
    * reads the first n; the rest stays zero). Unused (NULL) in direct
    * builds. */
   scs_float *lin_sys_warm_start;
+  /* indirect solvers: the size of SCS's residuals that each iteration's CG
+   * tolerance is set from (project_lin_sys), saved where SCS computes the
+   * residuals for the algorithm (set_cg_tol_res, at each convergence check
+   * and at the end of each solve); 0 before the first solve. Unused in direct
+   * builds. */
+  scs_float cg_tol_res;
   scs_float *diag_r; /* vector of R matrix diagonals (affects cone proj) */
   scs_float *b_orig, *c_orig;     /* original unnormalized b and c vectors */
   scs_float nm_b_orig, nm_c_orig; /* unnormalized NORM(b), NORM(c) */

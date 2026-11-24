@@ -112,7 +112,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - NULL
    * - :code:`log_csv_filename`
      - :code:`char *`
-     - If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower).
+     - If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower). The residuals it computes every iteration for the log are not used by the algorithm, which uses those of its convergence checks, so logging does not change the iterates (only the time: a solve with :code:`time_limit_secs` can stop sooner).
      - Any filename
      - NULL
 

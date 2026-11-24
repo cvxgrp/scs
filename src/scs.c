@@ -126,6 +126,7 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n,
                               scs_float pd);
 static void unnormalize_residuals(ScsWork *w);
 static void populate_residual_struct(ScsWork *w, scs_int iter);
+static void set_cg_tol_res(ScsWork *w);
 static scs_int has_converged(ScsWork *w, scs_int iter);
 static void warm_start_vars(ScsWork *w, ScsSolution *sol);
 static void cold_start_vars(ScsWork *w);
@@ -826,18 +827,17 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 #if INDIRECT > 0
   scs_float *warm_start = SCS_NULL;
   scs_float tol = -1.0;
-  scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
+  scs_float nm_ws;
   iter_rhs(w, w->u_t);
   /* compute warm start using the cone projection output */
-  nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, m);
-  nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, n);
   warm_start = w->lin_sys_warm_start;
   /* warm_start = u[:n] + tau * g[:n]; CG reads only these n entries of its
    * n + m (the y block stays zero) */
   memcpy(warm_start, w->u, n * sizeof(scs_float));
   SCS(add_scaled_array)(warm_start, w->g, n, w->u[l - 1]);
-  /* use normalized residuals to compute tolerance */
-  tol = MIN(nm_ax_s_btau, nm_px_aty_ctau);
+  /* use normalized residuals to compute tolerance: those of the last
+   * convergence check, saved by set_cg_tol_res */
+  tol = w->cg_tol_res;
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
@@ -1011,6 +1011,8 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     SCS(un_normalize_sol)(w->scal, sol);
   }
   populate_residual_struct(w, iter);
+  /* for the first CG solve of the next solve, before its first check */
+  set_cg_tol_res(w);
 
   nm_s = SCS(norm_inf)(sol->s, w->d->m);
   nm_y = SCS(norm_inf)(sol->y, w->d->m);
@@ -1269,6 +1271,28 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 static void set_refine_tol(ScsWork *w) {
   w->refine_tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
                       SCS(norm_inf)(w->r_normalized->px_aty_ctau, w->d->n));
+}
+
+/* Indirect solvers: saves the size of the residuals SCS is driving to zero
+ * (normalized, tau not divided out; the smaller of the CG_NORMs of the two)
+ * that each iteration's CG tolerance is set from (project_lin_sys). It is
+ * saved where SCS computes the residuals for the algorithm: at each
+ * convergence check, next to refine_tol, and at the end of each solve
+ * (finalize), for the first iteration of the next solve on the workspace,
+ * which runs before that solve's first check. It is kept here rather than
+ * read from r_normalized when CG runs for the same reason as refine_tol:
+ * logging to CSV (log_csv_filename) recomputes r_normalized every iteration,
+ * and logging must not change the iterates. Without logging r_normalized is
+ * computed only at those points, so the value is the one the CG tolerance
+ * read from r_normalized before. Nothing to save for direct solvers. */
+static void set_cg_tol_res(ScsWork *w) {
+#if INDIRECT > 0
+  scs_float nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, w->d->m);
+  scs_float nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, w->d->n);
+  w->cg_tol_res = MIN(nm_ax_s_btau, nm_px_aty_ctau);
+#else
+  (void)w;
+#endif
 }
 
 /* Whether the per-iteration refinement is on after a check, given res, the
@@ -2135,6 +2159,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       }
       populate_residual_struct(w, i);
       set_refine_tol(w);
+      set_cg_tol_res(w);
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
@@ -2179,7 +2204,12 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       }
     }
 
-    /* Log *after* updating scale so residual recalc does not affect alg */
+    /* Log *after* updating scale so residual recalc does not affect alg: the
+     * residuals recomputed here are only logged. The algorithm reads the ones
+     * computed at the convergence checks: has_converged and update_scale run
+     * only right after a check computed them, and the solves read the sizes
+     * saved there (set_refine_tol, set_cg_tol_res), so logging does not
+     * change the iterates. */
     if (w->log_csv_fout) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);
