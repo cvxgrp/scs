@@ -136,14 +136,14 @@ scs_int scs_solve_lin_sys(ScsLinSysWork *w, scs_float *b, const scs_float *s,
  *  @param  w             Linear system private workspace.
  *  @param  new_diag_r    Updated `diag_r`, diagonal entries of R.
  *  @return 0 on success; any other value, negative or positive, is a failure
- *          (for instance a factorization that failed), after the solver has
- *          printed why. SCS then goes back to the previous R: it writes that
- *          R into the same array and calls this function again, so a failed
- *          update must leave the workspace able to take another one. If that
- *          call fails too, SCS stops with `SCS_FAILED`. The direct solvers
- *          in `linsys/` fail (here and in `scs_init_lin_sys_work`) when the
- *          factorization has fewer than n positive pivots too: K is then
- *          not quasi-definite
+ *          (for instance a factorization that failed, or with the GPU indirect
+ *          solver a copy to the GPU that failed), after the solver has printed
+ *          why. SCS then goes back to the previous R: it writes that R into the
+ *          same array and calls this function again, so a failed update must
+ *          leave the workspace able to take another one. If that call fails
+ *          too, SCS stops with `SCS_FAILED`. The direct solvers in `linsys/`
+ *          fail (here and in `scs_init_lin_sys_work`) when the factorization
+ *          has fewer than n positive pivots too: K is then not quasi-definite
  *          (R_x + P + A' R_y^-1 A is not positive definite, for instance
  *          because P is not positive semidefinite).
  *

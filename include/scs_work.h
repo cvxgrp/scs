@@ -119,9 +119,10 @@ struct SCS_WORK {
   /* Scale updating workspace */
   scs_float sum_log_scale_factor;
   scs_int last_scale_update_iter, n_log_scale_factor, scale_updates;
-  /* scale updates of this solve that were rolled back because g could not be
-   * solved for with the new R (scale_update_rollback in src/scs.c); read by
-   * the tests. scale_updates counts only the updates kept. */
+  /* scale updates of this solve that were rolled back because the linear
+   * solver could not factorize K, or g could not be solved for, with the new
+   * R (scale_update_rollback in src/scs.c); read by the tests. scale_updates
+   * counts only the updates kept. */
   scs_int scale_rollbacks;
   /* per-row scale multipliers on R_y, size m (adaptive_diag_scale >= 1) */
   scs_float *scale_mults;

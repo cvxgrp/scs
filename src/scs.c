@@ -1752,16 +1752,19 @@ static void print_scale_update_failure(scs_float scale_tried,
  * previous R. Nothing else changed: the update resets the acceleration and
  * the cone cache and remaps v only after a solve for g that passes, and the
  * per-iteration refinement's state is not touched. So where the linear
- * solver's factorization or preconditioner is a deterministic function of R,
- * the iterates continue bit for bit as if the update had not been attempted.
- * With eigCG deflation (CG), the solve for g also harvests the deflation
- * basis again, the same one provided the solve for g that last installed
- * this R had started with no basis (always after a scale update, and in the
- * first solve after scs_init) and no iteration's solve has harvested since
- * (possible only if that solve kept no vector). Each rollback prints a
- * WARNING line, whatever verbose is, saying what went wrong (with the linear
- * solver's status, or the residual's ratio to the size of its terms) and that
- * SCS continues with the previous scale.
+ * solver's factorization or preconditioner is a deterministic function of R
+ * and its arithmetic is reproducible (not on the GPU: cuSPARSE's
+ * CUSPARSE_SPMV_CSR_ALG1, and cuDSS without its deterministic mode), the
+ * iterates continue bit for bit as if the update had not been attempted.
+ * With eigCG deflation (CG, CPU and GPU: linsys/eigcg.c), the update resets
+ * the deflation basis and the solve for g harvests it again, the same one
+ * provided the solve for g that last installed this R had started with no
+ * basis (always after a scale update, and in the first solve after scs_init)
+ * and no iteration's solve has harvested since (possible only if that solve
+ * kept no vector). Each rollback prints a WARNING line, whatever verbose is,
+ * saying what went wrong (with the linear solver's status, or the residual's
+ * ratio to the size of its terms) and that SCS continues with the previous
+ * scale.
  *
  * Why: the check of the solve for g exists to catch a broken linear solver,
  * and the setup of every solve still stops on it (update_work). At a scale
@@ -1798,7 +1801,7 @@ static void print_scale_update_failure(scs_float scale_tried,
  * prints what failed and stops with SCS_FAILED (for g with the message of the
  * setup). That is also the one way a working solver can still stop here:
  * where the restored g is not the bits of the one before the attempt (CG
- * outside the two conditions above, or a factorization that is not
+ * outside the two conditions above, or arithmetic that is not
  * reproducible), at an R where that g passed the check only narrowly, the
  * restored one can fail it. The decision depends only on the iterates and the
  * linear solver (deterministic), is the same on every backend (any nonzero
@@ -1806,8 +1809,9 @@ static void print_scale_update_failure(scs_float scale_tried,
  * backend reports as a failed factorization is its own: every direct solver
  * also refuses a K with fewer than n positive eigenvalues, at setup
  * (test_non_psd_p) and at every update (test_factor_rollback); the CG
- * solvers factorize nothing and never fail here, so for them only the check
- * of g applies. Returns 0, or -1 if the restore failed. */
+ * solvers factorize nothing, so for them the check of g is what applies (the
+ * GPU one's update fails only if a copy of R or its preconditioner to the GPU
+ * fails). Returns 0, or -1 if the restore failed. */
 static scs_int scale_update_rollback(ScsWork *w, scs_int iter,
                                      scs_float scale_prev,
                                      scs_int restore_mults,

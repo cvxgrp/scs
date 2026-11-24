@@ -200,11 +200,14 @@ SCS goes back to the previous :math:`R`, where both worked, and continues:
 - it keeps everything else, including the acceleration's memory and the warm
   starts of the cone projections, so the iterates continue as if the update
   had not been attempted: bit for bit with a direct solver whose
-  factorization is reproducible, and with conjugate gradients in the first
-  solve after setup if the solve for :math:`g` kept at least one deflation
-  vector (in a later solve on the same workspace, or after a solve for
-  :math:`g` that kept none, the rebuilt deflation vectors can differ from
-  those in use before the attempt);
+  factorization is reproducible, and with the CPU conjugate gradient solver
+  in the first solve after setup if the solve for :math:`g` kept at least one
+  deflation vector (in a later solve on the same workspace, or after a solve
+  for :math:`g` that kept none, the rebuilt deflation vectors can differ from
+  those in use before the attempt). The GPU conjugate gradient solver
+  rebuilds them the same way, from the same code, but its matrix multiplies
+  are not reproducible (see :ref:`gpu_reproducibility`), so with it the
+  rebuilt :math:`g` and deflation vectors can differ by rounding;
 - the next update can come 100 iterations later at the earliest
   (:code:`RESCALING_MIN_ITERS`, as after any update), from new samples
   (see :ref:`updating_scale`);
@@ -235,12 +238,14 @@ which the solve for :math:`g` that follows every update used to wait for
 instead: the update and that solve together take the same time as before
 (on an NVIDIA GB10, 2.93 to 2.95 ms with or without the check for a
 :math:`K` of size 3,000, and 0.361 to 0.362 s for 30,000; the copy itself
-takes 6 to 8 microseconds). The conjugate gradient solvers factorize
-nothing, so for them only the solve for :math:`g` can fail. Any nonzero
-status a linear solver returns from :code:`scs_update_lin_sys_diag_r` is a
-failure (up to SCS 3.3.2 only a negative one was: the positive codes of the
-dense solver and cuDSS were ignored, and the solve went on after an update
-that had failed, with the dense solver on a matrix it had not factorized).
+takes 6 to 8 microseconds). The conjugate gradient solvers factorize nothing,
+so for them only the solve for :math:`g` can fail, apart from the GPU solver's
+copies of :math:`R` and its preconditioner to the GPU, whose failure fails its
+update too. Any nonzero status a linear solver returns from
+:code:`scs_update_lin_sys_diag_r` is a failure (up to SCS 3.3.2 only a
+negative one was: the positive codes of the dense solver and cuDSS were
+ignored, and the solve went on after an update that had failed, with the dense
+solver on a matrix it had not factorized).
 
 A rollback costs the failed attempt and the way back: two factorizations
 (or, with conjugate gradients, two preconditioners) and up to two solves for

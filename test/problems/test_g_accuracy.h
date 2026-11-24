@@ -846,10 +846,11 @@ static const char *test_g_rollback(void) {
  * adaptive_scale off by at most 8e-8, relative.)
  *
  * Skipped with the CPU and GPU CG solvers, with the reason printed: they
- * factorize nothing (their update builds a preconditioner and returns 0; at
- * an update only the check of the solve for g applies to them,
- * test_g_rollback). With CG (measured on the Mac) the first update is kept
- * and the solve continues with that K.
+ * factorize nothing (their update builds a preconditioner and resets the
+ * deflation basis, and fails only if the GPU one cannot copy R or the
+ * preconditioner to the GPU; at an update only the check of the solve for g
+ * applies to them, test_g_rollback). With CG (measured on the Mac) the first
+ * update is kept and the solve continues with that K.
  */
 /* G_FR_A, G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts,
  * at iterations 100 and 200 (measured: 2 rollbacks, QDLDL, dense and Apple
