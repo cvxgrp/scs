@@ -789,20 +789,36 @@ static const char *test_g_rollback(void) {
  * How the factorization is made to fail at a scale update and not at setup,
  * through the problem data alone. K = [R_x + P, A'; A, -R_y] has n positive
  * eigenvalues exactly when R_x + P + A' R_y^-1 A is positive definite, which
- * QDLDL (its pivots) and the dense solver (its Cholesky factorization) check
- * at every factorization, at setup and at every update (at setup:
- * test_non_psd_p). With a P that is not positive semidefinite, that depends on
- * R_y. Here P = diag(G_FR_P11, 1) over the box -1 <= x <= 1 (A = [I; -I],
- * b = 1, c = 1, normalize off), so that matrix is diagonal, its first entry
- * R_x + G_FR_P11 plus R_y^-1 of the two rows of x_1. At setup every R_y^-1 is
- * the scale setting G_FR_SCALE: the entry is 2e12 - 1e11 > 0, and K
+ * the direct solvers check at every factorization, at setup and at every
+ * update (at setup: test_non_psd_p): QDLDL through its pivots, the dense
+ * solver through its Cholesky factorization, MKL Pardiso and cuDSS through
+ * the numbers of positive and negative pivots they report. With a P that is
+ * not positive semidefinite, that depends on R_y. Here P = diag(G_FR_P11, 1)
+ * over the box -1e5 <= x <= 1e5 (A = G_FR_A [I; -I], b = 1, c = 1,
+ * normalize off), so that matrix is diagonal, its first entry R_x + G_FR_P11
+ * plus G_FR_A^2 R_y^-1 of the two rows of x_1. At setup every R_y^-1 is the
+ * scale setting G_FR_SCALE: the entry is 2e-10 * 1e11 - 2 = 18 > 0, and K
  * factorizes. Any update from a scale above MAX_SCALE_VALUE (1e6) is clamped
  * to at most that, and the per-row multipliers to at most DIAG_SCALE_MULT_MAX
- * (1e3), so every R_y^-1 an update can install is at most 1e9 and the entry at
- * most 2e9 - 1e11 < 0: every attempt fails, whatever the iterates. The two
- * R_y^-1 terms are 20 times |G_FR_P11| at setup and at most a fiftieth of it
- * at an attempt. The problem is not convex; the solve is a fixture for the
- * rollback, not a solve.
+ * (1e3), so every R_y^-1 an update can install is at most 1e9 and the entry
+ * at most 2e-10 * 1e9 - 2 = -1.8 < 0: every attempt fails, whatever the
+ * iterates. The two R_y^-1 terms are 10 times |G_FR_P11| at setup and at
+ * most a tenth of it at an attempt. The problem is not convex; the solve is a
+ * fixture for the rollback, not a solve.
+ *
+ * Why the entries of A are small, rather than P11 large: setup needs
+ * R_y < 1e-9 (above), and K's pivots must not be small next to its norm.
+ * MKL Pardiso replaces a pivot below 10^-iparm[9] = 1e-13 times the infinity
+ * norm of K by that size (with its sign), and cuDSS one below its pivot
+ * epsilon (1e-13 in double precision): the factorization at setup would
+ * then be that of another matrix. With A = [I; -I], P11 must be below -2e9,
+ * so the norm is above 2e9 and Pardiso's threshold above 2e-4, far above
+ * R_y. Here the norm is about 2 and every pivot of K at setup is at least
+ * about 1e-11 in magnitude (R_y, or G_FR_A^2 / |G_FR_P11| = 5e-11, or sums
+ * of them): 50 times Pardiso's threshold and 100 times cuDSS's epsilon.
+ * cuDSS's epsilon in single precision (1e-5) is above every R_y that setup
+ * can have here, so single-precision cuDSS cannot run this test as it is
+ * (not built in CI).
  *
  * Checked, with each solver that refuses such a K at an update:
  * 1. G_FR_ITERS iterations with the default settings otherwise (verbose off):
@@ -811,8 +827,9 @@ static const char *test_g_rollback(void) {
  *    no update kept, the scale still G_FR_SCALE, the per-row multipliers back
  *    at 1, a status other than SCS_FAILED, the WARNING line saying that the
  *    linear solver could not factorize K with the new R (printed whatever
- *    verbose is; the status it gives is the solver's: -1 for QDLDL, dpotrf's
- *    info, 1, for the dense solver), and no message asking for a bug report.
+ *    verbose is; the status it gives is the solver's: -1 for QDLDL, MKL
+ *    Pardiso and cuDSS, dpotrf's info, 1, for the dense solver), and no
+ *    message asking for a bug report.
  * 2. The same with SCS's copy of rho_x set to G_FR_BAD_RHO_X after scs_init
  *    (written into the workspace, as test_g_rollback writes w->diag_r: setup
  *    would refuse it), so that both diagonal entries are negative at every R
@@ -822,31 +839,29 @@ static const char *test_g_rollback(void) {
  *    rollback and without the message asking for a bug report.
  * The messages are checked unless printing is compiled out (NO_PRINTING).
  * The iterates are not compared with those of the same solve with
- * adaptive_scale off: at this scale they are chaotic (one ulp in one entry of
- * b moved them by 0.1 to 1.1, relative, after 150 to 1000 iterations, QDLDL
- * and dense in double precision, Mac), so only bit for bit would mean
- * anything, and that does not hold where the arithmetic is not reproducible
- * from one solve to the next (see test_g_rollback). On the Mac they are the
- * same bits; test_g_rollback compares the continuation.
+ * adaptive_scale off; test_g_rollback compares the continuation. (Measured on
+ * the Mac, QDLDL and dense in double precision, after 150, 300 and 1000
+ * iterations: the same bits; one ulp in one entry of b moved the solve with
+ * adaptive_scale off by at most 8e-8, relative.)
  *
  * Skipped where the linear solver cannot fail this way, with the reason
  * printed: the CPU and GPU CG solvers factorize nothing (their update builds a
  * preconditioner and returns 0; at an update only the check of the solve for g
  * applies to them, test_g_rollback); Apple Accelerate's unpivoted LDL^T
- * reports a failed or singular factorization but not the inertia (its
- * SparseGetInertia is for the pivoted LDL^T only); MKL Pardiso and cuDSS check
- * the inertia at setup only. With CG and Accelerate (measured on the Mac) the
- * first update is kept and the solve continues with that K.
+ * reports a failed or singular factorization but does not check the
+ * inertia. With CG and Accelerate (measured on the Mac) the first update is
+ * kept and the solve continues with that K.
  */
-/* G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts, at
- * iterations 100 and 200 (measured: 2 rollbacks, QDLDL and dense, double and
- * single precision, Mac). G_FR_BAD_RHO_X: 500 times the largest R_y^-1 of
- * setup (2e12 over both rows), so that R_x + P + A' R_y^-1 A is negative
- * definite at every R. */
-#define G_FR_P11 (-1e11)
-#define G_FR_SCALE (1e12)
+/* G_FR_A, G_FR_P11, G_FR_SCALE: see above. G_FR_ITERS: room for 2 attempts,
+ * at iterations 100 and 200 (measured: 2 rollbacks, QDLDL and dense, double
+ * and single precision, Mac). G_FR_BAD_RHO_X: 500 times the largest
+ * G_FR_A^2 R_y^-1 term of setup (20 over both rows), so that
+ * R_x + P + A' R_y^-1 A is negative definite at every R. */
+#define G_FR_A (1e-5)
+#define G_FR_P11 (-2.)
+#define G_FR_SCALE (1e11)
 #define G_FR_ITERS (300)
-#define G_FR_BAD_RHO_X (-1e15)
+#define G_FR_BAD_RHO_X (-1e4)
 
 /* One solve of the problem above (rho_x replaced by bad_rho_x after scs_init
  * when it is nonzero), with the output captured as in g_acc_solve_capture
@@ -857,7 +872,7 @@ static scs_int g_fr_solve(scs_float bad_rho_x, ScsSolution *sol, ScsInfo *info,
                           const char *want, const char *want2,
                           const char *unwanted, scs_int *rollbacks,
                           scs_int *mults_one, scs_int *found) {
-  scs_float Ax[] = {1., -1., 1., -1.};
+  scs_float Ax[] = {G_FR_A, -G_FR_A, G_FR_A, -G_FR_A};
   scs_int Ai[] = {0, 2, 1, 3};
   scs_int Ap[] = {0, 2, 4};
   scs_float Px[] = {G_FR_P11, 1.};
@@ -907,12 +922,11 @@ static const char *test_factor_rollback(void) {
   scs_int status, rollbacks, mults_one, found;
   const char *fail = SCS_NULL, *method = scs_get_lin_sys_method();
 
-  if (!strstr(method, "qdldl") && !strstr(method, "cholesky")) {
+  if (strstr(method, "indirect") || strstr(method, "accelerate")) {
     scs_printf("test_factor_rollback: %s does not refuse a K with fewer than "
                "n positive eigenvalues at a scale update (the CG solvers "
                "factorize nothing; Apple Accelerate does not check the "
-               "inertia; MKL Pardiso and cuDSS check it at setup only): "
-               "skipped\n",
+               "inertia): skipped\n",
                method);
     SCS(free_sol)(sol);
     return mu_skipped;

@@ -213,19 +213,24 @@ SCS goes back to the previous :math:`R`, where both worked, and continues:
 
       WARNING: scale update at iteration 100 rolled back: the linear solver
       could not factorize K with the new R (scale 1.00e+06; status 1); SCS
-      continues with the previous scale (1.00e+12) and per-row multipliers.
+      continues with the previous scale (1.00e+11) and per-row multipliers.
 
   (one line in the output), with the linear solver's status when the
   factorization failed, or, when the solve for :math:`g` failed, its
   residual's ratio to the size of its terms; and :code:`scale_updates` in the
   :ref:`info <info>` struct counts only the updates kept.
 
-Which factorizations fail is the linear solver's own rule: QDLDL and the
-dense solver also refuse a :math:`K` with fewer than :math:`n` positive
-eigenvalues (which with :math:`P` positive semidefinite cannot happen in
-exact arithmetic), MKL Pardiso and cuDSS check that at setup only, and Apple
-Accelerate does not check it; the conjugate gradient solvers factorize
-nothing, so for them only the solve for :math:`g` can fail. Any nonzero
+Which factorizations fail is the linear solver's own rule. Besides a
+factorization that breaks down, the direct solvers refuse a :math:`K` with
+fewer than :math:`n` positive eigenvalues (which with :math:`P` positive
+semidefinite cannot happen in exact arithmetic), at setup and at every
+update of :math:`R`: QDLDL through its pivots, the dense solver through its
+Cholesky factorization, and MKL Pardiso and cuDSS through the numbers of
+positive and negative pivots they report after each factorization (Pardiso
+writes them into ``iparm`` at no cost; cuDSS copies two integers from the
+GPU, once per factorization). Apple Accelerate does not check it. The
+conjugate gradient solvers factorize nothing, so for them only the solve for
+:math:`g` can fail. Any nonzero
 status a linear solver returns from :code:`scs_update_lin_sys_diag_r` is a
 failure (up to SCS 3.3.2 only a negative one was: the positive codes of the
 dense solver and cuDSS were ignored, and the solve went on after an update
