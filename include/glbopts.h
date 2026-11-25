@@ -943,9 +943,12 @@ static inline void *scs_calloc(size_t count, size_t size) {
  * sides that a solve would still resolve; lower runs CG on right-hand sides
  * at rounding level. */
 #define CG_ZERO_RHS_TOL (1e-12)
-/* Each CG solve targets tol = CG_TOL_FACTOR * current_residual. Smaller
- * values give more accurate CG solves at the cost of more CG iterations.
- * With deflation making inner accuracy cheap, 0.03 measured optimal on a
+/* Each iteration's CG solve targets tol = CG_TOL_FACTOR * the residual of
+ * SCS's last convergence check (the smaller of the primal and dual, saved by
+ * set_cg_tol_res in src/scs.c; project_lin_sys also caps tol with CG_RATE
+ * below and floors it at CG_BEST_TOL). Smaller values give more accurate
+ * CG solves at the cost of more CG iterations. With deflation making inner
+ * accuracy cheap, 0.03 measured optimal on a
  * netlib / Maros-Meszaros / SOC suite with the CPU indirect solver (the GPU
  * one deflates the same way; bracketed on both sides: 0.02
  * starts flipping problems, 0.01 pays more CG for no outer-iteration

@@ -145,7 +145,14 @@ static const char *rob_gauss_cov_est(void) {
   scs_float *p = SCS_NULL;
   scs_int psize = 0;
 
-  scs_float opt = -4.8912;
+  /* The optimal value, from a solve of this problem to eps 1e-9 (QDLDL; pobj
+   * and dobj agree to 1e-11). The checks below take objectives within
+   * SOL_TOL (1e-4 in double precision) of it. The value used before, -4.8912,
+   * is 4.4e-5 below it, so it took objectives only up to 5.6e-5 above the
+   * optimum: the GPU indirect solver with DEFLATE_VECTORS=0 solves the last
+   * case below (status solved, eps 1e-6) to objectives 6.3e-5 and 6.8e-5
+   * above it, 1.1e-4 above -4.8912. */
+  scs_float opt = -4.891156266;
   /* end data */
 
   d->m = m;
