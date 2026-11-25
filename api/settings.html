@@ -239,7 +239,7 @@ They are set in the <a class="reference internal" href="c.html#scssettings"><spa
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">log_csv_filename</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code></p></td>
-<td><p>If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower).</p></td>
+<td><p>If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower). The residuals it computes every iteration for the log are not used by the algorithm, which uses those of its convergence checks, so logging does not change the iterates (only the time: a solve with <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> can stop sooner).</p></td>
 <td><p>Any filename</p></td>
 <td><p>NULL</p></td>
 </tr>
