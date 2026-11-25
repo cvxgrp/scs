@@ -60,6 +60,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Help</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#scs-returns-solved-inaccurate">SCS returns <code class="docutils literal notranslate"><span class="pre">solved_inaccurate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scs-returns-indeterminate">SCS returns <code class="docutils literal notranslate"><span class="pre">indeterminate</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scs-returns-infeasible-or-unbounded-unexpectedly">SCS returns <code class="docutils literal notranslate"><span class="pre">infeasible</span></code> or <code class="docutils literal notranslate"><span class="pre">unbounded</span></code> unexpectedly</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scs-is-very-slow">SCS is very slow</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numerical-warnings-or-nan-in-output">Numerical warnings or NaN in output</a></li>
@@ -123,6 +124,17 @@ turned it off, try turning it back on.</p></li>
 <li><p><strong>Try adaptive scaling</strong>: set <code class="code docutils literal notranslate"><span class="pre">adaptive_scale=1</span></code> (the default). This
 automatically tunes the internal <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter during the solve.</p></li>
 </ul>
+</section>
+<section id="scs-returns-indeterminate">
+<span id="help-indeterminate"></span><h3>SCS returns <code class="docutils literal notranslate"><span class="pre">indeterminate</span></code><a class="headerlink" href="#scs-returns-indeterminate" title="Link to this heading"></a></h3>
+<p>The status <code class="code docutils literal notranslate"><span class="pre">indeterminate</span> <span class="pre">(inaccurate</span> <span class="pre">-</span> <span class="pre">reached</span> <span class="pre">max_iters)</span></code> (exit flag
+<code class="code docutils literal notranslate"><span class="pre">SCS_INDETERMINATE</span></code>, -3) means SCS ran out of iterations (or hit the
+time limit) at an iterate that gives no estimate of a solution or of a
+certificate, so x, y and s are NaN (see <a class="reference internal" href="../api/exit_flags.html#exit-flags-limit"><span class="std std-ref">At max_iters or time_limit_secs</span></a>). It happens
+in the first few iterations, so with a very small <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> or time
+limit, and on runs whose iterates diverged. Try the steps above for
+<code class="docutils literal notranslate"><span class="pre">solved_inaccurate</span></code>, starting with a larger <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> or time
+limit.</p>
 </section>
 <section id="scs-returns-infeasible-or-unbounded-unexpectedly">
 <h3>SCS returns <code class="docutils literal notranslate"><span class="pre">infeasible</span></code> or <code class="docutils literal notranslate"><span class="pre">unbounded</span></code> unexpectedly<a class="headerlink" href="#scs-returns-infeasible-or-unbounded-unexpectedly" title="Link to this heading"></a></h3>

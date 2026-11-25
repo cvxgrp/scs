@@ -210,6 +210,11 @@ the following fields.</p>
 </tr>
 </tbody>
 </table>
+<p>When SCS returns <code class="code docutils literal notranslate"><span class="pre">SCS_INDETERMINATE</span></code>, or stops at <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> with an iterate that is not finite (see <a class="reference internal" href="exit_flags.html#exit-flags-limit"><span class="std std-ref">exit
+flags</span></a>), <code class="code docutils literal notranslate"><span class="pre">pobj</span></code>, <code class="code docutils literal notranslate"><span class="pre">dobj</span></code>, <code class="code docutils literal notranslate"><span class="pre">res_pri</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">res_dual</span></code>, <code class="code docutils literal notranslate"><span class="pre">gap</span></code>, <code class="code docutils literal notranslate"><span class="pre">res_infeas</span></code>, <code class="code docutils literal notranslate"><span class="pre">res_unbdd_a</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">res_unbdd_p</span></code> and <code class="code docutils literal notranslate"><span class="pre">comp_slack</span></code> are NaN, as are x, y and s.</p>
 <section id="anderson-acceleration-statistics">
 <h2>Anderson acceleration statistics<a class="headerlink" href="#anderson-acceleration-statistics" title="Link to this heading"></a></h2>
 <p>The <code class="code docutils literal notranslate"><span class="pre">aa_stats</span></code> field contains detailed diagnostics from the Anderson

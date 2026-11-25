@@ -131,7 +131,11 @@ by setting the warm-start <a class="reference internal" href="../api/settings.ht
 <span class="pre">y,</span> <span class="pre">s</span></code> members of the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a> struct, where those members correspond
 to the guess of the solution in the <a class="reference internal" href="index.html#optimality"><span class="std std-ref">standard form</span></a>.  SCS will
 initialize the solver at those points and then overwrite the <a class="reference internal" href="../api/c.html#scssolution"><span class="std std-ref">Solution</span></a>
-struct members with the real solution at termination.</p>
+struct members with the real solution at termination. NaN entries of the guess
+are read as zero, so a warm start from a solution that SCS returned as NaN
+(after <code class="code docutils literal notranslate"><span class="pre">SCS_INDETERMINATE</span></code>, for example, see <a class="reference internal" href="../api/exit_flags.html#exit-flags-limit"><span class="std std-ref">exit flags</span></a>) starts from zero, as a cold start does; the
+<code class="code docutils literal notranslate"><span class="pre">scale</span></code> and the per-row multipliers still carry over as described
+above.</p>
 <p>The settings that only the solve reads, such as the tolerances,
 <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> and <code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code>, can also be changed between
 solves with <code class="code docutils literal notranslate"><span class="pre">scs_update_settings</span></code>, see <a class="reference internal" href="../api/settings.html#update-settings"><span class="std std-ref">Changing settings after setup</span></a>.</p>

@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#termination-criteria">Termination criteria</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Optimality</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">Infeasibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#iteration-and-time-limits">Iteration and time limits</a></li>
 </ul>
 </li>
 </ul>
@@ -238,6 +239,14 @@ consecutive residual checks before declaring infeasibility or unboundedness.</p>
 SCS will return one of the two above certificates, whichever one it finds
 first. However, in that case the interpretation of infeasibility in one space
 being equivalent to unboundedness in the dual space does not hold.</p>
+</section>
+<section id="iteration-and-time-limits">
+<h3>Iteration and time limits<a class="headerlink" href="#iteration-and-time-limits" title="Link to this heading"></a></h3>
+<p>If none of these criteria hold within <code class="code docutils literal notranslate"><span class="pre">max_iters</span></code> iterations or
+<code class="code docutils literal notranslate"><span class="pre">time_limit_secs</span></code> (see <a class="reference internal" href="../api/settings.html#settings"><span class="std std-ref">settings</span></a>), SCS stops and returns
+a best guess from its last iterate with an inaccurate status, or
+<code class="code docutils literal notranslate"><span class="pre">SCS_INDETERMINATE</span></code> when that iterate gives no estimate of a solution or
+of a certificate; see <a class="reference internal" href="../api/exit_flags.html#exit-flags-limit"><span class="std std-ref">exit flags</span></a>.</p>
 </section>
 </section>
 </section>
