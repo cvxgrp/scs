@@ -216,8 +216,15 @@ static inline void *scs_calloc(size_t count, size_t size) {
 
 /* print summary output every this num iterations */
 #define PRINT_INTERVAL (250)
-/* check for convergence every this num iterations */
+/* check for convergence (and sample and maybe update the scale) every this
+ * num iterations. A check due at an iteration whose Anderson acceleration
+ * step the safeguard rejects runs at the next iteration instead, which
+ * carries no such step (see the AA safeguard in scs_solve). */
 #define CONVERGED_INTERVAL (25)
+#endif
+/* the summary is printed at a check */
+#if PRINT_INTERVAL % CONVERGED_INTERVAL != 0
+#error "PRINT_INTERVAL must be a multiple of CONVERGED_INTERVAL"
 #endif
 
 /* maintain the iterates at L2 norm =  ITERATE_NORM * sqrt(n+m+1) */
