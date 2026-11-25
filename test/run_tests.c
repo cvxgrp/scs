@@ -57,7 +57,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 121
+#define MU_TOTAL_TESTS 123
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -261,6 +261,8 @@ static void all_tests(void) {
   mu_run_test(test_infeasible_inaccurate);
   mu_run_test(test_unbounded_inaccurate);
   mu_run_test(test_max_iters_1);
+  mu_run_test(test_indeterminate_at_limit);
+  mu_run_test(test_nonfinite_at_limit);
   mu_run_test(test_adaptive_scale);
   mu_run_test(test_no_acceleration);
   mu_run_test(test_type2_acceleration);

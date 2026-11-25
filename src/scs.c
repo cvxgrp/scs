@@ -144,6 +144,7 @@ static void update_dual_vars(ScsWork *w);
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter);
 static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                      scs_int iter);
+static scs_int all_finite(const scs_float *x, scs_int len);
 static void set_diag_r(ScsWork *w);
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs);
@@ -970,8 +971,63 @@ static void set_unbounded(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   info->status_val = SCS_UNBOUNDED;
 }
 
-/* not yet converged, take best guess */
+/* No estimate of a solution or of a certificate: x, y, s and every objective
+ * and residual field are NaN. NaN rather than the last iterate, which is a
+ * ray with no meaning of its own and can look like a plausible solution. The
+ * cost: a warm start from this solution starts from zero, as a cold start
+ * does (warm_start_vars reads NaN as 0); the scale and the per-row
+ * multipliers still carry over. */
+static void set_no_estimate(const ScsWork *w, ScsSolution *sol,
+                            ScsInfo *info) {
+  SCS(scale_array)(sol->x, NAN, w->d->n);
+  SCS(scale_array)(sol->y, NAN, w->d->m);
+  SCS(scale_array)(sol->s, NAN, w->d->m);
+  info->gap = NAN;
+  info->res_pri = NAN;
+  info->res_dual = NAN;
+  info->pobj = NAN;
+  info->dobj = NAN;
+  info->res_infeas = NAN;
+  info->res_unbdd_a = NAN;
+  info->res_unbdd_p = NAN;
+  info->comp_slack = NAN;
+}
+
+/* Reached max_iters or time_limit_secs: report what the last iterate
+ * (x, y, s, tau, kappa) supports, tested in this order.
+ * - Not finite (a NaN or an infinite entry: the iterate overflowed, or a
+ *   linear solve or BLAS call returned one): SCS_FAILED, status "failure",
+ *   x, y, s NaN. Tested first because such an iterate passes the tests
+ *   below: project_cones sets tau = MAX(NaN, 0) = 0, so it would read as no
+ *   estimate, and with tau > 0 (always at iteration 0) as an inaccurate
+ *   solution.
+ * - kappa > tau with b'y < 0 or c'x < 0: the inaccurate certificate,
+ *   y / -b'y or (x, s) / -c'x.
+ * - tau > 0: the inaccurate solution (x, y, s) / tau.
+ * - Otherwise tau = 0 (project_cones clips it at zero) and b'y >= 0 and
+ *   c'x >= 0: a solution needs tau > 0 and a certificate needs b'y < 0 or
+ *   c'x < 0, so the iterate is an estimate of neither, and no threshold or
+ *   older iterate is used to make one. SCS_INDETERMINATE, x, y, s NaN
+ *   (set_no_estimate). This case also takes tau = kappa = 0, which needs the
+ *   unclipped tau to be exactly zero and has not been seen.
+ * Every test is exact, so the status is a function of the last iterate alone,
+ * and the iterates are not changed. Measured on master 4ccf2380 (2026-11-25),
+ * the indeterminate case comes from two regimes: the first iterations (on
+ * one-variable LPs with 4 rows, 5,480 of 4.7M runs, all at max_iters 2 or 3)
+ * and runs whose iterates diverged (netlib beaconfd with CG at eps 1e-4: 19
+ * of 500 starts at 700 iterations; in the one start examined, iterates of
+ * size 1e69 to 1e71). Before SCS 3.4.0 it returned SCS_FAILED, the raw
+ * iterate, and a status of only " (inaccurate - reached max_iters)". */
 static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+  if (!isfinite(w->r_orig->tau) || !isfinite(w->r_orig->kap) ||
+      !all_finite(sol->x, w->d->n) || !all_finite(sol->y, w->d->m) ||
+      !all_finite(sol->s, w->d->m)) {
+    set_no_estimate(w, sol, info);
+    strcpy(info->status, "failure");
+    info->status_val = SCS_FAILED;
+    scs_printf("Failure:the iterate is not finite (NaN or Inf)\n");
+    return; /* "failure" takes no "(inaccurate - ...)" suffix */
+  }
   if (w->r_orig->kap > w->r_orig->tau &&
       (w->r_orig->bty_tau < 0 || w->r_orig->ctx_tau < 0)) {
     if (w->r_orig->bty_tau < 0 &&
@@ -986,10 +1042,12 @@ static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     set_solved(w, sol, info);
     info->status_val = SCS_SOLVED_INACCURATE;
   } else {
-    scs_printf("ERROR: could not determine problem status.\n");
-    info->status_val = SCS_FAILED;
+    set_no_estimate(w, sol, info);
+    strcpy(info->status, "indeterminate");
+    info->status_val = SCS_INDETERMINATE;
   }
-  /* Append inaccurate to the status string */
+  /* Append inaccurate to the status string. Every branch above starts it with
+   * strcpy, so this never appends to what the caller left in info->status. */
   if (w->time_limit_reached) {
     strcat(info->status, " (inaccurate - reached time_limit_secs)");
   } else if (info->iter >= w->stgs->max_iters) {
