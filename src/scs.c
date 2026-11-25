@@ -2300,7 +2300,13 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     /* this ensures the returned iterates always satisfy conic constraints */
     if (w->accel) {
       SCS(tic)(&accel_timer);
-      if (i > 0 && i % w->stgs->acceleration_interval == 0) {
+      /* No AA step at the last iteration: its iterate is returned, and a
+       * rejected step there could not wait for a vetted one (see the AA
+       * safeguard below). This changes the run only when max_iters - 1 is a
+       * multiple of acceleration_interval (always at interval 1; never at
+       * the default max_iters and interval 5). */
+      if (i > 0 && i % w->stgs->acceleration_interval == 0 &&
+          i + 1 < w->stgs->max_iters) {
         /* v overwritten with AA output here */
         w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
         aa_called = 1;
@@ -2358,9 +2364,11 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
      * reset the first aa_apply only records the iterate. So a check waits
      * exactly one iteration, for every acceleration_interval,
      * acceleration_lookback and AA type, and reads the plain DR step from
-     * the restored v. The scale update is paced by the iteration the check
-     * was due at (check_iter), so the cadence of RESCALING_MIN_ITERS and the
-     * samples per update are unchanged. The safeguard is called whenever AA
+     * the restored v. No check is lost: no step is made at the last
+     * iteration (above), so a check due before it can always wait. The
+     * scale update is paced by the iteration the check was due at
+     * (check_iter), so the cadence of RESCALING_MIN_ITERS and the samples
+     * per update are unchanged. The safeguard is called whenever AA
      * ran: it tests only when AA made a step, and returns 0 otherwise.
      *
      * Why: before, the check ran before the safeguard (since SCS 3.1.0:
