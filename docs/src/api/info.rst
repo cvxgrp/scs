@@ -66,7 +66,7 @@ the following fields.
      - Final value of the scalar :code:`scale` parameter, which can be passed as the :code:`scale` setting of a new workspace for a similar problem (see :ref:`updating_scale`). The per-row multipliers of :code:`adaptive_diag_scale` are not returned and start at one in a new workspace. When the same workspace is solved again both the :code:`scale` and the multipliers carry over from the previous solve (see :ref:`warm_start`)
    * - :code:`rejected_accel_steps`
      - :code:`scs_int`
-     - Number of times an AA update was rejected by the safeguarding check (see :ref:`acceleration`)
+     - Number of times an AA update was rejected by the safeguarding check (see :ref:`acceleration`). The safeguard tests every AA step, including the step of the iteration the solve stops at and of an iteration with a scale update (before SCS 3.4.0 it did not test either, and a step at a scale update was counted as accepted)
    * - :code:`accepted_accel_steps`
      - :code:`scs_int`
      - Number of times an AA update was accepted by the safeguarding check (see :ref:`acceleration`)
