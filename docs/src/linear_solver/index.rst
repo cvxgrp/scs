@@ -163,18 +163,96 @@ of :math:`K`'s residual: the solve started from :math:`g_0` is limited by
 that rounding, but each further step solves only for the correction, so it
 is not.
 
-**If it fails.** The solve should never fail. If the linear solver returns
-an error, :math:`g` is not finite, or the residual of the refined :math:`g`
-is more than half the size of its terms (:code:`G_FAIL_REL_RES`: not even
-the leading digit right; with working solvers it measured at most about
-:math:`10^{-2}` of the size, and that only where the solver could do no
-better, such as conjugate gradients at its iteration limit), SCS stops with
-status :code:`SCS_FAILED` (see :ref:`exit_flags`) and prints what failed,
-that this indicates a bug in SCS or its linear solver, and a request to open
-an issue at https://github.com/cvxgrp/scs/issues with the problem data (the
-``write_data_filename`` setting saves it). If :math:`b` or :math:`c`
-contains a NaN or infinite entry, SCS stops with :code:`SCS_FAILED` and says
-so instead.
+**If it fails at the start of a solve.** The solve has failed if the linear
+solver returns an error, :math:`g` is not finite, or the residual of the
+refined :math:`g` is more than half the size of its terms
+(:code:`G_FAIL_REL_RES`: not even the leading digit right; with working
+solvers it measured at most about :math:`10^{-2}` of the size, and that only
+where the solver could do no better, such as conjugate gradients at its
+iteration limit). At the start of a solve that should never happen, so SCS
+stops with status :code:`SCS_FAILED` (see :ref:`exit_flags`) and prints what
+failed, that this indicates a bug in SCS or its linear solver, and a request
+to open an issue at https://github.com/cvxgrp/scs/issues with the problem
+data (the ``write_data_filename`` setting saves it). If :math:`b` or
+:math:`c` contains a NaN or infinite entry, SCS stops with
+:code:`SCS_FAILED` and says so instead.
+
+**If it fails after a scale update.** There a working solver can fail too,
+at the limit of what it can do with the new :math:`R`. On the Netlib LP
+beaconfd, with the indirect solver, runs that diverged moved the
+:code:`scale` and the per-row multipliers until :math:`R_y` spanned nine
+orders of magnitude, and conjugate gradients then ran its :math:`10 n`
+iterations without a correct digit, before and after refinement; 3 of 564
+starting points stopped with :code:`SCS_FAILED`. A direct solver can
+likewise fail to factorize :math:`K` with the new :math:`R`: with
+:math:`P` positive semidefinite, :math:`K` can always be factorized in exact
+arithmetic, so that is rounding or a limit of the solver at that
+:math:`R` (the dense solver's Cholesky factorization of
+:math:`R_x + P + A^\top R_y^{-1} A`, for instance, once
+:math:`A^\top R_y^{-1} A` swamps :math:`R_x + P` in rounding). So after a
+scale update whose factorization fails, or whose solve for :math:`g` fails,
+SCS goes back to the previous :math:`R`, where both worked, and continues:
+
+- it puts back the :code:`scale` and the per-row multipliers, gives the
+  linear solver the previous :math:`R` again (a direct solver factorizes the
+  same matrix again), and solves for :math:`g` again there, which with
+  conjugate gradients also rebuilds the deflation vectors;
+- it keeps everything else, including the acceleration's memory and the warm
+  starts of the cone projections, so the iterates continue as if the update
+  had not been attempted: bit for bit with a direct solver whose
+  factorization is reproducible, and with the CPU conjugate gradient solver
+  in the first solve after setup if the solve for :math:`g` kept at least one
+  deflation vector (in a later solve on the same workspace, or after a solve
+  for :math:`g` that kept none, the rebuilt deflation vectors can differ from
+  those in use before the attempt). The GPU conjugate gradient solver
+  rebuilds them the same way, from the same code, but its matrix multiplies
+  are not reproducible (see :ref:`gpu_reproducibility`), so with it the
+  rebuilt :math:`g` and deflation vectors can differ by rounding;
+- the next update can come 100 iterations later at the earliest
+  (:code:`RESCALING_MIN_ITERS`, as after any update), from new samples
+  (see :ref:`updating_scale`);
+- it prints a line whether or not :code:`verbose` is on, after the linear
+  solver's own message if it printed one, for instance::
+
+      WARNING: scale update at iteration 100 rolled back: the linear solver
+      could not factorize K with the new R (scale 1.00e+06; status 1); SCS
+      continues with the previous scale (1.00e+11) and per-row multipliers.
+
+  (one line in the output), with the linear solver's status when the
+  factorization failed, or, when the solve for :math:`g` failed, its
+  residual's ratio to the size of its terms; and :code:`scale_updates` in the
+  :ref:`info <info>` struct counts only the updates kept.
+
+Which factorizations fail is the linear solver's own rule. Besides a
+factorization that breaks down, the direct solvers refuse a :math:`K` with
+fewer than :math:`n` positive eigenvalues (which with :math:`P` positive
+semidefinite cannot happen in exact arithmetic), at setup and at every
+update of :math:`R`: QDLDL through its pivots, the dense solver through its
+Cholesky factorization, MKL Pardiso and cuDSS through the numbers of
+positive and negative pivots they report after each factorization, and
+Apple Accelerate through the signs of its pivots (see
+:ref:`apple_accelerate`). Pardiso writes the numbers into ``iparm`` at no
+cost. cuDSS copies them from the GPU, and the copy waits for the
+factorization to finish, so the update now takes the factorization's time,
+which the solve for :math:`g` that follows every update used to wait for
+instead: the update and that solve together take the same time as before
+(on an NVIDIA GB10, 2.93 to 2.95 ms with or without the check for a
+:math:`K` of size 3,000, and 0.361 to 0.362 s for 30,000; the copy itself
+takes 6 to 8 microseconds). The conjugate gradient solvers factorize nothing,
+so for them only the solve for :math:`g` can fail, apart from the GPU solver's
+copies of :math:`R` and its preconditioner to the GPU, whose failure fails its
+update too. Any nonzero status a linear solver returns from
+:code:`scs_update_lin_sys_diag_r` is a failure (up to SCS 3.3.2 only a
+negative one was: the positive codes of the dense solver and cuDSS were
+ignored, and the solve went on after an update that had failed, with the dense
+solver on a matrix it had not factorized).
+
+A rollback costs the failed attempt and the way back: two factorizations
+(or, with conjugate gradients, two preconditioners) and up to two solves for
+:math:`g`. Only if the linear solver cannot factorize :math:`K` or solve for
+:math:`g` at the previous :math:`R` as well does SCS stop: with
+:code:`SCS_FAILED` and a line saying what failed (for :math:`g`, with the
+message of the start of a solve). There is nothing to set.
 
 **Cost.** One multiply by :math:`K` each time :math:`g` is solved for (the
 residual of :math:`g_0`) and one pass over :math:`A` and :math:`P` for the
@@ -537,6 +615,16 @@ solver from the Accelerate Sparse Solvers API, which is well-suited for the
 quasi-definite KKT systems that SCS produces. Accelerate performs its own
 fill-reducing ordering internally so no external AMD package is needed.
 
+Like the other direct solvers, it refuses a KKT matrix with fewer than
+:math:`n` positive pivots, at setup (a :math:`P` that is not positive
+semidefinite) and after every refactorization (see :ref:`g_refinement`).
+Accelerate's ``SparseGetInertia`` works only for its pivoted LDL\ :sup:`T`,
+so SCS reads the pivots, the diagonal of :math:`D`, through Accelerate's
+subfactor of :math:`D` (``SparseCreateSubfactor``) and counts their signs;
+the factorization stays unpivoted. That costs :math:`n + m` numbers of
+memory and, per factorization, a pass over them: on an Apple M4, 0.36 ms for
+a KKT matrix of size 60,000, 0.07% of a refactorization.
+
 This backend is macOS-only and is available without installing any additional
 libraries since the Accelerate framework ships with Xcode / the macOS SDK.
 It does not support 64-bit integer indexing (``DLONG``).
@@ -574,8 +662,10 @@ then solves the positive definite system using using `conjugate gradients
 CG requires one multiply each of sparse matrices :math:`P, A, A^\top`.  The
 system is solved up to some tolerance, which is tuned to ensure that the
 overall algorithm converges: each solve targets a small fraction
-(:code:`CG_TOL_FACTOR`, default :math:`0.03`) of the smaller of the current
-primal and dual residuals, additionally capped by a term decaying with
+(:code:`CG_TOL_FACTOR`, default :math:`0.03`) of the smaller of the primal
+and dual residuals at SCS's last convergence check (every 25 iterations; the
+residuals a CSV log recomputes every iteration are not used, so logging does
+not change the solves), additionally capped by a term decaying with
 iteration :math:`k` like :math:`O(1/k^\gamma)` where :math:`\gamma` is
 determined by the constant :code:`CG_RATE` (defaults to :math:`2`), and
 floored at :code:`CG_BEST_TOL`. Each solve is warm-started from the previous
@@ -585,19 +675,28 @@ matrix from the CG iterations themselves (eigCG; Stathopoulos and Orginos
 the smallest eigenvalues from subsequent solves, which substantially reduces
 the CG iterations needed on ill-conditioned problems. Applying the deflation
 in a solve costs no matrix multiplies. Each harvest costs the multiplies of
-one CG iteration per vector.
+one CG iteration per vector. A harvest keeps only the vectors that pass a
+check of their accuracy and are not numerically dependent on the vectors it
+already keeps (CG's Lanczos process can return one eigenvector twice); a
+dependent vector is dropped on its own and the rest are kept.
 
 Deflation needs LAPACK and double precision. It is switched off when SCS is
 built without LAPACK (:code:`USE_LAPACK=0`) or in single precision
-(:code:`SFLOAT=1`), and only the CPU indirect solver has it. Single precision
-builds also use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
+(:code:`SFLOAT=1`). The CPU and the :ref:`GPU <gpu_indirect>` indirect solvers
+both have it, the same algorithm in shared code. Single precision builds also
+use :math:`0.2` for :code:`CG_TOL_FACTOR` and :math:`1.5` for
 :code:`CG_RATE`.
 
 Deflation keeps :math:`2n` numbers per vector in memory (:math:`60n` by
-default), and a harvest takes a further :math:`n` numbers per window entry and
-:math:`2n` per vector while it runs (:math:`150n` by default). That is much
-more than CG itself needs (a few vectors of length :math:`n`). Two constants
-in :code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
+default), and the window its harvests work in takes a further :math:`n`
+numbers per window entry and :math:`2n` per vector (:math:`150n` by default):
+:math:`210n` numbers in all by default, about 1.7 GB in double precision at
+:math:`n = 10^6`. That is much more than CG itself needs (a few vectors of
+length :math:`n`). All of it is allocated when the solver is set up and held
+until the solver is freed, so whether a solve deflates never depends on how
+much memory is free while it runs. If it cannot be allocated, setup fails
+with a message giving the size it needed. Two constants in
+:code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
 
 * :code:`DEFLATE_VECTORS` (default 30) is the number of deflation vectors.
   More vectors take more of the smallest eigenvalues out of the solves, for
@@ -605,8 +704,8 @@ in :code:`include/glbopts.h` set it, and both are fixed when SCS is compiled:
   gives plain preconditioned CG with no extra memory.
 * :code:`EIGCG_WINDOW` (default 60) is the size of the eigCG window, the
   number of CG vectors that a harvest keeps in memory. A larger window
-  compresses the CG history less often, for more memory while the harvest
-  runs. The window is never smaller than three times the number of deflation
+  compresses the CG history less often, for more memory. The window is never
+  smaller than three times the number of deflation
   vectors, so with the default 30 vectors it is 90 and a smaller
   :code:`EIGCG_WINDOW` has no effect unless :code:`DEFLATE_VECTORS` is lowered
   as well.
@@ -644,9 +743,20 @@ Sparse GPU indirect method
 The above linear solvers all run on CPU. We also have support for a GPU version
 of the indirect solver, where the matrix multiplies are all performed on the
 GPU. It runs conjugate gradients with the same diagonal preconditioner,
-tolerance schedule and warm start as the CPU indirect solver, but it does not
-harvest eigenvectors or deflate, so :code:`DEFLATE_VECTORS` and
-:code:`EIGCG_WINDOW` have no effect on it. Usually the direct GPU solver will be faster than this solver.
+tolerance schedule, warm start and eigCG deflation as the CPU indirect solver
+(see :ref:`above <indirect>`; the deflation is the same code). The vectors of
+length :math:`n` that deflation keeps are in GPU memory: with the defaults
+:math:`211n` numbers (the :math:`210n` above and the diagonal its harvests
+check vectors against), allocated when the solver is set up, about 1.7 GB in
+double precision at :math:`n = 10^6`. That can be several times what the
+solver needs otherwise: with as many rows as columns and ten nonzeros per
+column of :math:`A`, the solver takes about :math:`330n` bytes without
+deflation, and deflation adds about :math:`1700n` bytes. If that memory is not
+free on the GPU, setup fails with a message giving the size it needed; build
+with a lower :code:`DEFLATE_VECTORS` to need less, or with 0 to turn deflation
+off. The small eigenvalue problems of a harvest run on the CPU with LAPACK, as
+in the CPU solver, so deflation needs a build with LAPACK here too. Usually
+the direct GPU solver will be faster than this solver.
 
 .. _cudss_solver:
 

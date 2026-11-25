@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "csparse.h"
+#include "eigcg.h"
 #include "glbopts.h"
 #include "gpu.h"
 #include "linalg.h"
@@ -17,6 +18,10 @@ struct SCS_LIN_SYS_WORK {
   /* reporting */
   scs_int tot_cg_its;
   scs_float *M; /* preconditioner on cpu */
+  /* eigCG deflation, shared with the CPU indirect solver
+   * (linsys/eigcg.h): the harvested eigenvectors W and AW and the
+   * window are in GPU memory, the small matrices on the host */
+  ScsEigcg dfl;
   /* ALL BELOW HOSTED ON THE GPU */
   scs_float *p;       /* cg iterate, n  */
   scs_float *r;       /* cg residual, n */
@@ -25,6 +30,14 @@ struct SCS_LIN_SYS_WORK {
   scs_float *tmp_m;   /* m, used in mat_vec */
   scs_float *z;       /* preconditioned */
   scs_float *M_gpu;   /* preconditioner */
+  /* with deflation on only (allocated at setup, as the rest of its memory):
+   * the diagonal of R_x + P + A' R_y^{-1} A (the inverse of M) for the
+   * filter of a harvest, n; and room for the small matrices and
+   * coefficients that deflation copies between host and GPU, dfl_small_n
+   * numbers */
+  scs_float *Md_gpu;
+  scs_float *dfl_small;
+  size_t dfl_small_n;
   const ScsMatrix *A; /* does *not* own this memory */
   const ScsMatrix *P; /* does *not* own this memory */
   ScsGpuMatrix *Ag;   /* A matrix on GPU */

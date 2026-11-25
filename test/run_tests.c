@@ -29,12 +29,14 @@
 #include "problems/test_root_plus.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_solve_refine.h"
+#include "problems/test_csv_log.h"
 #include "problems/test_lin_sys_solve.h"
 #include "problems/test_refine_perturbed.h"
 #include "problems/test_refine_certificate.h"
 #include "problems/test_box_cone.h"
 #include "problems/test_box_cone_t_weight.h"
 #include "problems/test_box_proj.h"
+#include "problems/test_deflation.h"
 #include "problems/test_psd_n1.h"
 #include "problems/test_solver_options.h"
 #include "problems/test_update_settings.h"
@@ -55,7 +57,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 115
+#define MU_TOTAL_TESTS 121
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -179,11 +181,17 @@ static void all_tests(void) {
   mu_run_test(lp_update);
   mu_run_test(test_g_accuracy);
   mu_run_test(test_g_accuracy_iteration);
+  mu_run_test(test_g_rollback);
+  mu_run_test(test_factor_rollback);
   mu_run_test(test_solve_refine_tight);
   mu_run_test(test_solve_refine_idle);
   mu_run_test(test_solve_refine_csv);
+  mu_run_test(test_csv_log);
   mu_run_test(test_solve_refine_correction);
   mu_run_test(test_lin_sys_solve);
+  mu_run_test(test_eigcg_gram_factor);
+  mu_run_test(test_eigcg_core);
+  mu_run_test(test_lin_sys_deflation);
   mu_run_test(test_refine_perturbed);
   mu_run_test(test_refine_certificate);
   mu_run_test(rob_gauss_cov_est);

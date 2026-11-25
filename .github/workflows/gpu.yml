@@ -158,6 +158,15 @@ jobs:
       - run: make test_gpu CUDA_PATH=/usr
       - name: Run the GPU tests on the simulated GPU
         run: vgpu run out/run_tests_gpu_indirect
+      # eigCG deflation is a compile-time setting (DEFLATE_VECTORS,
+      # include/glbopts.h), on by default: the run above deflates. Rebuilt with
+      # it off, the GPU solver runs plain CG.
+      - name: GPU tests with eigCG deflation off (DEFLATE_VECTORS=0)
+        run: |
+          make purge
+          make gpu test_gpu CUDA_PATH=/usr \
+            CFLAGS="-Werror=implicit-function-declaration -DDEFLATE_VECTORS=0"
+          vgpu run out/run_tests_gpu_indirect
 
   # cuDSS, SCS's GPU direct backend, run. The linux job above builds
   # run_tests_cudss but cannot run it on a GPU-less runner. NVIDIA's libcudss

@@ -62,6 +62,15 @@ extern "C" {
   cusparse##x
 #endif
 
+/* CUBLAS_FN(x): the cuBLAS routine x for scs_float, for a call whose returned
+ * status is checked. CUBLAS(x) above starts with an error check statement
+ * when VERBOSITY > 0, so it cannot be used inside an expression. */
+#ifndef SFLOAT
+#define CUBLAS_FN(x) cublasD##x
+#else
+#define CUBLAS_FN(x) cublasS##x
+#endif
+
 #ifndef SFLOAT
 #define SCS_CUDA_FLOAT CUDA_R_64F
 #else
