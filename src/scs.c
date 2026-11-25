@@ -1794,8 +1794,8 @@ static void print_scale_update_failure(scs_float scale_tried,
  * preconditioner at the new R, and its solve for g if the factorization
  * worked) and the restore (the same at the previous R with one solve for g),
  * and the solve goes on with the R the update meant to replace. The attempt
- * is paced as an update (last_scale_update_iter is this iteration and the
- * samples start again, update_scale), so the next one comes at least
+ * is paced as an update (last_scale_update_iter is this check's iteration
+ * and the samples start again, update_scale), so the next one comes at least
  * RESCALING_MIN_ITERS iterations later, from new samples. If the restore
  * fails too, the linear solver now fails at an R where it worked before: SCS
  * prints what failed and stops with SCS_FAILED (for g with the message of the
@@ -1856,6 +1856,11 @@ static scs_int scale_update_rollback(ScsWork *w, scs_int iter,
 /* Samples the residual balance and, when it is far enough off, updates the
  * scale (and the per-row multipliers): a new R, a new factorization and g.
  * An update that fails at the new R is rolled back (scale_update_rollback).
+ * Called after this iteration's dual step, on an iterate the AA safeguard
+ * has vetted (scs_solve). iter is the iteration the check was due at, a
+ * multiple of CONVERGED_INTERVAL; the check runs one iteration later when
+ * the AA safeguard rejected that iteration's step. It paces the updates
+ * (RESCALING_MIN_ITERS) and names the check in the rollback's message.
  * Returns 0, or -1 if the rollback failed too (the caller stops with
  * SCS_FAILED). */
 static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
@@ -2025,6 +2030,12 @@ static scs_int update_scale(ScsWork *w, const ScsCone *k, scs_int iter) {
     for (i = 0; i < w->d->n + w->d->m + 1; i++) {
       w->v[i] = w->rsk[i] / w->diag_r[i] + 2 * w->u_t[i] - w->u[i];
     }
+    /* v is now this iteration's input under the new R. scs_solve took the
+     * dual step before calling here, so that the AA safeguard could judge
+     * it first; the remap above does not read v, so taking the step again
+     * gives the arithmetic of remapping and then stepping (one axpy more per
+     * applied update). */
+    update_dual_vars(w);
   }
   return 0;
 }
@@ -2276,7 +2287,14 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
   }
 
   /* SCS */
+  /* a scale update due at a check whose iteration's AA step was rejected
+   * waits for the next iteration (see the AA safeguard below) */
+  scs_int update_due = 0, update_iter = 0;
   for (i = 0; i < w->stgs->max_iters; ++i) {
+    /* aa_called: AA ran this iteration (and v may be its step); vetted: the
+     * AA safeguard has not rejected a step of this iteration, so its iterate
+     * is one the scale update may read (see the safeguard below) */
+    scs_int aa_called = 0, vetted = 1;
     /* Accelerate here so that last step always projection onto cone */
     /* this ensures the returned iterates always satisfy conic constraints */
     if (w->accel) {
@@ -2284,6 +2302,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       if (i > 0 && i % w->stgs->acceleration_interval == 0) {
         /* v overwritten with AA output here */
         w->aa_norm = aa_apply(w->v, w->v_prev, w->accel);
+        aa_called = 1;
       }
       total_accel_time += SCS(tocq)(&accel_timer);
     }
@@ -2319,13 +2338,63 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     /* since Moreau decomp logic relies on v at start */
     compute_rsk(w);
 
+    /****************** dual variable step **********************/
+    /* before the AA safeguard, which judges the step by this output, and so
+     * before the check below (which reads u and rsk, not v); update_scale
+     * remaps v and takes this step again */
+    update_dual_vars(w);
+
+    /* AA safeguard, before the check: the scale update reads only iterates
+     * the safeguard has vetted.
+     *
+     * What: when this iteration carried an AA step and the safeguard rejects
+     * it, u and rsk were built from the rejected step. The safeguard puts v
+     * and v_prev back to the plain iteration's (aa.c) and resets AA. The
+     * scale update due at this iteration (with the refinement tolerance,
+     * which is read from the same residuals) then runs at the next iteration
+     * instead. That iteration never carries an AA step: after a reset the
+     * first aa_apply only records the iterate. So the update waits at most
+     * one iteration, for every acceleration_interval, acceleration_lookback
+     * and AA type, and reads the plain DR step from the restored v. It is
+     * paced by the iteration it was due at (update_iter), so the cadence of
+     * RESCALING_MIN_ITERS and the samples per update are unchanged. The
+     * safeguard is called whenever AA ran: it tests only when AA made a step
+     * and returns 0 otherwise.
+     *
+     * Why: before (since 5a40b446, #198, which moved update_scale ahead of
+     * the dual step), the check and update_scale ran before the safeguard.
+     * Every check is an AA iteration at the default acceleration_interval 5,
+     * so the update could read the iterate of a step the safeguard would go
+     * on to reject. An update applied there reset AA, the safeguard then
+     * found nothing to test (the step was counted accepted), and v was
+     * rebuilt from that iterate: the step was kept untested. On HUESTIS
+     * (Maros-Meszaros, eps 1e-4 and 1e-6, 41 starts each, 22,600 iterations)
+     * that knocked runs off the path that solves: 71 of 82 failed with
+     * QDLDL, 5 of 82 with CPU CG with deflation and 12 of 82 with GPU CG
+     * with deflation (cuSPARSE ALG2); 86 of these 88 failures oscillated,
+     * with 12 to 160 scale updates.
+     *
+     * Tradeoff: no solve is added. At a check whose iteration's step is
+     * rejected the update and the refinement tolerance come one iteration
+     * later (a second residual computation there). The convergence and
+     * time-limit tests below still read this iteration, and so does the CG
+     * tolerance of the next iteration's solve. Deterministic: the verdict is
+     * a function of the iterates. */
+    if (aa_called) {
+      if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
+        w->rejected_accel_steps++;
+        vetted = 0;
+      } else if (w->aa_norm > 0) {
+        w->accepted_accel_steps++;
+      }
+    }
+
     if (i % CONVERGED_INTERVAL == 0) {
       if (scs_is_interrupted()) {
         return failure(w, w->d->m, w->d->n, sol, info, SCS_SIGINT,
                        "interrupted", "interrupted");
       }
       populate_residual_struct(w, i);
-      set_refine_tol(w);
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
@@ -2335,6 +2404,8 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
           break;
         }
       }
+      update_due = 1;
+      update_iter = i;
     }
 
     /* Compute residuals. */
@@ -2343,30 +2414,16 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       print_summary(w, i, &solve_timer);
     }
 
-    /* If residuals are fresh then maybe compute new scale. */
-    if (w->stgs->adaptive_scale && i == w->r_orig->last_iter) {
-      if (update_scale(w, k, i) != 0) {
+    /* The refinement tolerance and the scale update, at a vetted iterate:
+     * the check's residuals, or this iteration's when the check was due at
+     * the previous one */
+    if (update_due && vetted) {
+      update_due = 0;
+      populate_residual_struct(w, i);
+      set_refine_tol(w);
+      if (w->stgs->adaptive_scale && update_scale(w, k, update_iter) != 0) {
         return failure(w, w->d->m, w->d->n, sol, info, SCS_FAILED,
                        "error in update_scale", "failure");
-      }
-    }
-
-    /****************** dual variable step **********************/
-    /* do this after update_scale due to remapping that happens there */
-    update_dual_vars(w);
-
-    /* AA safeguard check.
-     * Perform safeguarding *after* convergence check to prevent safeguard
-     * overwriting converged iterate, since safeguard is on `v` and convergence
-     * is on `u`.
-     */
-    if (w->accel && i % w->stgs->acceleration_interval == 0 && w->aa_norm > 0) {
-      if (aa_safeguard(w->v, w->v_prev, w->accel) < 0) {
-        /* TODO should we copy u from u_prev here too? Then move above, possibly
-         * better residual calculation and scale updating. */
-        w->rejected_accel_steps++;
-      } else {
-        w->accepted_accel_steps++;
       }
     }
 
