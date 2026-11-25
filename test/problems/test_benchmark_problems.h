@@ -36,12 +36,12 @@
  * The SDPs need USE_LAPACK for the PSD cone (run_tests.c skips them
  * without it).
  *
- * Screen (Mac, 2026-11-24): each test's own settings and checks from the
- * default scale and 40 one-ulp moves of it (200 for CG and single
- * precision), on every backend in 24 builds (clang and gcc, -O0 to -O3,
- * Accelerate and OpenBLAS, 4- and 8-byte integers, with and without LAPACK,
- * eigCG on and off, ASan and UBSan): 59,009 solves, none failed. Each
- * problem's comment gives the iterations seen.
+ * Screen (Mac, on master of 2026-11-25): each test's own settings and
+ * checks from the default scale and 40 one-ulp moves of it (200 for CG and
+ * single precision), on every backend in 24 builds (clang and gcc, -O0 to
+ * -O3, Accelerate and OpenBLAS, 4- and 8-byte integers, with and without
+ * LAPACK, eigCG on and off, ASan and UBSan): 59,009 solves, none failed.
+ * Each problem's comment gives the iterations seen.
  */
 
 /* skip flags: the builds a problem does not run in */
@@ -279,10 +279,11 @@ static const BenchProblem bench_truss4_problem = {
 /*
  * SDPLIB qap5: a solved SDP with one 26 x 26 block, at eps 1e-6, which also
  * exercises CG and eigCG on a real SDP (eigCG changes its CG work).
- * Optimal value -436 (SDPLIB). Screen: 275 iterations on the direct solvers
- * and 275 to 1,250 on CG in double precision, 250 to 325 in single. Skipped
- * in single precision with CG, where about a third of 201 starts did not
- * finish in 6,750 iterations.
+ * Optimal value -436 (SDPLIB). Screen: in double precision, 275 iterations
+ * on the direct solvers, and on CG 275 to 300 with eigCG and 325 to 550
+ * without it (DEFLATE_VECTORS=0); 250 to 325 in single. Skipped in single
+ * precision with CG, where about a third of 201 starts did not finish in
+ * 6,750 iterations.
  */
 static const BenchProblem bench_qap5_problem = {
     "qap5",
