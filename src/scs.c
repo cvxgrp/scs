@@ -2368,8 +2368,8 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
      * iteration (above), so a check due before it can always wait. The
      * scale update is paced by the iteration the check was due at
      * (check_iter), so the cadence of RESCALING_MIN_ITERS and the samples
-     * per update are unchanged. The safeguard is called whenever AA
-     * ran: it tests only when AA made a step, and returns 0 otherwise.
+     * per update are unchanged. The safeguard is called whenever AA ran: it
+     * tests only when AA made a step, and returns 0 otherwise.
      *
      * Why: before, the check ran before the safeguard (since SCS 3.1.0:
      * 2c4bde50 moved the safeguard after the check, and 5a40b446, #198,
@@ -2382,11 +2382,14 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
      * 41 starts each, 22,600 iterations) that knocked runs off the path that
      * solves: 71 of 82 failed with QDLDL, 5 of 82 with CPU CG with deflation
      * and 12 of 82 with GPU CG with deflation (cuSPARSE ALG2); 86 of these 88
-     * failures oscillated, with 12 to 160 scale updates. The convergence test
-     * waits too, so that one check reads one iterate: a rejected step is
-     * never returned, and never counts toward the consecutive checks a
-     * certificate must pass (CERT_PERSISTENCE_CHECKS), which are there to
-     * reject transient iterates such as accelerated ones.
+     * failures oscillated, with 12 to 160 scale updates. With this order the
+     * same runs fail 0, 1 and 2 of 82 (and 1 of 82 with plain CPU CG, 0
+     * before), none oscillating: those runs are still on the slow path that
+     * solves at 22,600 iterations (the CPU ones solve by 30,025). The
+     * convergence test waits too, so that one check reads one iterate: a
+     * rejected step is never returned, and never counts toward the
+     * consecutive checks a certificate must pass (CERT_PERSISTENCE_CHECKS),
+     * which are there to reject transient iterates such as accelerated ones.
      *
      * Tradeoff: no solve is added. At a check whose iteration's step is
      * rejected, the check, and with it termination and the scale update,
