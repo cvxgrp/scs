@@ -67,7 +67,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1.5
    * - :code:`time_limit_secs`
      - :code:`scs_float`
-     - Time limit for the solve in seconds (can be fractional). :code:`0` is interpreted as no limit. The clock starts when :code:`scs_solve` is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (:code:`CONVERGED_INTERVAL` in :code:`include/glbopts.h`), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, or :code:`SCS_INDETERMINATE` when the last iterate gives none, see :ref:`exit flags <exit_flags_limit>`. It has no effect if SCS is compiled with the :code:`NO_TIMER` :ref:`compile flag <compile_flags>`. It can be changed after setup, for example to give the solve what is left of a total time budget, see :ref:`update_settings`.
+     - Time limit for the solve in seconds (can be fractional). :code:`0` is interpreted as no limit. The clock starts when :code:`scs_solve` is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (:code:`CONVERGED_INTERVAL` in :code:`include/glbopts.h`), so a solve can overrun it by up to 25 iterations (26 when a check waits one iteration for the :ref:`acceleration <acceleration>` safeguard). When the limit is reached SCS returns its best guess with an inaccurate status, or :code:`SCS_INDETERMINATE` when the last iterate gives none, see :ref:`exit flags <exit_flags_limit>`. It has no effect if SCS is compiled with the :code:`NO_TIMER` :ref:`compile flag <compile_flags>`. It can be changed after setup, for example to give the solve what is left of a total time budget, see :ref:`update_settings`.
      - :math:`[0, \infty)`
      - 0
    * - :code:`verbose`
@@ -236,7 +236,9 @@ What it does not do
   yourself as above.
 * It does not make the limit exact: SCS tests the time only when it checks
   convergence, every 25 iterations, so a solve can overrun the limit by up to
-  25 iterations plus the time to finish (as with any time limit). The limit
+  25 iterations (26 when a check waits one iteration for the
+  :ref:`acceleration <acceleration>` safeguard) plus the time to finish (as
+  with any time limit). The limit
   has no effect in a build with the :code:`NO_TIMER` :ref:`compile flag
   <compile_flags>`.
 * It does not change the setup time reported in the :ref:`info <info>`

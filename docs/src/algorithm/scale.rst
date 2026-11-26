@@ -278,6 +278,12 @@ SCS computes the residuals to test for convergence, which is every 25
 iterations starting at iteration 0 (:code:`CONVERGED_INTERVAL` in
 :code:`include/glbopts.h`). At each of these iterations it takes one sample
 of the imbalance between the two residuals and then decides whether to update.
+It reads only iterates the :ref:`acceleration <acceleration>` safeguard has
+accepted: when the accelerated step of such an iteration is rejected, the
+convergence test, the sample and the decision move to the next iteration,
+which carries no accelerated step. Iteration counts below (:math:`l`, and the
+100 iterations between updates) are counted from the iterations the checks
+were due at, so a check that moves does not change them.
 
 Specifically, at such an iteration :math:`k` consider the case where :math:`l`
 iterations have elapsed since the last update of the :code:`scale` parameter
@@ -373,7 +379,9 @@ perturbed matrix, so is somewhat expensive for larger problems and should be
 done sparingly. Also, since changing the :code:`scale` or the per-row
 multipliers changes the operator we are using in DR splitting, every update
 also resets the :ref:`Anderson acceleration <acceleration>`, whichever linear
-solver is in use. After a reset the acceleration has to fill its memory again
+solver is in use. The reset comes after the safeguard has judged the
+iteration's accelerated step, so an update never keeps a step without that
+test. After a reset the acceleration has to fill its memory again
 before it produces a step: the first call after the reset only records the
 iterate, and the first step comes :code:`acceleration_lookback` calls later,
 with one call every :code:`acceleration_interval` iterations. With the default

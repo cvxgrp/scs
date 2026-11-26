@@ -663,9 +663,11 @@ CG requires one multiply each of sparse matrices :math:`P, A, A^\top`.  The
 system is solved up to some tolerance, which is tuned to ensure that the
 overall algorithm converges: each solve targets a small fraction
 (:code:`CG_TOL_FACTOR`, default :math:`0.03`) of the smaller of the primal
-and dual residuals at SCS's last convergence check (every 25 iterations; the
-residuals a CSV log recomputes every iteration are not used, so logging does
-not change the solves), additionally capped by a term decaying with
+and dual residuals at SCS's last convergence check (every 25 iterations, or
+one iteration later when the :ref:`acceleration <acceleration>` safeguard has
+rejected that iteration's step; the residuals a CSV log recomputes every
+iteration are not used, so logging does not change the solves), additionally
+capped by a term decaying with
 iteration :math:`k` like :math:`O(1/k^\gamma)` where :math:`\gamma` is
 determined by the constant :code:`CG_RATE` (defaults to :math:`2`), and
 floored at :code:`CG_BEST_TOL`. Each solve is warm-started from the previous
