@@ -235,16 +235,19 @@ revert the iterate to :math:`x^k` and reset the AA state.
 The safeguard judges each step as soon as the iteration that used it is done,
 before anything reads that iteration's iterate. Every 25 iterations SCS
 computes its residuals and runs a check: the :ref:`termination <termination>`
-tests, the time limit and the :ref:`update of the scale <updating_scale>`.
+tests, the time limit, the :ref:`update of the scale <updating_scale>` and
+the tolerances the linear solves read until the next check (the refinement's
+and, for the indirect solvers, CG's; see :ref:`linear_solver`).
 When the step of a check's iteration is rejected, none of these reads that
 iteration: the check runs at the next iteration instead, which never carries
 an accelerated step, because the rejection has reset the AA state and the
 first AA call after a reset only records the iterate. So a check waits at most
 one iteration, whatever :code:`acceleration_interval`,
 :code:`acceleration_lookback` and the AA type, and an iterate built from a
-rejected step is never tested for convergence, used to update the scale, or
-returned. For the same reason AA makes no step at the last iteration
-(:code:`max_iters`), whose iterate is returned. The one decision still made on
+rejected step is never tested for convergence, used to update the scale or to
+set a solve's tolerance, or returned. For the same reason AA makes no step at
+the last iteration (:code:`max_iters`), whose iterate is returned (see
+:ref:`exit flags <exit_flags_limit>`). The one decision still made on
 an iterate the safeguard has not judged is whether to refine the linear
 solves (see :ref:`refinement`), which is decided at the solve itself.
 
