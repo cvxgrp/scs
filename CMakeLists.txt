@@ -8,9 +8,9 @@ cmake_minimum_required(VERSION 3.22)
 project(
   scs
   LANGUAGES C
-  VERSION 3.3.2)
+  VERSION 3.4.0)
 
-# ABI version, the loader identity of the shared libraries (libscsdir.so.3.3):
+# ABI version, the loader identity of the shared libraries (libscsdir.so.3.4):
 # bump on ABI breaks, never on patch releases. scs.mk derives the same value
 # from SCS_VERSION in include/glbopts.h.
 set(SCS_ABI_VERSION "${scs_VERSION_MAJOR}.${scs_VERSION_MINOR}")
