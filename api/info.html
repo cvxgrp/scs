@@ -186,7 +186,7 @@ the following fields.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">rejected_accel_steps</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>
-<td><p>Number of times an AA update was rejected by the safeguarding check (see <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>)</p></td>
+<td><p>Number of times an AA update was rejected by the safeguarding check (see <a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">Acceleration</span></a>). The safeguard tests every AA step, including the step of the iteration the solve stops at and of an iteration with a scale update (before SCS 3.4.0 it did not test either, and a step at a scale update was counted as accepted)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">accepted_accel_steps</span></code></p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">scs_int</span></code></p></td>

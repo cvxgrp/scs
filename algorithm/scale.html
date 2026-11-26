@@ -337,7 +337,13 @@ than the dual and decreased if the opposite is true.</p>
 SCS computes the residuals to test for convergence, which is every 25
 iterations starting at iteration 0 (<code class="code docutils literal notranslate"><span class="pre">CONVERGED_INTERVAL</span></code> in
 <code class="code docutils literal notranslate"><span class="pre">include/glbopts.h</span></code>). At each of these iterations it takes one sample
-of the imbalance between the two residuals and then decides whether to update.</p>
+of the imbalance between the two residuals and then decides whether to update.
+It reads only iterates the <a class="reference internal" href="acceleration.html#acceleration"><span class="std std-ref">acceleration</span></a> safeguard has
+accepted: when the accelerated step of such an iteration is rejected, the
+convergence test, the sample and the decision move to the next iteration,
+which carries no accelerated step. Iteration counts below (<span class="math notranslate nohighlight">\(l\)</span>, and the
+100 iterations between updates) are counted from the iterations the checks
+were due at, so a check that moves does not change them.</p>
 <p>Specifically, at such an iteration <span class="math notranslate nohighlight">\(k\)</span> consider the case where <span class="math notranslate nohighlight">\(l\)</span>
 iterations have elapsed since the last update of the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> parameter
 or of the per-row multipliers described below, and denote by
@@ -417,7 +423,9 @@ perturbed matrix, so is somewhat expensive for larger problems and should be
 done sparingly. Also, since changing the <code class="code docutils literal notranslate"><span class="pre">scale</span></code> or the per-row
 multipliers changes the operator we are using in DR splitting, every update
 also resets the <a class="reference internal" href="acceleration.html#acceleration"><span class="std std-ref">Anderson acceleration</span></a>, whichever linear
-solver is in use. After a reset the acceleration has to fill its memory again
+solver is in use. The reset comes after the safeguard has judged the
+iteration’s accelerated step, so an update never keeps a step without that
+test. After a reset the acceleration has to fill its memory again
 before it produces a step: the first call after the reset only records the
 iterate, and the first step comes <code class="code docutils literal notranslate"><span class="pre">acceleration_lookback</span></code> calls later,
 with one call every <code class="code docutils literal notranslate"><span class="pre">acceleration_interval</span></code> iterations. With the default

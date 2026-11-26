@@ -95,6 +95,11 @@ Each status except :code:`failure` ends in :code:`(inaccurate - reached
 max_iters)` or :code:`(inaccurate - reached time_limit_secs)`, for example
 :code:`indeterminate (inaccurate - reached max_iters)`.
 
+The last iterate is never built from an accelerated step that the
+:ref:`acceleration <acceleration>` safeguard rejected: AA makes no step at the
+last iteration, and the time limit is tested only at a convergence check,
+which reads only iterates the safeguard has accepted.
+
 The estimates returned with 2, -6 and -7 do not meet the tolerances. A
 certificate estimate rests on the sign of :math:`b^\top y` or :math:`c^\top
 x` at the last iterate alone, which on a run whose iterates diverged can

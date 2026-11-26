@@ -187,6 +187,12 @@ To guard against transient iterates that momentarily pass the residual tests
 SCS additionally requires the certificate conditions to hold at two
 consecutive residual checks before declaring infeasibility or unboundedness.
 
+All of these tests read only iterates the acceleration safeguard has accepted.
+When the accelerated step of an iteration with a check due is rejected, the
+check is made at the next iteration instead, which carries no accelerated step
+(see :ref:`acceleration`). So a solve can stop one iteration after a multiple
+of 25.
+
 In some rare cases a problem is both primal and dual infeasible. In this case
 SCS will return one of the two above certificates, whichever one it finds
 first. However, in that case the interpretation of infeasibility in one space

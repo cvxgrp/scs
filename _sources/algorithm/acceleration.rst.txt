@@ -232,6 +232,33 @@ if the norm of the residual after the AA step is larger than some amount (eg, if
 it increases the residual from the previous iterate).  After rejecting a step we
 revert the iterate to :math:`x^k` and reset the AA state.
 
+The safeguard judges each step as soon as the iteration that used it is done,
+before anything reads that iteration's iterate. Every 25 iterations SCS
+computes its residuals and runs a check: the :ref:`termination <termination>`
+tests, the time limit, the :ref:`update of the scale <updating_scale>` and
+the tolerances the linear solves read until the next check (the refinement's
+and, for the indirect solvers, CG's; see :ref:`linear_solver`).
+When the step of a check's iteration is rejected, none of these reads that
+iteration: the check runs at the next iteration instead, which never carries
+an accelerated step, because the rejection has reset the AA state and the
+first AA call after a reset only records the iterate. So a check waits at most
+one iteration, whatever :code:`acceleration_interval`,
+:code:`acceleration_lookback` and the AA type, and an iterate built from a
+rejected step is never tested for convergence, used to update the scale or to
+set a solve's tolerance, or returned. For the same reason AA makes no step at
+the last iteration (:code:`max_iters`), whose iterate is returned (see
+:ref:`exit flags <exit_flags_limit>`). The one decision still made on
+an iterate the safeguard has not judged is whether to refine the linear
+solves (see :ref:`refinement`), which is decided at the solve itself.
+
+Before SCS 3.4.0 the check ran before the safeguard, and every check is an AA
+iteration at the default :code:`acceleration_interval` of 5. A scale update
+there could read the iterate of a step the safeguard would then reject; the
+update resets AA, so the step was not tested at all and was kept. On HUESTIS
+(Maros-Meszaros), which spends thousands of iterations with the scale at its
+limit while AA proposes very large steps, that made 71 of 82 runs fail with
+QDLDL (eps 1e-4 and 1e-6, 41 initial scales each, 22,600 iterations).
+
 Relaxation
 """"""""""
 

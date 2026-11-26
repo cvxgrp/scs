@@ -215,6 +215,10 @@ residuals</p></td>
 <p>Each status except <code class="code docutils literal notranslate"><span class="pre">failure</span></code> ends in <code class="code docutils literal notranslate"><span class="pre">(inaccurate</span> <span class="pre">-</span> <span class="pre">reached</span>
 <span class="pre">max_iters)</span></code> or <code class="code docutils literal notranslate"><span class="pre">(inaccurate</span> <span class="pre">-</span> <span class="pre">reached</span> <span class="pre">time_limit_secs)</span></code>, for example
 <code class="code docutils literal notranslate"><span class="pre">indeterminate</span> <span class="pre">(inaccurate</span> <span class="pre">-</span> <span class="pre">reached</span> <span class="pre">max_iters)</span></code>.</p>
+<p>The last iterate is never built from an accelerated step that the
+<a class="reference internal" href="../algorithm/acceleration.html#acceleration"><span class="std std-ref">acceleration</span></a> safeguard rejected: AA makes no step at the
+last iteration, and the time limit is tested only at a convergence check,
+which reads only iterates the safeguard has accepted.</p>
 <p>The estimates returned with 2, -6 and -7 do not meet the tolerances. A
 certificate estimate rests on the sign of <span class="math notranslate nohighlight">\(b^\top y\)</span> or <span class="math notranslate nohighlight">\(c^\top
 x\)</span> at the last iterate alone, which on a run whose iterates diverged can
