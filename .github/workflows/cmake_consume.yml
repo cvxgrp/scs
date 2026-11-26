@@ -48,10 +48,10 @@ jobs:
         if: matrix.shared == 'ON'
         run: |
           # The loader identity must be the ABI version (major.minor), never
-          # the patch version: 3.3.1 must keep satisfying libscsdir.so.3.3.
+          # the patch version: 3.4.1 must keep satisfying libscsdir.so.3.4.
           soname=$(objdump -p prefix/lib/libscsdir.so | awk '/SONAME/ {print $2}')
           echo "SONAME: $soname"
-          [ "$soname" = "libscsdir.so.3.3" ]
+          [ "$soname" = "libscsdir.so.3.4" ]
           ls -l prefix/lib/libscsdir.so*
 
       - name: Remove private build dependencies (shared only)

@@ -34,7 +34,7 @@ endif
 SCS_SOVERSION := $(shell awk -F'"' '/define SCS_VERSION/ {split($$2, v, "."); print v[1] "." v[2]}' include/glbopts.h)
 
 # versioned(name): the file a shared library is linked as; the unversioned
-# name becomes a symlink to it (libscsdir.so.3.3, libscsdir.3.3.dylib).
+# name becomes a symlink to it (libscsdir.so.3.4, libscsdir.3.4.dylib).
 # Windows DLLs stay unversioned.
 ifeq ($(UNAME), Darwin)
 # we're on apple, no need to link rt library
