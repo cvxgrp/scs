@@ -30,6 +30,7 @@
 #include "problems/test_root_plus.h"
 #include "problems/test_soc_sizes.h"
 #include "problems/test_solve_refine.h"
+#include "problems/test_csv_log.h"
 #include "problems/test_lin_sys_solve.h"
 #include "problems/test_refine_perturbed.h"
 #include "problems/test_refine_certificate.h"
@@ -57,7 +58,7 @@ const char *const mu_skipped = "skipped";
  * as skipped, and main() checks that run + skipped == MU_TOTAL_TESTS. A build
  * that silently loses tests therefore fails instead of printing ALL TESTS
  * PASSED. Bump this when adding a test. */
-#define MU_TOTAL_TESTS 115
+#define MU_TOTAL_TESTS 127
 
 #define _SKIP(problem)                                                         \
   static const char *problem(void) { return mu_skipped; }
@@ -140,6 +141,17 @@ _SKIP(test_ell1_and_nuc)
 _SKIP(test_spectral_metric_updates)
 #endif
 
+/* problems from public benchmark collections (problems/benchmark/README.md);
+ * the SDPs among them need blas / lapack, and the header leaves them out
+ * without */
+#include "problems/test_benchmark_problems.h"
+#if !defined(USE_LAPACK)
+_SKIP(bench_infp1)
+_SKIP(bench_infd2)
+_SKIP(bench_truss4)
+_SKIP(bench_qap5)
+#endif
+
 /* solves problems from data files */
 #if NO_READ_WRITE == 0
 #include "problems/hs21_tiny_qp_rw.h"
@@ -175,6 +187,7 @@ static void all_tests(void) {
   mu_run_test(test_solve_refine_tight);
   mu_run_test(test_solve_refine_idle);
   mu_run_test(test_solve_refine_csv);
+  mu_run_test(test_csv_log);
   mu_run_test(test_solve_refine_correction);
   mu_run_test(test_lin_sys_solve);
   mu_run_test(test_eigcg_gram_factor);
@@ -214,6 +227,15 @@ static void all_tests(void) {
   mu_run_test(issue_140);
   mu_run_test(issue_220);
   mu_run_test(issue_499);
+  mu_run_test(bench_infp1);
+  mu_run_test(bench_infd2);
+  mu_run_test(bench_truss4);
+  mu_run_test(bench_qap5);
+  mu_run_test(bench_galenet);
+  mu_run_test(bench_itest2);
+  mu_run_test(bench_cvxqp2_s);
+  mu_run_test(bench_dualc1);
+  mu_run_test(bench_gouldqp2);
   mu_run_test(test_exp_cone);
   mu_run_test(test_dual_exp_cone);
   mu_run_test(test_power_cone);
@@ -240,6 +262,8 @@ static void all_tests(void) {
   mu_run_test(test_infeasible_inaccurate);
   mu_run_test(test_unbounded_inaccurate);
   mu_run_test(test_max_iters_1);
+  mu_run_test(test_indeterminate_at_limit);
+  mu_run_test(test_nonfinite_at_limit);
   mu_run_test(test_adaptive_scale);
   mu_run_test(test_aa_vetted_structure);
   mu_run_test(test_aa_vetted_last_iter);
@@ -294,7 +318,7 @@ int main(void) {
              (long)SCS(psd_fallbacks));
 #endif
   if (tests_skipped > 0) {
-    scs_printf("Skipped (compiled out by build flags):");
+    scs_printf("Skipped (not run in this build or configuration):");
     for (i = 0; i < tests_skipped && i < MU_MAX_FAILED_TESTS; ++i) {
       scs_printf(" %s", skipped_tests[i]);
     }

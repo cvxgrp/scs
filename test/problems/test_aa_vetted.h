@@ -36,10 +36,10 @@
  *
  * The tests read what happened at each iteration from the CSV log
  * (log_csv_filename): the scale and the counts of accepted and rejected AA
- * steps. Logging recomputes the residuals at every iteration, which the CG
- * solvers' tolerance reads (it is the last residuals computed), so with CG
- * the logged trajectories differ from the unlogged ones. The structure
- * asserted below holds on any trajectory, so that does not matter here.
+ * steps. Logging does not change the iterates (test_csv_log: the CG
+ * tolerance, like the refinement's, is saved at the checks), so these are
+ * the trajectories of unlogged solves too; and the structure asserted below
+ * holds on any trajectory.
  */
 
 /* the problem of size n described above */
@@ -335,9 +335,9 @@ static const char *aa_vetted_logged(scs_int n, scs_float eps, scs_int ulps,
  * initial scales (24 solves); at intervals 2, 3 and 5 (the default), n = 300,
  * lookbacks 1, 3 and 10 (the default) and both AA types (18 solves); eps 1e-4
  * and at most 2,000 iterations each. Measured on macOS arm64 with QDLDL (and
- * CPU CG): at interval 1, 34 (27) checks that waited and changed the scale
- * and 22 (11) scale changes at an accepted step; at the other intervals, 15
- * (14) and 12 (4). The test asks for at least one of each, and at interval 1
+ * CPU CG): at interval 1, 34 (32) checks that waited and changed the scale
+ * and 22 (16) scale changes at an accepted step; at the other intervals, 15
+ * (15) and 12 (12). The test asks for at least one of each, and at interval 1
  * for at least one change at an accepted step. Before the change no check
  * ever waited (and this test stops earlier, at an AA step made at the last
  * iteration of a solve that ran out of iterations).
@@ -407,9 +407,9 @@ static const char *test_aa_vetted_structure(void) {
  * interval 1 with lookbacks 1 (type II) and 2 (type I) and max_iters 101,
  * 151, ..., 401, and at max_iters 1,001 and 1,251 (interval 5) and 301
  * (interval 3) with the default lookback. Before the change, AA made a step
- * at the last iteration in 9 of these 17 solves with QDLDL and in 8 with CPU
+ * at the last iteration in 9 of these 17 solves with QDLDL and in 7 with CPU
  * CG (macOS arm64). A solve that converges first does not test the last
- * iteration (with CG, 5 of the 17 solved in 175 iterations), so the test asks
+ * iteration (with CG, 5 of the 17 solved in 200 iterations), so the test asks
  * only that some solve ran out of iterations (all 17 with QDLDL, 12 with CG).
  */
 static const char *test_aa_vetted_last_iter(void) {

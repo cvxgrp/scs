@@ -198,3 +198,12 @@ SCS will return one of the two above certificates, whichever one it finds
 first. However, in that case the interpretation of infeasibility in one space
 being equivalent to unboundedness in the dual space does not hold.
 
+Iteration and time limits
+-------------------------
+
+If none of these criteria hold within :code:`max_iters` iterations or
+:code:`time_limit_secs` (see :ref:`settings <settings>`), SCS stops and returns
+a best guess from its last iterate with an inaccurate status, or
+:code:`SCS_INDETERMINATE` when that iterate gives no estimate of a solution or
+of a certificate; see :ref:`exit flags <exit_flags_limit>`.
+

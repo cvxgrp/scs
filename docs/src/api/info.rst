@@ -83,6 +83,12 @@ the following fields.
      - :code:`scs_float`
      - Total time (milliseconds) spent in the :ref:`acceleration routine <acceleration>`
 
+When SCS returns :code:`SCS_INDETERMINATE`, or stops at :code:`max_iters` or
+:code:`time_limit_secs` with an iterate that is not finite (see :ref:`exit
+flags <exit_flags_limit>`), :code:`pobj`, :code:`dobj`, :code:`res_pri`,
+:code:`res_dual`, :code:`gap`, :code:`res_infeas`, :code:`res_unbdd_a`,
+:code:`res_unbdd_p` and :code:`comp_slack` are NaN, as are x, y and s.
+
 Anderson acceleration statistics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

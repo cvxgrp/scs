@@ -126,6 +126,7 @@ static void compute_residuals(ScsResiduals *r, scs_int m, scs_int n,
                               scs_float pd);
 static void unnormalize_residuals(ScsWork *w);
 static void populate_residual_struct(ScsWork *w, scs_int iter);
+static void set_cg_tol_res(ScsWork *w);
 static scs_int has_converged(ScsWork *w, scs_int iter);
 static void warm_start_vars(ScsWork *w, ScsSolution *sol);
 static void cold_start_vars(ScsWork *w);
@@ -143,6 +144,7 @@ static void update_dual_vars(ScsWork *w);
 static scs_int project_cones(ScsWork *w, const ScsCone *k, scs_int iter);
 static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
                      scs_int iter);
+static scs_int all_finite(const scs_float *x, scs_int len);
 static void set_diag_r(ScsWork *w);
 static ScsWork *init_work(const ScsData *d, const ScsCone *k,
                           const ScsSettings *stgs);
@@ -825,18 +827,17 @@ static scs_int project_lin_sys(ScsWork *w, scs_int iter) {
 #if INDIRECT > 0
   scs_float *warm_start = SCS_NULL;
   scs_float tol = -1.0;
-  scs_float nm_ax_s_btau, nm_px_aty_ctau, nm_ws;
+  scs_float nm_ws;
   iter_rhs(w, w->u_t);
   /* compute warm start using the cone projection output */
-  nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, m);
-  nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, n);
   warm_start = w->lin_sys_warm_start;
   /* warm_start = u[:n] + tau * g[:n]; CG reads only these n entries of its
    * n + m (the y block stays zero) */
   memcpy(warm_start, w->u, n * sizeof(scs_float));
   SCS(add_scaled_array)(warm_start, w->g, n, w->u[l - 1]);
-  /* use normalized residuals to compute tolerance */
-  tol = MIN(nm_ax_s_btau, nm_px_aty_ctau);
+  /* use normalized residuals to compute tolerance: those of the last
+   * convergence check, saved by set_cg_tol_res */
+  tol = w->cg_tol_res;
   /* tol ~ O(1/k^(1+eps)) guarantees convergence */
   /* use warm-start to calculate tolerance rather than w->u_t, since warm_start
    * should be approximately equal to the true solution */
@@ -970,8 +971,63 @@ static void set_unbounded(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
   info->status_val = SCS_UNBOUNDED;
 }
 
-/* not yet converged, take best guess */
+/* No estimate of a solution or of a certificate: x, y, s and every objective
+ * and residual field are NaN. NaN rather than the last iterate, which is a
+ * ray with no meaning of its own and can look like a plausible solution. The
+ * cost: a warm start from this solution starts from zero, as a cold start
+ * does (warm_start_vars reads NaN as 0); the scale and the per-row
+ * multipliers still carry over. */
+static void set_no_estimate(const ScsWork *w, ScsSolution *sol,
+                            ScsInfo *info) {
+  SCS(scale_array)(sol->x, NAN, w->d->n);
+  SCS(scale_array)(sol->y, NAN, w->d->m);
+  SCS(scale_array)(sol->s, NAN, w->d->m);
+  info->gap = NAN;
+  info->res_pri = NAN;
+  info->res_dual = NAN;
+  info->pobj = NAN;
+  info->dobj = NAN;
+  info->res_infeas = NAN;
+  info->res_unbdd_a = NAN;
+  info->res_unbdd_p = NAN;
+  info->comp_slack = NAN;
+}
+
+/* Reached max_iters or time_limit_secs: report what the last iterate
+ * (x, y, s, tau, kappa) supports, tested in this order.
+ * - Not finite (a NaN or an infinite entry: the iterate overflowed, or a
+ *   linear solve or BLAS call returned one): SCS_FAILED, status "failure",
+ *   x, y, s NaN. Tested first because such an iterate passes the tests
+ *   below: project_cones sets tau = MAX(NaN, 0) = 0, so it would read as no
+ *   estimate, and with tau > 0 (always at iteration 0) as an inaccurate
+ *   solution.
+ * - kappa > tau with b'y < 0 or c'x < 0: the inaccurate certificate,
+ *   y / -b'y or (x, s) / -c'x.
+ * - tau > 0: the inaccurate solution (x, y, s) / tau.
+ * - Otherwise tau = 0 (project_cones clips it at zero) and b'y >= 0 and
+ *   c'x >= 0: a solution needs tau > 0 and a certificate needs b'y < 0 or
+ *   c'x < 0, so the iterate is an estimate of neither, and no threshold or
+ *   older iterate is used to make one. SCS_INDETERMINATE, x, y, s NaN
+ *   (set_no_estimate). This case also takes tau = kappa = 0, which needs the
+ *   unclipped tau to be exactly zero and has not been seen.
+ * Every test is exact, so the status is a function of the last iterate alone,
+ * and the iterates are not changed. Measured on master 4ccf2380 (2026-11-25),
+ * the indeterminate case comes from two regimes: the first iterations (on
+ * one-variable LPs with 4 rows, 5,480 of 4.7M runs, all at max_iters 2 or 3)
+ * and runs whose iterates diverged (netlib beaconfd with CG at eps 1e-4: 19
+ * of 500 starts at 700 iterations; in the one start examined, iterates of
+ * size 1e69 to 1e71). Before SCS 3.4.0 it returned SCS_FAILED, the raw
+ * iterate, and a status of only " (inaccurate - reached max_iters)". */
 static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
+  if (!isfinite(w->r_orig->tau) || !isfinite(w->r_orig->kap) ||
+      !all_finite(sol->x, w->d->n) || !all_finite(sol->y, w->d->m) ||
+      !all_finite(sol->s, w->d->m)) {
+    set_no_estimate(w, sol, info);
+    strcpy(info->status, "failure");
+    info->status_val = SCS_FAILED;
+    scs_printf("Failure:the iterate is not finite (NaN or Inf)\n");
+    return; /* "failure" takes no "(inaccurate - ...)" suffix */
+  }
   if (w->r_orig->kap > w->r_orig->tau &&
       (w->r_orig->bty_tau < 0 || w->r_orig->ctx_tau < 0)) {
     if (w->r_orig->bty_tau < 0 &&
@@ -986,10 +1042,12 @@ static void set_unfinished(const ScsWork *w, ScsSolution *sol, ScsInfo *info) {
     set_solved(w, sol, info);
     info->status_val = SCS_SOLVED_INACCURATE;
   } else {
-    scs_printf("ERROR: could not determine problem status.\n");
-    info->status_val = SCS_FAILED;
+    set_no_estimate(w, sol, info);
+    strcpy(info->status, "indeterminate");
+    info->status_val = SCS_INDETERMINATE;
   }
-  /* Append inaccurate to the status string */
+  /* Append inaccurate to the status string. Every branch above starts it with
+   * strcpy, so this never appends to what the caller left in info->status. */
   if (w->time_limit_reached) {
     strcat(info->status, " (inaccurate - reached time_limit_secs)");
   } else if (info->iter >= w->stgs->max_iters) {
@@ -1010,6 +1068,8 @@ static void finalize(ScsWork *w, ScsSolution *sol, ScsInfo *info,
     SCS(un_normalize_sol)(w->scal, sol);
   }
   populate_residual_struct(w, iter);
+  /* for the first CG solve of the next solve, before its first check */
+  set_cg_tol_res(w);
 
   nm_s = SCS(norm_inf)(sol->s, w->d->m);
   nm_y = SCS(norm_inf)(sol->y, w->d->m);
@@ -1268,6 +1328,30 @@ static ScsWork *init_work(const ScsData *d, const ScsCone *k,
 static void set_refine_tol(ScsWork *w) {
   w->refine_tol = MIN(SCS(norm_inf)(w->r_normalized->ax_s_btau, w->d->m),
                       SCS(norm_inf)(w->r_normalized->px_aty_ctau, w->d->n));
+}
+
+/* Indirect solvers: saves the size of the residuals SCS is driving to zero
+ * (normalized, tau not divided out; the smaller of the CG_NORMs of the two)
+ * that each iteration's CG tolerance is set from (project_lin_sys). It is
+ * saved where SCS computes the residuals for the algorithm: at each
+ * convergence check, next to refine_tol (a check that waits for the AA
+ * safeguard saves it at the iteration it runs, from an iterate the safeguard
+ * has vetted; see scs_solve), and at the end of each solve (finalize), for
+ * the first iteration of the next solve on the workspace, which runs before
+ * that solve's first check. It is kept here rather than
+ * read from r_normalized when CG runs for the same reason as refine_tol:
+ * logging to CSV (log_csv_filename) recomputes r_normalized every iteration,
+ * and logging must not change the iterates. Without logging r_normalized is
+ * computed only at those points, so the value is the one the CG tolerance
+ * read from r_normalized before. Nothing to save for direct solvers. */
+static void set_cg_tol_res(ScsWork *w) {
+#if INDIRECT > 0
+  scs_float nm_ax_s_btau = CG_NORM(w->r_normalized->ax_s_btau, w->d->m);
+  scs_float nm_px_aty_ctau = CG_NORM(w->r_normalized->px_aty_ctau, w->d->n);
+  w->cg_tol_res = MIN(nm_ax_s_btau, nm_px_aty_ctau);
+#else
+  (void)w;
+#endif
 }
 
 /* Whether the per-iteration refinement is on after a check, given res, the
@@ -2355,7 +2439,8 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
      * safeguard has vetted.
      *
      * What: the check is the convergence and time-limit tests, the
-     * refinement tolerance, the verbose print and the scale update (its
+     * tolerances the linear solves read until the next check (set_refine_tol
+     * and set_cg_tol_res), the verbose print and the scale update (its
      * sample and its decision). When this iteration carried an AA step and
      * the safeguard rejects it, u and rsk were built from the rejected step.
      * The safeguard puts v and v_prev back to the plain iteration's (aa.c)
@@ -2423,6 +2508,7 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       }
       populate_residual_struct(w, i);
       set_refine_tol(w);
+      set_cg_tol_res(w);
       if ((info->status_val = has_converged(w, i)) != 0) {
         break;
       }
@@ -2433,9 +2519,9 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
         }
       }
       /* the residuals just checked, at the checks due at multiples of
-       * PRINT_INTERVAL; inside the check so that verbose never computes the
-       * residuals of a rejected step, which the next solve's CG tolerance
-       * would read */
+       * PRINT_INTERVAL; inside the check, so that the line printed is the
+       * iterate the check read (at a check that waited, iteration
+       * check_iter + 1) */
       if (w->stgs->verbose && check_iter % PRINT_INTERVAL == 0) {
         print_summary(w, i, &solve_timer);
       }
@@ -2445,7 +2531,12 @@ scs_int scs_solve(ScsWork *w, ScsSolution *sol, ScsInfo *info,
       }
     }
 
-    /* Log *after* updating scale so residual recalc does not affect alg */
+    /* Log *after* updating scale so residual recalc does not affect alg: the
+     * residuals recomputed here are only logged. The algorithm reads the ones
+     * computed at the convergence checks: has_converged and update_scale run
+     * only right after a check computed them, and the solves read the sizes
+     * saved there (set_refine_tol, set_cg_tol_res), so logging does not
+     * change the iterates. */
     if (w->log_csv_fout) {
       /* calc residuals every iter if logging to csv */
       populate_residual_struct(w, i);

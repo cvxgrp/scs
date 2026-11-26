@@ -41,7 +41,12 @@ by setting the warm-start :ref:`setting <settings>` to :code:`True` when calling
 y, s` members of the :ref:`ScsSolution` struct, where those members correspond
 to the guess of the solution in the :ref:`standard form <optimality>`.  SCS will
 initialize the solver at those points and then overwrite the :ref:`ScsSolution`
-struct members with the real solution at termination.
+struct members with the real solution at termination. NaN entries of the guess
+are read as zero, so a warm start from a solution that SCS returned as NaN
+(after :code:`SCS_INDETERMINATE`, for example, see :ref:`exit flags
+<exit_flags_limit>`) starts from zero, as a cold start does; the
+:code:`scale` and the per-row multipliers still carry over as described
+above.
 
 The settings that only the solve reads, such as the tolerances,
 :code:`max_iters` and :code:`time_limit_secs`, can also be changed between

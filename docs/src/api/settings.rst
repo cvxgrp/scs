@@ -42,7 +42,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1e-6 (1e-2 in single precision builds)
    * - :code:`max_iters`
      - :code:`scs_int`
-     - Maximum number of iterations to run.
+     - Maximum number of iterations to run. When it is reached SCS returns its best guess with an inaccurate status, or :code:`SCS_INDETERMINATE` when the last iterate gives none, see :ref:`exit flags <exit_flags_limit>`.
      - :math:`\mathbf{N}`
      - 1e5
    * - :code:`eps_abs`
@@ -67,7 +67,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - 1.5
    * - :code:`time_limit_secs`
      - :code:`scs_float`
-     - Time limit for the solve in seconds (can be fractional). :code:`0` is interpreted as no limit. The clock starts when :code:`scs_solve` is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (:code:`CONVERGED_INTERVAL` in :code:`include/glbopts.h`), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, see :ref:`exit flags <exit_flags>`. It has no effect if SCS is compiled with the :code:`NO_TIMER` :ref:`compile flag <compile_flags>`. It can be changed after setup, for example to give the solve what is left of a total time budget, see :ref:`update_settings`.
+     - Time limit for the solve in seconds (can be fractional). :code:`0` is interpreted as no limit. The clock starts when :code:`scs_solve` is called, so the setup time (e.g., the initial factorization) is not counted, although the time column of the printed output does include it. The limit is only tested when convergence is checked, every 25 iterations (:code:`CONVERGED_INTERVAL` in :code:`include/glbopts.h`), so a solve can overrun it by up to 25 iterations. When the limit is reached SCS returns its best guess with an inaccurate status, or :code:`SCS_INDETERMINATE` when the last iterate gives none, see :ref:`exit flags <exit_flags_limit>`. It has no effect if SCS is compiled with the :code:`NO_TIMER` :ref:`compile flag <compile_flags>`. It can be changed after setup, for example to give the solve what is left of a total time budget, see :ref:`update_settings`.
      - :math:`[0, \infty)`
      - 0
    * - :code:`verbose`
@@ -112,7 +112,7 @@ They are set in the :ref:`ScsSettings <ScsSettings>` struct.
      - NULL
    * - :code:`log_csv_filename`
      - :code:`char *`
-     - If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower).
+     - If this is set SCS will write csv logs of various quantities through the solver (makes the solver much slower). The residuals it computes every iteration for the log are not used by the algorithm, which uses those of its convergence checks, so logging does not change the iterates (only the time: a solve with :code:`time_limit_secs` can stop sooner).
      - Any filename
      - NULL
 
@@ -224,8 +224,8 @@ How to check it worked
 ^^^^^^^^^^^^^^^^^^^^^^
 
 A solve stopped by the time limit returns an inaccurate :ref:`exit flag
-<exit_flags>` and its status ends in :code:`(inaccurate - reached
-time_limit_secs)`. With :code:`verbose` on, :code:`scs_update_settings`
+<exit_flags_limit>`, or :code:`SCS_INDETERMINATE`, and its status ends in
+:code:`(inaccurate - reached time_limit_secs)`. With :code:`verbose` on, :code:`scs_update_settings`
 prints the values now in force, starting :code:`settings updated:`.
 
 What it does not do

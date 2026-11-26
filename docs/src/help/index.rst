@@ -36,6 +36,20 @@ residuals exceed the requested tolerances. Try:
 * **Try adaptive scaling**: set :code:`adaptive_scale=1` (the default). This
   automatically tunes the internal :code:`scale` parameter during the solve.
 
+.. _help_indeterminate:
+
+SCS returns ``indeterminate``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The status :code:`indeterminate (inaccurate - reached max_iters)` (exit flag
+:code:`SCS_INDETERMINATE`, -3) means SCS ran out of iterations (or hit the
+time limit) at an iterate that gives no estimate of a solution or of a
+certificate, so x, y and s are NaN (see :ref:`exit_flags_limit`). It happens
+in the first few iterations, so with a very small :code:`max_iters` or time
+limit, and on runs whose iterates diverged. Try the steps above for
+``solved_inaccurate``, starting with a larger :code:`max_iters` or time
+limit.
+
 SCS returns ``infeasible`` or ``unbounded`` unexpectedly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
