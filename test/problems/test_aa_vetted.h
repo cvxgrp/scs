@@ -40,6 +40,13 @@
  * tolerance, like the refinement's, is saved at the checks), so these are
  * the trajectories of unlogged solves too; and the structure asserted below
  * holds on any trajectory.
+ *
+ * The three tests that read the log (all but test_aa_vetted_huestis) are
+ * skipped with the dense solver, which refactors an n x n matrix at every
+ * scale update: they made its suite about 9 times as long (10.6 s against
+ * 1.2 s on an Apple M-series Mac), and CI's valgrind job did not finish it
+ * within its hour. The code they check, in src/scs.c, is the same for every
+ * linear solver.
  */
 
 /* the problem of size n described above */
@@ -281,6 +288,16 @@ static const char *aa_vetted_structure(const AaVettedLog *g,
 
 #define AA_VETTED_CSV "test_aa_vetted.csv"
 
+/* whether the linear solver is the dense one, which skips the logged tests
+ * (see the top of this file); prints that test is skipped */
+static int aa_vetted_dense(const char *test) {
+  if (!strstr(scs_get_lin_sys_method(), "dense")) {
+    return 0;
+  }
+  scs_printf("%s: skipped with the dense solver (cost)\n", test);
+  return 1;
+}
+
 /* one logged solve of the problem of size n; checks its structure and adds
  * to the counts */
 static const char *aa_vetted_logged(scs_int n, scs_float eps, scs_int ulps,
@@ -354,6 +371,9 @@ static const char *test_aa_vetted_structure(void) {
   ScsInfo info;
   scs_int a, b, t, u;
   const char *fail;
+  if (aa_vetted_dense("test_aa_vetted_structure")) {
+    return mu_skipped;
+  }
   for (a = 0; a < 3; ++a) {
     for (b = 1; b <= 2; ++b) {
       for (t = 0; t < 2; ++t) {
@@ -423,6 +443,9 @@ static const char *test_aa_vetted_last_iter(void) {
   ScsInfo info;
   scs_int j, b, mi, ran_out = 0;
   const char *fail;
+  if (aa_vetted_dense("test_aa_vetted_last_iter")) {
+    return mu_skipped;
+  }
   for (j = 0; j < 3 + 2 * 7; ++j) {
     scs_int iv = 1, lb, t1, max_iters;
     if (j < 3) {
@@ -458,20 +481,20 @@ static const char *test_aa_vetted_last_iter(void) {
  * the next solve). Whether they solve is printed, not checked: it is not what
  * this test is about, and it depends on the BLAS and LAPACK. At
  * acceleration_interval 1 this problem can take more than these 5,000
- * iterations: with the dense solver the CI runners (MKL on Linux, Accelerate
- * on macOS arm64) did not solve it from the default start, while on an Apple
- * M-series Mac every backend solved both solves from 41 starts, with
- * Accelerate and with OpenBLAS (the first in at most 3,551 iterations). In
- * single precision it does not solve at eps 1e-4.
+ * iterations: with the dense solver (which now skips this test) the CI
+ * runners (MKL on Linux, Accelerate on macOS arm64) did not solve it from the
+ * default start, while on an Apple M-series Mac every backend solved both
+ * solves from 41 starts, with Accelerate and with OpenBLAS (the first in at
+ * most 3,551 iterations). In single precision it does not solve at eps 1e-4.
  */
 static const char *test_aa_vetted_repeat(void) {
 #if NO_READ_WRITE > 0
   return mu_skipped;
 #else
-  ScsCone *k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
-  ScsData *d = (ScsData *)scs_calloc(1, sizeof(ScsData));
-  ScsSettings *stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
-  ScsSolution *sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
+  ScsCone *k;
+  ScsData *d;
+  ScsSettings *stgs;
+  ScsSolution *sol;
   scs_float *b_new;
   AaVettedCount c = {0};
   AaVettedLog g;
@@ -479,6 +502,13 @@ static const char *test_aa_vetted_repeat(void) {
   ScsWork *w;
   scs_int r, status[2] = {SCS_FAILED, SCS_FAILED}, iters[2] = {0, 0};
   const char *fail = SCS_NULL;
+  if (aa_vetted_dense("test_aa_vetted_repeat")) {
+    return mu_skipped;
+  }
+  k = (ScsCone *)scs_calloc(1, sizeof(ScsCone));
+  d = (ScsData *)scs_calloc(1, sizeof(ScsData));
+  stgs = (ScsSettings *)scs_calloc(1, sizeof(ScsSettings));
+  sol = (ScsSolution *)scs_calloc(1, sizeof(ScsSolution));
   aa_vetted_data(d, k, 1000);
   aa_vetted_settings(stgs, 1e-4, 0, 5000, 1, 10, 1, AA_VETTED_CSV);
   b_new = (scs_float *)scs_calloc(d->m, sizeof(scs_float));
